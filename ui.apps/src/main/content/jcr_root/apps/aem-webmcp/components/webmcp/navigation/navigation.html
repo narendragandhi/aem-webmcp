@@ -1,0 +1,374 @@
+<!--*
+    WebMCP Navigation Component (Extends Core Components Navigation)
+    ===============================================================
+    AI AGENT CAPABILITIES:
+    - Get site structure as tree
+    - Navigate to any page
+    - Get breadcrumbs
+    - Search within navigation
+    - Get menu items by level
+    - Identify current page
+    
+    DATA STRUCTURE FOR AI:
+    - Tree structure with: id, label, url, children, level
+    - Actions: navigate, getBreadcrumbs, searchNav
+    - Current page detection
+*-->
+<nav class="webmcp-navigation"
+     data-webmcp-action="site-navigation"
+     data-webmcp-description="Site navigation with AI agent support - exposes site structure and allows navigation"
+     role="navigation"
+     aria-label="Main Navigation"
+     data-nav-structure='{"home":"/","products":"/products","about":"/about","contact":"/contact"}'>
+    
+    <!-- Mobile Toggle -->
+    <button class="webmcp-nav__toggle"
+            data-webmcp-action="toggle-mobile-menu"
+            aria-label="Toggle navigation menu"
+            aria-expanded="false">
+        <span class="hamburger"></span>
+    </button>
+    
+    <!-- Search in Navigation (for AI agents) -->
+    <div class="webmcp-nav__search"
+         data-webmcp-action="nav-search"
+         data-webmcp-description="Search within site navigation">
+        <input type="search"
+               placeholder="Search site..."
+               aria-label="Search navigation"
+               data-webmcp-field="navSearchQuery"
+               data-webmcp-type="string"/>
+    </div>
+    
+    <!-- Navigation Menu -->
+    <ul class="webmcp-nav__menu"
+        role="menubar"
+        data-webmcp-action="main-menu"
+        data-webmcp-description="Main navigation menu structure">
+        
+        <!-- Home -->
+        <li class="webmcp-nav__item"
+            role="none"
+            data-nav-id="home"
+            data-nav-label="Home"
+            data-nav-url="/"
+            data-nav-level="1"
+            data-webmcp-action="nav-item">
+            <a href="/"
+               role="menuitem"
+               data-webmcp-action="navigate"
+               data-nav-url="/"
+               aria-current="page">
+                Home
+            </a>
+        </li>
+        
+        <!-- Products (with dropdown) -->
+        <li class="webmcp-nav__item has-dropdown"
+            role="none"
+            data-nav-id="products"
+            data-nav-label="Products"
+            data-nav-url="/products"
+            data-nav-level="1"
+            data-webmcp-action="nav-item">
+            
+            <a href="/products"
+               role="menuitem"
+               data-webmcp-action="navigate"
+               data-nav-url="/products"
+               aria-haspopup="true"
+               aria-expanded="false">
+                Products
+                <span class="dropdown-arrow" aria-hidden="true">▼</span>
+            </a>
+            
+            <!-- Dropdown Menu -->
+            <ul class="webmcp-nav__dropdown"
+                role="menu"
+                data-webmcp-action="products-dropdown"
+                data-webmcp-description="Products submenu">
+                
+                <li class="webmcp-nav__item"
+                    role="none"
+                    data-nav-id="products-electronics"
+                    data-nav-label="Electronics"
+                    data-nav-url="/products/electronics"
+                    data-nav-level="2"
+                    data-webmcp-action="nav-item">
+                    <a href="/products/electronics"
+                       role="menuitem"
+                       data-webmcp-action="navigate"
+                       data-nav-url="/products/electronics">
+                        Electronics
+                    </a>
+                </li>
+                
+                <li class="webmcp-nav__item"
+                    role="none"
+                    data-nav-id="products-clothing"
+                    data-nav-label="Clothing"
+                    data-nav-url="/products/clothing"
+                    data-nav-level="2"
+                    data-webmcp-action="nav-item">
+                    <a href="/products/clothing"
+                       role="menuitem"
+                       data-webmcp-action="navigate"
+                       data-nav-url="/products/clothing">
+                        Clothing
+                    </a>
+                </li>
+                
+                <li class="webmcp-nav__item"
+                    role="none"
+                    data-nav-id="products-home"
+                    data-nav-label="Home & Garden"
+                    data-nav-url="/products/home-garden"
+                    data-nav-level="2"
+                    data-webmcp-action="nav-item">
+                    <a href="/products/home-garden"
+                       role="menuitem"
+                       data-webmcp-action="navigate"
+                       data-nav-url="/products/home-garden">
+                        Home & Garden
+                    </a>
+                </li>
+                
+                <li class="webmcp-nav__item"
+                    role="none"
+                    data-nav-id="products-sports"
+                    data-nav-label="Sports"
+                    data-nav-url="/products/sports"
+                    data-nav-level="2"
+                    data-webmcp-action="nav-item">
+                    <a href="/products/sports"
+                       role="menuitem"
+                       data-webmcp-action="navigate"
+                       data-nav-url="/products/sports">
+                        Sports
+                    </a>
+                </li>
+                
+                <li class="webmcp-nav__item"
+                    role="none"
+                    data-nav-id="products-books"
+                    data-nav-label="Books"
+                    data-nav-url="/products/books"
+                    data-nav-level="2"
+                    data-webmcp-action="nav-item">
+                    <a href="/products/books"
+                       role="menuitem"
+                       data-webmcp-action="navigate"
+                       data-nav-url="/products/books">
+                        Books
+                    </a>
+                </li>
+            </ul>
+        </li>
+        
+        <!-- Services -->
+        <li class="webmcp-nav__item has-dropdown"
+            role="none"
+            data-nav-id="services"
+            data-nav-label="Services"
+            data-nav-url="/services"
+            data-nav-level="1"
+            data-webmcp-action="nav-item">
+            
+            <a href="/services"
+               role="menuitem"
+               data-webmcp-action="navigate"
+               aria-haspopup="true">
+                Services
+                <span class="dropdown-arrow">▼</span>
+            </a>
+            
+            <ul class="webmcp-nav__dropdown"
+                role="menu">
+                <li data-nav-id="services-consulting"
+                    data-nav-label="Consulting"
+                    data-nav-url="/services/consulting">
+                    <a href="/services/consulting"
+                       role="menuitem"
+                       data-webmcp-action="navigate"
+                       data-nav-url="/services/consulting">
+                        Consulting
+                    </a>
+                </li>
+                <li data-nav-id="services-training"
+                    data-nav-label="Training"
+                    data-nav-url="/services/training">
+                    <a href="/services/training"
+                       role="menuitem"
+                       data-webmcp-action="navigate"
+                       data-nav-url="/services/training">
+                        Training
+                    </a>
+                </li>
+                <li data-nav-id="services-support"
+                    data-nav-label="Support"
+                    data-nav-url="/services/support">
+                    <a href="/services/support"
+                       role="menuitem"
+                       data-webmcp-action="navigate"
+                       data-nav-url="/services/support">
+                        Support
+                    </a>
+                </li>
+            </ul>
+        </li>
+        
+        <!-- About -->
+        <li class="webmcp-nav__item"
+            role="none"
+            data-nav-id="about"
+            data-nav-label="About"
+            data-nav-url="/about"
+            data-nav-level="1"
+            data-webmcp-action="nav-item">
+            <a href="/about"
+               role="menuitem"
+               data-webmcp-action="navigate"
+               data-nav-url="/about">
+                About
+            </a>
+        </li>
+        
+        <!-- Contact -->
+        <li class="webmcp-nav__item"
+            role="none"
+            data-nav-id="contact"
+            data-nav-label="Contact"
+            data-nav-url="/contact"
+            data-nav-level="1"
+            data-webmcp-action="nav-item">
+            <a href="/contact"
+               role="menuitem"
+               data-webmcp-action="navigate"
+               data-nav-url="/contact">
+                Contact
+            </a>
+        </li>
+    </ul>
+    
+    <!-- Utility Nav (Right side) -->
+    <ul class="webmcp-nav__utility"
+        role="menubar"
+        data-webmcp-action="utility-navigation">
+        
+        <!-- Search -->
+        <li class="webmcp-nav__item"
+            data-webmcp-action="open-search">
+            <button aria-label="Search">
+                🔍
+            </button>
+        </li>
+        
+        <!-- Cart -->
+        <li class="webmcp-nav__item"
+            data-nav-id="cart"
+            data-webmcp-action="view-cart">
+            <a href="/cart" aria-label="Shopping cart">
+                🛒
+                <span class="cart-count" data-cart-count="3">3</span>
+            </a>
+        </li>
+        
+        <!-- Account -->
+        <li class="webmcp-nav__item has-dropdown"
+            data-webmcp-action="account-menu">
+            <a href="/account" aria-label="My account">
+                👤
+            </a>
+            <ul class="webmcp-nav__dropdown">
+                <li><a href="/account/profile">My Profile</a></li>
+                <li><a href="/account/orders">Order History</a></li>
+                <li><a href="/account/wishlist">Wishlist</a></li>
+                <li><a href="/logout">Sign Out</a></li>
+            </ul>
+        </li>
+    </ul>
+    
+    <!-- Breadcrumbs (for AI agents) -->
+    <nav class="webmcp-nav__breadcrumbs"
+         aria-label="Breadcrumb"
+         data-webmcp-action="breadcrumbs"
+         data-webmcp-description="Breadcrumb navigation showing current location">
+        <ol>
+            <li><a href="/">Home</a></li>
+            <li><a href="/products">Products</a></li>
+            <li aria-current="page">Electronics</li>
+        </ol>
+    </nav>
+    
+    <!-- Site Map Link (for AI agents) -->
+    <a href="/sitemap.xml"
+       class="webmcp-nav__sitemap"
+       data-webmcp-action="view-sitemap"
+       style="display:none">
+        Site Map
+    </a>
+</nav>
+
+<!-- Structured Data for AI Agents -->
+<script type="application/ld+json" class="webmcp-nav__data">
+{
+    "@context": "https://schema.org",
+    "@type": "SiteNavigationElement",
+    "name": "Main Navigation",
+    "description": "Primary site navigation with categories and subcategories",
+    "aiAgentActions": {
+        "navigate": "Navigate to any page in the navigation",
+        "getBreadcrumbs": "Get breadcrumb path to current page",
+        "searchNav": "Search within navigation items",
+        "getMenuTree": "Get complete navigation tree structure"
+    },
+    "navigationTree": [
+        {
+            "id": "home",
+            "label": "Home",
+            "url": "/",
+            "level": 1
+        },
+        {
+            "id": "products",
+            "label": "Products",
+            "url": "/products",
+            "level": 1,
+            "children": [
+                {"id": "electronics", "label": "Electronics", "url": "/products/electronics", "level": 2},
+                {"id": "clothing", "label": "Clothing", "url": "/products/clothing", "level": 2},
+                {"id": "home-garden", "label": "Home & Garden", "url": "/products/home-garden", "level": 2},
+                {"id": "sports", "label": "Sports", "url": "/products/sports", "level": 2},
+                {"id": "books", "label": "Books", "url": "/products/books", "level": 2}
+            ]
+        },
+        {
+            "id": "services",
+            "label": "Services",
+            "url": "/services",
+            "level": 1,
+            "children": [
+                {"id": "consulting", "label": "Consulting", "url": "/services/consulting", "level": 2},
+                {"id": "training", "label": "Training", "url": "/services/training", "level": 2},
+                {"id": "support", "label": "Support", "url": "/services/support", "level": 2}
+            ]
+        },
+        {
+            "id": "about",
+            "label": "About",
+            "url": "/about",
+            "level": 1
+        },
+        {
+            "id": "contact",
+            "label": "Contact",
+            "url": "/contact",
+            "level": 1
+        }
+    ],
+    "currentPage": {
+        "path": "/products/electronics",
+        "breadcrumbs": ["Home", "Products", "Electronics"]
+    }
+}
+</script>

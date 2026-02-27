@@ -1,0 +1,363 @@
+<!--*
+    WebMCP Booking/Reservation Component
+    ======================================
+    AI AGENT CAPABILITIES:
+    - Check availability for date range
+    - Select service/type
+    - Pre-fill customer details
+    - Choose time slots
+    - Add special requests
+    - Confirm booking
+    
+    DATA STRUCTURE FOR AI:
+    - Service types: consultation, demo, meeting, appointment
+    - Date fields: preferredDate, alternativeDate
+    - Time slots: morning, afternoon, evening
+    - Actions: checkAvailability, book, cancel, reschedule
+*-->
+<div class="webmcp-booking"
+     data-webmcp-action="booking-form"
+     data-webmcp-description="Reservation/booking form with AI agent support for scheduling appointments">
+    
+    <!-- Booking Tabs -->
+    <div class="webmcp-booking__tabs"
+         data-webmcp-action="booking-tabs"
+         data-webmcp-description="Switch between booking types">
+        <button class="tab active" 
+                data-tab="consultation"
+                data-webmcp-action="select-booking-type"
+                data-booking-type="consultation">
+            Consultation
+        </button>
+        <button class="tab" 
+                data-tab="demo"
+                data-webmcp-action="select-booking-type"
+                data-booking-type="demo">
+            Product Demo
+        </button>
+        <button class="tab" 
+                data-tab="meeting"
+                data-webmcp-action="select-booking-type"
+                data-booking-type="meeting">
+            Schedule Meeting
+        </button>
+    </div>
+    
+    <form action="/bin/api/book" 
+          method="POST"
+          class="webmcp-booking__form"
+          data-webmcp-action="submit-booking"
+          data-webmcp-description="Submit booking reservation">
+        
+        <input type="hidden" name="bookingType" value="consultation"/>
+        
+        <!-- Step 1: Service Selection -->
+        <section class="webmcp-booking__step"
+                 data-step="1"
+                 data-webmcp-action="service-selection"
+                 data-webmcp-description="Select type of booking">
+            <h3>1. Select Service</h3>
+            
+            <div class="webmcp-form__field"
+                 data-webmcp-field="serviceType"
+                 data-webmcp-type="select"
+                 data-webmcp-required="true"
+                 data-webmcp-description="Type of service to book">
+                <label for="service-type">Service Type <span class="required">*</span></label>
+                <select id="service-type" name="serviceType" required
+                        data-webmcp-action="select-service">
+                    <option value="">Select a service</option>
+                    <option value="initial-consultation">Initial Consultation (Free)</option>
+                    <option value="technical-demo">Technical Demo</option>
+                    <option value="product-walkthrough">Product Walkthrough</option>
+                    <option value="pricing-discussion">Pricing Discussion</option>
+                    <option value="onboarding-session">Onboarding Session</option>
+                </select>
+            </div>
+            
+            <div class="webmcp-form__field"
+                 data-webmcp-field="duration"
+                 data-webmcp-type="select"
+                 data-webmcp-required="true"
+                 data-webmcp-description="Duration of the booking">
+                <label for="duration">Duration <span class="required">*</span></label>
+                <select id="duration" name="duration" required>
+                    <option value="15">15 minutes</option>
+                    <option value="30" selected>30 minutes</option>
+                    <option value="60">1 hour</option>
+                    <option value="90">1.5 hours</option>
+                </select>
+            </div>
+        </section>
+        
+        <!-- Step 2: Date & Time Selection -->
+        <section class="webmcp-booking__step"
+                 data-step="2"
+                 data-webmcp-action="datetime-selection"
+                 data-webmcp-description="Select preferred date and time">
+            <h3>2. Choose Date & Time</h3>
+            
+            <!-- Preferred Date -->
+            <div class="webmcp-form__field"
+                 data-webmcp-field="preferredDate"
+                 data-webmcp-type="date"
+                 data-webmcp-required="true"
+                 data-webmcp-description="Preferred date for booking">
+                <label for="preferred-date">
+                    Preferred Date <span class="required">*</span>
+                </label>
+                <input type="date" 
+                       id="preferred-date" 
+                       name="preferredDate"
+                       required
+                       min="${currentDate}"
+                       data-webmcp-action="select-date"/>
+                <span class="webmcp-field__hint">Select your preferred date</span>
+            </div>
+            
+            <!-- Alternative Date -->
+            <div class="webmcp-form__field"
+                 data-webmcp-field="alternativeDate"
+                 data-webmcp-type="date"
+                 data-webmcp-description="Alternative date if preferred is unavailable">
+                <label for="alternative-date">
+                    Alternative Date
+                </label>
+                <input type="date" 
+                       id="alternative-date" 
+                       name="alternativeDate"
+                       data-webmcp-action="select-alternative-date"/>
+            </div>
+            
+            <!-- Time Slot Selection -->
+            <div class="webmcp-form__field"
+                 data-webmcp-field="timeSlot"
+                 data-webmcp-type="select"
+                 data-webmcp-required="true"
+                 data-webmcp-description="Preferred time slot">
+                <label for="time-slot">Preferred Time <span class="required">*</span></label>
+                <select id="time-slot" name="timeSlot" required>
+                    <option value="">Select a time slot</option>
+                    <optgroup label="Morning">
+                        <option value="09:00">9:00 AM</option>
+                        <option value="09:30">9:30 AM</option>
+                        <option value="10:00">10:00 AM</option>
+                        <option value="10:30">10:30 AM</option>
+                        <option value="11:00">11:00 AM</option>
+                        <option value="11:30">11:30 AM</option>
+                    </optgroup>
+                    <optgroup label="Afternoon">
+                        <option value="13:00">1:00 PM</option>
+                        <option value="13:30">1:30 PM</option>
+                        <option value="14:00">2:00 PM</option>
+                        <option value="14:30">2:30 PM</option>
+                        <option value="15:00">3:00 PM</option>
+                        <option value="15:30">3:30 PM</option>
+                        <option value="16:00">4:00 PM</option>
+                        <option value="16:30">4:30 PM</option>
+                    </optgroup>
+                    <optgroup label="Evening">
+                        <option value="17:00">5:00 PM</option>
+                        <option value="17:30">5:30 PM</option>
+                    </optgroup>
+                </select>
+            </div>
+            
+            <!-- Timezone -->
+            <div class="webmcp-form__field"
+                 data-webmcp-field="timezone"
+                 data-webmcp-type="select"
+                 data-webmcp-description="Your timezone for accurate scheduling">
+                <label for="timezone">Your Timezone</label>
+                <select id="timezone" name="timezone">
+                    <option value="America/New_York" selected>Eastern Time (ET)</option>
+                    <option value="America/Chicago">Central Time (CT)</option>
+                    <option value="America/Denver">Mountain Time (MT)</option>
+                    <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                    <option value="Europe/London">GMT/BST</option>
+                    <option value="Europe/Paris">Central European Time</option>
+                    <option value="Asia/Tokyo">Japan Standard Time</option>
+                </select>
+            </div>
+            
+            <!-- Check Availability Button -->
+            <button type="button" 
+                    class="btn-check-availability"
+                    data-webmcp-action="check-availability"
+                    data-webmcp-description="Check available time slots for selected date">
+                Check Availability
+            </button>
+            
+            <!-- Availability Display -->
+            <div class="webmcp-availability"
+                 data-webmcp-action="availability-results"
+                 style="display:none">
+                <h4>Available Slots</h4>
+                <div class="available-slots">
+                    <button type="button" class="slot available">9:00 AM</button>
+                    <button type="button" class="slot available">10:30 AM</button>
+                    <button type="button" class="slot available">2:00 PM</button>
+                    <button type="button" class="slot available">4:00 PM</button>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Step 3: Customer Information -->
+        <section class="webmcp-booking__step"
+                 data-step="3"
+                 data-webmcp-action="customer-info"
+                 data-webmcp-description="Enter customer contact details">
+            <h3>3. Your Information</h3>
+            
+            <div class="webmcp-form__field"
+                 data-webmcp-field="firstName"
+                 data-webmcp-type="string"
+                 data-webmcp-required="true">
+                <label for="first-name">First Name <span class="required">*</span></label>
+                <input type="text" id="first-name" name="firstName" required/>
+            </div>
+            
+            <div class="webmcp-form__field"
+                 data-webmcp-field="lastName"
+                 data-webmcp-type="string"
+                 data-webmcp-required="true">
+                <label for="last-name">Last Name <span class="required">*</span></label>
+                <input type="text" id="last-name" name="lastName" required/>
+            </div>
+            
+            <div class="webmcp-form__field"
+                 data-webmcp-field="email"
+                 data-webmcp-type="email"
+                 data-webmcp-required="true">
+                <label for="booking-email">Email <span class="required">*</span></label>
+                <input type="email" id="booking-email" name="email" required/>
+            </div>
+            
+            <div class="webmcp-form__field"
+                 data-webmcp-field="phone"
+                 data-webmcp-type="tel">
+                <label for="booking-phone">Phone</label>
+                <input type="tel" id="booking-phone" name="phone"/>
+            </div>
+            
+            <div class="webmcp-form__field"
+                 data-webmcp-field="company"
+                 data-webmcp-type="string">
+                <label for="booking-company">Company</label>
+                <input type="text" id="booking-company" name="company"/>
+            </div>
+            
+            <div class="webmcp-form__field"
+                 data-webmcp-field="attendees"
+                 data-webmcp-type="integer"
+                 data-webmcp-description="Number of attendees for the meeting">
+                <label for="attendees">Number of Attendees</label>
+                <input type="number" id="attendees" name="attendees" 
+                       min="1" max="50" value="1"/>
+            </div>
+        </section>
+        
+        <!-- Step 4: Additional Details -->
+        <section class="webmcp-booking__step"
+                 data-step="4"
+                 data-webmcp-action="additional-details"
+                 data-webmcp-description="Additional information and special requests">
+            <h3>4. Additional Details</h3>
+            
+            <div class="webmcp-form__field"
+                 data-webmcp-field="topic"
+                 data-webmcp-type="string"
+                 data-webmcp-description="Main topic or agenda for the meeting">
+                <label for="topic">Topic / Agenda</label>
+                <input type="text" id="topic" name="topic"
+                       placeholder="What would you like to discuss?"/>
+            </div>
+            
+            <div class="webmcp-form__field"
+                 data-webmcp-field="specialRequests"
+                 data-webmcp-type="text"
+                 data-webmcp-description="Any special requirements or requests">
+                <label for="special-requests">Special Requirements</label>
+                <textarea id="special-requests" name="specialRequests" rows="3"
+                          placeholder="Accessibility needs, technical requirements, etc."></textarea>
+            </div>
+            
+            <div class="webmcp-form__field"
+                 data-webmcp-field="howHeard"
+                 data-webmcp-type="select"
+                 data-webmcp-description="How did you hear about us">
+                <label for="how-heard">How did you hear about us?</label>
+                <select id="how-heard" name="howHeard">
+                    <option value="">Select an option</option>
+                    <option value="search">Search Engine</option>
+                    <option value="social">Social Media</option>
+                    <option value="referral">Referral</option>
+                    <option value="advertisement">Advertisement</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+        </section>
+        
+        <!-- Step 5: Confirmation -->
+        <section class="webmcp-booking__step"
+                 data-step="5"
+                 data-webmcp-action="confirmation"
+                 data-webmcp-description="Review and confirm booking">
+            <h3>5. Confirm Booking</h3>
+            
+            <div class="webmcp-booking__summary">
+                <h4>Booking Summary</h4>
+                <dl>
+                    <dt>Service</dt>
+                    <dd data-summary="serviceType">Initial Consultation</dd>
+                    
+                    <dt>Duration</dt>
+                    <dd data-summary="duration">30 minutes</dd>
+                    
+                    <dt>Date</dt>
+                    <dd data-summary="preferredDate">March 15, 2026</dd>
+                    
+                    <dt>Time</dt>
+                    <dd data-summary="timeSlot">10:00 AM</dd>
+                    
+                    <dt>Name</dt>
+                    <dd data-summary="name">John Doe</dd>
+                    
+                    <dt>Email</dt>
+                    <dd data-summary="email">john@example.com</dd>
+                </dl>
+            </div>
+            
+            <div class="webmcp-form__field"
+                 data-webmcp-field="agreeTerms"
+                 data-webmcp-type="boolean"
+                 data-webmcp-required="true">
+                <label class="checkbox-option">
+                    <input type="checkbox" name="agreeTerms" required/>
+                    <span>I agree to the <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a></span>
+                </label>
+            </div>
+        </section>
+        
+        <!-- Navigation -->
+        <div class="webmcp-booking__navigation">
+            <button type="button" 
+                    class="btn-prev"
+                    data-webmcp-action="previous-step"
+                    disabled>
+                Previous
+            </button>
+            <button type="button" 
+                    class="btn-next"
+                    data-webmcp-action="next-step">
+                Next
+            </button>
+            <button type="submit" 
+                    class="btn-submit"
+                    data-webmcp-action="confirm-booking"
+                    style="display:none">
+                Confirm Booking
+            </button>
+        </div>
+    </form>
+</div>

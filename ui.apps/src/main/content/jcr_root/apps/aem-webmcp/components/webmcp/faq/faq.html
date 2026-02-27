@@ -1,0 +1,358 @@
+<!--*
+    WebMCP FAQ Component (Extends Core Components Accordion)
+    =======================================================
+    AI AGENT CAPABILITIES:
+    - Get all FAQ items and answers
+    - Search/filter FAQs by keyword
+    - Expand/collapse items
+    - Get answer by question ID
+    - Track which FAQs were viewed
+    
+    DATA STRUCTURE FOR AI:
+    - Items: [{id, question, answer, category, tags, helpfulCount}]
+    - Actions: search, getAnswer, expandItem, collapseItem
+    - Searchable by: question text, answer content, category, tags
+*-->
+<div class="webmcp-faq"
+     data-webmcp-action="faq-component"
+     data-webmcp-description="Frequently Asked Questions with AI agent search and retrieval"
+     itemscope>
+    
+    <!-- FAQ Header -->
+    <header class="webmcp-faq__header">
+        <h2>Frequently Asked Questions</h2>
+        <p>Find answers to common questions about our products and services</p>
+        
+        <!-- Search for AI Agents -->
+        <div class="webmcp-faq__search"
+             data-webmcp-action="faq-search"
+             data-webmcp-description="Search FAQ by keywords">
+            <label for="faq-search-input" class="sr-only">Search FAQs</label>
+            <input type="search" 
+                   id="faq-search-input"
+                   placeholder="Search questions..."
+                   data-webmcp-field="searchQuery"
+                   data-webmcp-type="string"
+                   data-webmcp-description="Search keyword to find relevant FAQs"/>
+            <button type="button" 
+                    class="search-btn"
+                    data-webmcp-action="search-faq">
+                Search
+            </button>
+        </div>
+        
+        <!-- Category Filter -->
+        <div class="webmcp-faq__categories"
+             data-webmcp-action="faq-categories"
+             data-webmcp-description="Filter FAQ by category">
+            <button class="category-btn active"
+                    data-category="all"
+                    data-webmcp-action="filter-category">
+                All
+            </button>
+            <button class="category-btn"
+                    data-category="general"
+                    data-webmcp-action="filter-category">
+                General
+            </button>
+            <button class="category-btn"
+                    data-category="billing"
+                    data-webmcp-action="filter-category">
+                Billing
+            </button>
+            <button class="category-btn"
+                    data-category="technical"
+                    data-webmcp-action="filter-category">
+                Technical
+            </button>
+            <button class="category-btn"
+                    data-category="shipping"
+                    data-webmcp-action="filter-category">
+                Shipping
+            </button>
+            <button class="category-btn"
+                    data-category="returns"
+                    data-webmcp-action="filter-category">
+                Returns
+            </button>
+        </div>
+    </header>
+    
+    <!-- Accordion Items (WebMCP Enhanced) -->
+    <div class="webmcp-faq__items"
+         data-webmcp-component="accordion"
+         role="group"
+         aria-label="FAQ Items">
+        
+        <!-- FAQ Item 1 -->
+        <section class="webmcp-faq__item accordion__item"
+                 data-faq-id="FAQ-001"
+                 data-faq-question="What are your shipping options?"
+                 data-faq-answer="We offer standard (5-7 days), express (2-3 days), and overnight shipping. Free shipping is available on orders over $50."
+                 data-faq-category="shipping"
+                 data-faq-tags='["shipping","delivery","free shipping","express"]'
+                 data-faq-helpful="342"
+                 data-webmcp-action="faq-item"
+                 data-webmcp-description="Shipping options question">
+            
+            <button class="accordion__header"
+                    id="accordion-header-1"
+                    aria-expanded="false"
+                    aria-controls="accordion-panel-1"
+                    data-webmcp-action="toggle-faq"
+                    data-faq-id="FAQ-001">
+                <span class="accordion__title">What are your shipping options?</span>
+                <span class="accordion__icon"></span>
+            </button>
+            
+            <div class="accordion__panel"
+                 id="accordion-panel-1"
+                 role="region"
+                 aria-labelledby="accordion-header-1"
+                 hidden
+                 data-webmcp-answer="FAQ-001">
+                
+                <div class="faq__answer-content">
+                    <p>We offer several shipping options to meet your needs:</p>
+                    <ul>
+                        <li><strong>Standard Shipping (Free)</strong> - 5-7 business days, on orders over $50</li>
+                        <li><strong>Express Shipping</strong> - 2-3 business days, $14.99</li>
+                        <li><strong>Overnight Shipping</strong> - Next business day, $29.99</li>
+                    </ul>
+                    <p>International shipping is available to 50+ countries. Delivery times vary by location.</p>
+                    
+                    <div class="faq__meta">
+                        <span class="faq__category" data-category="shipping">Shipping</span>
+                        <span class="faq__helpful">✓ Helpful (342)</span>
+                    </div>
+                    
+                    <button class="faq__feedback"
+                            data-webmcp-action="mark-helpful"
+                            data-faq-id="FAQ-001">
+                        Was this helpful?
+                    </button>
+                </div>
+            </div>
+        </section>
+        
+        <!-- FAQ Item 2 -->
+        <section class="webmcp-faq__item accordion__item"
+                 data-faq-id="FAQ-002"
+                 data-faq-question="What is your return policy?"
+                 data-faq-answer="We offer a 30-day return policy for most items. Products must be unused and in original packaging."
+                 data-faq-category="returns"
+                 data-faq-tags='["return","refund","exchange","policy"]'
+                 data-faq-helpful="289"
+                 data-webmcp-action="faq-item">
+            
+            <button class="accordion__header"
+                    id="accordion-header-2"
+                    aria-expanded="false"
+                    aria-controls="accordion-panel-2"
+                    data-webmcp-action="toggle-faq"
+                    data-faq-id="FAQ-002">
+                <span class="accordion__title">What is your return policy?</span>
+                <span class="accordion__icon"></span>
+            </button>
+            
+            <div class="accordion__panel"
+                 id="accordion-panel-2"
+                 role="region"
+                 aria-labelledby="accordion-header-2"
+                 hidden
+                 data-webmcp-answer="FAQ-002">
+                
+                <div class="faq__answer-content">
+                    <p>We want you to be completely satisfied with your purchase. Here's our return policy:</p>
+                    <ul>
+                        <li><strong>30-Day Returns</strong> - Most items can be returned within 30 days</li>
+                        <li><strong>Condition</strong> - Items must be unused and in original packaging</li>
+                        <li><strong>Refunds</strong> - Processed within 5-7 business days</li>
+                        <li><strong>Exchanges</strong> - We offer free exchanges for different sizes/colors</li>
+                    </ul>
+                    <p>To initiate a return, visit our Returns Portal or contact customer support.</p>
+                    
+                    <div class="faq__meta">
+                        <span class="faq__category" data-category="returns">Returns</span>
+                        <span class="faq__helpful">✓ Helpful (289)</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- FAQ Item 3 -->
+        <section class="webmcp-faq__item accordion__item"
+                 data-faq-id="FAQ-003"
+                 data-faq-question="How do I track my order?"
+                 data-faq-answer="You can track your order using the tracking number sent to your email. Visit our tracking page or use the carrier's website."
+                 data-faq-category="shipping"
+                 data-faq-tags='["shipping","tracking","order status"]'
+                 data-faq-helpful="456"
+                 data-webmcp-action="faq-item">
+            
+            <button class="accordion__header"
+                    id="accordion-header-3"
+                    aria-expanded="false"
+                    aria-controls="accordion-panel-3"
+                    data-webmcp-action="toggle-faq"
+                    data-faq-id="FAQ-003">
+                <span class="accordion__title">How do I track my order?</span>
+                <span class="accordion__icon"></span>
+            </button>
+            
+            <div class="accordion__panel"
+                 id="accordion-panel-3"
+                 role="region"
+                 aria-labelledby="accordion-header-3"
+                 hidden
+                 data-webmcp-answer="FAQ-003">
+                
+                <div class="faq__answer-content">
+                    <p>Tracking your order is easy:</p>
+                    <ol>
+                        <li>Check your email for the tracking number (sent when order ships)</li>
+                        <li>Visit our <a href="/track-order">Tracking Page</a></li>
+                        <li>Enter your order number or tracking number</li>
+                        <li>View real-time status updates</li>
+                    </ol>
+                    <p>You can also track directly through the carrier (UPS, FedEx, USPS) using their tracking website.</p>
+                    
+                    <div class="faq__meta">
+                        <span class="faq__category" data-category="shipping">Shipping</span>
+                        <span class="faq__helpful">✓ Helpful (456)</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- FAQ Item 4 -->
+        <section class="webmcp-faq__item accordion__item"
+                 data-faq-id="FAQ-004"
+                 data-faq-question="What payment methods do you accept?"
+                 data-faq-answer="We accept Visa, MasterCard, American Express, PayPal, Apple Pay, Google Pay, and store credit."
+                 data-faq-category="billing"
+                 data-faq-tags='["payment","credit card","paypal","billing"]'
+                 data-faq-helpful="178"
+                 data-webmcp-action="faq-item">
+            
+            <button class="accordion__header"
+                    id="accordion-header-4"
+                    aria-expanded="false"
+                    aria-controls="accordion-panel-4"
+                    data-webmcp-action="toggle-faq"
+                    data-faq-id="FAQ-004">
+                <span class="accordion__title">What payment methods do you accept?</span>
+                    <span class="accordion__icon"></span>
+            </button>
+            
+            <div class="accordion__panel"
+                 id="accordion-panel-4"
+                 role="region"
+                 aria-labelledby="accordion-header-4"
+                 hidden
+                 data-webmcp-answer="FAQ-004">
+                
+                <div class="faq__answer-content">
+                    <p>We accept a wide variety of payment methods:</p>
+                    <ul class="payment-methods">
+                        <li>💳 Visa</li>
+                        <li>💳 MasterCard</li>
+                        <li>💳 American Express</li>
+                        <li>🅿️ PayPal</li>
+                        <li>🍎 Apple Pay</li>
+                        <li>🔷 Google Pay</li>
+                        <li>🎫 Store Credit</li>
+                    </ul>
+                    <p>All transactions are secure and encrypted. We also offer flexible financing options through Klarna.</p>
+                    
+                    <div class="faq__meta">
+                        <span class="faq__category" data-category="billing">Billing</span>
+                        <span class="faq__helpful">✓ Helpful (178)</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- FAQ Item 5 -->
+        <section class="webmcp-faq__item accordion__item"
+                 data-faq-id="FAQ-005"
+                 data-faq-question="Do you offer technical support?"
+                 data-faq-answer="Yes, we provide 24/7 technical support via chat, email, and phone. Premium users also have access to dedicated support engineers."
+                 data-faq-category="technical"
+                 data-faq-tags='["support","technical","help","contact"]'
+                 data-faq-helpful="234"
+                 data-webmcp-action="faq-item">
+            
+            <button class="accordion__header"
+                    id="accordion-header-5"
+                    aria-expanded="false"
+                    aria-controls="accordion-panel-5"
+                    data-webmcp-action="toggle-faq"
+                    data-faq-id="FAQ-005">
+                <span class="accordion__title">Do you offer technical support?</span>
+                <span class="accordion__icon"></span>
+            </button>
+            
+            <div class="accordion__panel"
+                 id="accordion-panel-5"
+                 role="region"
+                 aria-labelledby="accordion-header-5"
+                 hidden
+                 data-webmcp-answer="FAQ-005">
+                
+                <div class="faq__answer-content">
+                    <p>Absolutely! We provide comprehensive technical support:</p>
+                    <ul>
+                        <li><strong>Live Chat</strong> - Available 24/7 for instant help</li>
+                        <li><strong>Email Support</strong> - Response within 24 hours</li>
+                        <li><strong>Phone Support</strong> - Available Mon-Fri, 9am-6pm EST</li>
+                        <li><strong>Knowledge Base</strong> - Self-service articles and tutorials</li>
+                        <li><strong>Premium Support</strong> - Dedicated engineers for enterprise customers</li>
+                    </ul>
+                    <p>Visit our <a href="/support">Support Center</a> to access all resources.</p>
+                    
+                    <div class="faq__meta">
+                        <span class="faq__category" data-category="technical">Technical</span>
+                        <span class="faq__helpful">✓ Helpful (234)</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <!-- AI Agent Info -->
+    <aside class="webmcp-faq__agent-info"
+           data-webmcp-action="ai-agent-data"
+           data-webmcp-description="Structured data for AI agents">
+        <script type="application/json" class="webmcp-faq__data">
+        {
+            "totalQuestions": 5,
+            "categories": ["general", "billing", "technical", "shipping", "returns"],
+            "searchable": true,
+            "actions": {
+                "search": "Search FAQs by keyword",
+                "getAnswer": "Get answer by FAQ ID",
+                "filterCategory": "Filter by category",
+                "markHelpful": "Mark answer as helpful"
+            },
+            "allFAQs": [
+                {"id": "FAQ-001", "question": "What are your shipping options?", "category": "shipping"},
+                {"id": "FAQ-002", "question": "What is your return policy?", "category": "returns"},
+                {"id": "FAQ-003", "question": "How do I track my order?", "category": "shipping"},
+                {"id": "FAQ-004", "question": "What payment methods do you accept?", "category": "billing"},
+                {"id": "FAQ-005", "question": "Do you offer technical support?", "category": "technical"}
+            ]
+        }
+        </script>
+    </aside>
+    
+    <!-- Still Have Questions -->
+    <footer class="webmcp-faq__footer">
+        <p>Can't find what you're looking for?</p>
+        <a href="/contact" 
+           class="btn-contact"
+           data-webmcp-action="contact-support">
+            Contact Support
+        </a>
+    </footer>
+</div>

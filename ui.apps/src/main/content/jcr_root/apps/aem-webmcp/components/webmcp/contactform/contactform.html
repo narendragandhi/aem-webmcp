@@ -1,0 +1,342 @@
+<!--*
+    WebMCP Contact Form Component
+    ==============================
+    AI AGENT CAPABILITIES:
+    - Pre-fill form fields with user context
+    - Submit contact form on behalf of user
+    - Upload attachments
+    - Select inquiry type
+    - Schedule callback
+    
+    DATA STRUCTURE FOR AI:
+    - Fields: name, email, phone, inquiryType, message, preferredContact, callbackTime, attachments
+    - Inquiry types: general, sales, support, billing, partnership
+    - Actions: submit, reset, uploadAttachment
+*-->
+<div class="webmcp-contact-form"
+     data-webmcp-action="contact-form"
+     data-webmcp-description="Contact form with AI agent support - can pre-fill, validate, and submit"
+     id="contact-form">
+    
+    <form action="/bin/api/contact" 
+          method="POST"
+          enctype="multipart/form-data"
+          class="webmcp-form"
+          data-webmcp-action="submit-contact-form"
+          data-webmcp-description="Submit contact form with all fields">
+        
+        <!-- Hidden fields for AI agents -->
+        <input type="hidden" name="_charset_" value="UTF-8"/>
+        <input type="hidden" name="formId" value="contact-form-webmcp"/>
+        
+        <!-- Header -->
+        <div class="webmcp-form__header">
+            <h2>Contact Us</h2>
+            <p>Fill out the form below and our team will get back to you within 24 hours.</p>
+        </div>
+        
+        <!-- Inquiry Type -->
+        <div class="webmcp-form__field"
+             data-webmcp-field="inquiryType"
+             data-webmcp-type="select"
+             data-webmcp-required="true"
+             data-webmcp-description="Type of inquiry - helps route to correct department">
+            <label for="inquiry-type">
+                Inquiry Type <span class="required">*</span>
+            </label>
+            <select id="inquiry-type" 
+                    name="inquiryType" 
+                    required
+                    data-webmcp-action="select-inquiry-type">
+                <option value="">Select an option</option>
+                <option value="general">General Question</option>
+                <option value="sales">Sales Inquiry</option>
+                <option value="support">Technical Support</option>
+                <option value="billing">Billing Question</option>
+                <option value="partnership">Partnership Opportunity</option>
+                <option value="feedback">Feedback</option>
+            </select>
+            <span class="webmcp-field__hint">Select the most relevant option</span>
+        </div>
+        
+        <!-- Name Field -->
+        <div class="webmcp-form__field"
+             data-webmcp-field="name"
+             data-webmcp-type="string"
+             data-webmcp-required="true"
+             data-webmcp-description="Full name of the person contacting us">
+            <label for="name">
+                Full Name <span class="required">*</span>
+            </label>
+            <input type="text" 
+                   id="name" 
+                   name="name"
+                   placeholder="John Doe"
+                   required
+                   pattern="[A-Za-z\s]{2,50}"
+                   data-webmcp-action="fill-name"/>
+            <span class="webmcp-field__hint">Enter your first and last name</span>
+        </div>
+        
+        <!-- Email Field -->
+        <div class="webmcp-form__field"
+             data-webmcp-field="email"
+             data-webmcp-type="email"
+             data-webmcp-required="true"
+             data-webmcp-description="Email address for response">
+            <label for="email">
+                Email Address <span class="required">*</span>
+            </label>
+            <input type="email" 
+                   id="email" 
+                   name="email"
+                   placeholder="john@example.com"
+                   required
+                   data-webmcp-action="fill-email"/>
+            <span class="webmcp-field__hint">We'll reply to this email</span>
+        </div>
+        
+        <!-- Phone Field -->
+        <div class="webmcp-form__field"
+             data-webmcp-field="phone"
+             data-webmcp-type="string"
+             data-webmcp-required="false"
+             data-webmcp-description="Phone number for callback">
+            <label for="phone">
+                Phone Number
+            </label>
+            <input type="tel" 
+                   id="phone" 
+                   name="phone"
+                   placeholder="+1 (555) 123-4567"
+                   pattern="[\+\d\s\-\(\)]{10,}"
+                   data-webmcp-action="fill-phone"/>
+            <span class="webmcp-field__hint">Optional - for urgent inquiries</span>
+        </div>
+        
+        <!-- Company Field -->
+        <div class="webmcp-form__field"
+             data-webmcp-field="company"
+             data-webmcp-type="string"
+             data-webmcp-required="false"
+             data-webmcp-description="Company name for business inquiries">
+            <label for="company">
+                Company Name
+            </label>
+            <input type="text" 
+                   id="company" 
+                   name="company"
+                   placeholder="Acme Inc."
+                   data-webmcp-action="fill-company"/>
+        </div>
+        
+        <!-- Order Number (conditional) -->
+        <div class="webmcp-form__field webmcp-field--conditional"
+             data-webmcp-field="orderNumber"
+             data-webmcp-type="string"
+             data-webmcp-required="false"
+             data-webmcp-visible-when="inquiryType=billing,inquiryType=support"
+             data-webmcp-description="Order number for order-related inquiries">
+            <label for="order-number">
+                Order Number
+            </label>
+            <input type="text" 
+                   id="order-number" 
+                   name="orderNumber"
+                   placeholder="ORD-12345"
+                   pattern="ORD-\d+"/>
+            <span class="webmcp-field__hint">Found in your confirmation email</span>
+        </div>
+        
+        <!-- Subject -->
+        <div class="webmcp-form__field"
+             data-webmcp-field="subject"
+             data-webmcp-type="string"
+             data-webmcp-required="true"
+             data-webmcp-description="Subject line for the inquiry">
+            <label for="subject">
+                Subject <span class="required">*</span>
+            </label>
+            <input type="text" 
+                   id="subject" 
+                   name="subject"
+                   placeholder="Brief description of your inquiry"
+                   required
+                   maxlength="100"
+                   data-webmcp-action="fill-subject"/>
+        </div>
+        
+        <!-- Message -->
+        <div class="webmcp-form__field"
+             data-webmcp-field="message"
+             data-webmcp-type="text"
+             data-webmcp-required="true"
+             data-webmcp-description="Detailed message content">
+            <label for="message">
+                Message <span class="required">*</span>
+            </label>
+            <textarea id="message" 
+                      name="message"
+                      rows="5"
+                      placeholder="Please describe your inquiry in detail..."
+                      required
+                      maxlength="2000"
+                      data-webmcp-action="fill-message"></textarea>
+            <span class="webmcp-field__hint">Maximum 2000 characters</span>
+        </div>
+        
+        <!-- Preferred Contact Method -->
+        <div class="webmcp-form__field"
+             data-webmcp-field="preferredContact"
+             data-webmcp-type="radio"
+             data-webmcp-required="false"
+             data-webmcp-description="How the user prefers to be contacted">
+            <label>Preferred Contact Method</label>
+            <div class="radio-group">
+                <label class="radio-option">
+                    <input type="radio" 
+                           name="preferredContact" 
+                           value="email" 
+                           checked/>
+                    <span>Email</span>
+                </label>
+                <label class="radio-option">
+                    <input type="radio" 
+                           name="preferredContact" 
+                           value="phone"/>
+                    <span>Phone</span>
+                </label>
+                <label class="radio-option">
+                    <input type="radio" 
+                           name="preferredContact" 
+                           value="either"/>
+                    <span>Either</span>
+                </label>
+            </div>
+        </div>
+        
+        <!-- Callback Request -->
+        <div class="webmcp-form__field"
+             data-webmcp-field="requestCallback"
+             data-webmcp-type="boolean"
+             data-webmcp-description="Whether user requests a phone callback">
+            <label class="checkbox-option">
+                <input type="checkbox" 
+                       name="requestCallback"
+                       value="true"/>
+                <span>Request a callback</span>
+            </label>
+        </div>
+        
+        <!-- Callback Time (conditional) -->
+        <div class="webmcp-form__field webmcp-field--conditional"
+             data-webmcp-field="callbackTime"
+             data-webmcp-type="select"
+             data-webmcp-required="false"
+             data-webmcp-visible-when="requestCallback=true"
+             data-webmcp-description="Preferred time for callback">
+            <label for="callback-time">Preferred Callback Time</label>
+            <select id="callback-time" name="callbackTime">
+                <option value="">Any time</option>
+                <option value="morning">Morning (9am - 12pm)</option>
+                <option value="afternoon">Afternoon (12pm - 5pm)</option>
+                <option value="evening">Evening (5pm - 8pm)</option>
+            </select>
+        </div>
+        
+        <!-- File Upload -->
+        <div class="webmcp-form__field"
+             data-webmcp-field="attachments"
+             data-webmcp-type="file"
+             data-webmcp-multiple="true"
+             data-webmcp-accept="image/*,.pdf,.doc,.docx"
+             data-webmcp-description="File attachments (images, PDFs, documents)">
+            <label for="attachments">
+                Attachments
+            </label>
+            <input type="file" 
+                   id="attachments" 
+                   name="attachments"
+                   multiple
+                   accept="image/*,.pdf,.doc,.docx"
+                   data-webmcp-action="upload-files"/>
+            <span class="webmcp-field__hint">Max 5 files, 10MB each. Supported: Images, PDF, Word</span>
+        </div>
+        
+        <!-- Newsletter Subscribe -->
+        <div class="webmcp-form__field"
+             data-webmcp-field="subscribeNewsletter"
+             data-webmcp-type="boolean"
+             data-webmcp-description="Subscribe to newsletter">
+            <label class="checkbox-option">
+                <input type="checkbox" 
+                       name="subscribeNewsletter"
+                       value="true"/>
+                <span>Subscribe to our newsletter for updates and offers</span>
+            </label>
+        </div>
+        
+        <!-- Priority (for AI agents) -->
+        <div class="webmcp-form__field webmcp-form__field--agent-only"
+             data-webmcp-field="priority"
+             data-webmcp-type="select"
+             data-webmcp-description="Priority level for AI agent routing">
+            <label for="priority">Priority (AI Agent Use)</label>
+            <select id="priority" name="priority">
+                <option value="normal" selected>Normal</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+            </select>
+        </div>
+        
+        <!-- Agent Notes (for AI agents) -->
+        <div class="webmcp-form__field webmcp-form__field--agent-only"
+             data-webmcp-field="agentNotes"
+             data-webmcp-type="text"
+             data-webmcp-description="Internal notes from AI agent">
+            <label for="agent-notes">Agent Notes</label>
+            <textarea id="agent-notes" 
+                      name="agentNotes"
+                      rows="3"
+                      placeholder="Notes from AI agent context..."
+                      data-webmcp-action="add-agent-notes"></textarea>
+        </div>
+        
+        <!-- Submit Actions -->
+        <div class="webmcp-form__actions"
+             data-webmcp-action="form-actions"
+             data-webmcp-description="Form submission controls">
+            <button type="submit" 
+                    class="btn-submit"
+                    data-webmcp-action="submit-form">
+                Send Message
+            </button>
+            <button type="reset" 
+                    class="btn-reset"
+                    data-webmcp-action="reset-form">
+                Clear Form
+            </button>
+        </div>
+        
+        <!-- Success/Error Messages -->
+        <div class="webmcp-form__messages"
+             data-webmcp-action="form-messages">
+            <div class="webmcp-message webmcp-message--success" 
+                 style="display:none"
+                 data-webmcp-result="success">
+                ✓ Thank you! Your message has been sent successfully. We'll respond within 24 hours.
+            </div>
+            <div class="webmcp-message webmcp-message--error" 
+                 style="display:none"
+                 data-webmcp-result="error">
+                ⚠️ Sorry, there was an error sending your message. Please try again.
+            </div>
+        </div>
+        
+        <!-- Privacy Notice -->
+        <p class="webmcp-form__privacy">
+            By submitting this form, you agree to our 
+            <a href="/privacy" data-webmcp-action="view-privacy">Privacy Policy</a>.
+        </p>
+    </form>
+</div>

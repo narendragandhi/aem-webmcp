@@ -1,0 +1,8 @@
+<!--/*
+    WebMCP JSON-LD Schema
+    Renders structured data for AI agents and search engines
+*/-->
+<sly data-sly-use.webmcpJsonLd="aemwebmcp.core.models.webmcp.WebMCPJsonLdModel"
+     data-sly-test="${webmcpJsonLd.hasWebMCPComponents}">
+    ${webmcpJsonLd.jsonLdScript @ context='unsafe'}
+</sly>

@@ -1,0 +1,375 @@
+<!--*
+    WebMCP Product Catalog Component
+    =================================
+    This component demonstrates e-commerce capabilities for AI agents.
+    
+    AI AGENT CAPABILITIES:
+    - Browse products with metadata
+    - Filter by category, price, rating
+    - Sort by price, popularity, rating
+    - Add items to cart
+    - View product details
+    
+    DATA STRUCTURE FOR AI:
+    - Products expose: id, name, description, price, category, rating, stock
+    - Filters expose: categories, price ranges, ratings
+    - Actions: addToCart, filter, sort, viewProduct
+*-->
+<div class="webmcp-product-catalog"
+     data-webmcp-catalog="true"
+     data-webmcp-action="product-catalog"
+     data-webmcp-description="E-commerce product catalog with filtering and sorting for AI agents">
+    
+    <!-- Filter Panel - Exposed to AI Agents -->
+    <aside class="webmcp-catalog__filters"
+           data-webmcp-action="filter-panel"
+           data-webmcp-description="Product filter panel with categories, price ranges, and ratings">
+        
+        <form class="webmcp-filters__form"
+              data-webmcp-action="apply-filters"
+              data-webmcp-description="Apply product filters">
+            
+            <!-- Category Filter -->
+            <fieldset class="webmcp-filter__group">
+                <legend>Category</legend>
+                <div data-webmcp-field="category"
+                     data-webmcp-type="multi-select"
+                     data-webmcp-options='["Electronics","Clothing","Home & Garden","Sports","Books"]'>
+                    <label>
+                        <input type="checkbox" name="category" value="electronics"/>
+                        Electronics
+                    </label>
+                    <label>
+                        <input type="checkbox" name="category" value="clothing"/>
+                        Clothing
+                    </label>
+                    <label>
+                        <input type="checkbox" name="category" value="home-garden"/>
+                        Home & Garden
+                    </label>
+                    <label>
+                        <input type="checkbox" name="category" value="sports"/>
+                        Sports
+                    </label>
+                    <label>
+                        <input type="checkbox" name="category" value="books"/>
+                        Books
+                    </label>
+                </div>
+            </fieldset>
+            
+            <!-- Price Range Filter -->
+            <fieldset class="webmcp-filter__group">
+                <legend>Price Range</legend>
+                <div data-webmcp-field="priceMin" data-webmcp-type="number">
+                    <label>Min Price ($)</label>
+                    <input type="number" name="priceMin" min="0" step="1" placeholder="0"/>
+                </div>
+                <div data-webmcp-field="priceMax" data-webmcp-type="number">
+                    <label>Max Price ($)</label>
+                    <input type="number" name="priceMax" min="0" step="1" placeholder="1000"/>
+                </div>
+            </fieldset>
+            
+            <!-- Rating Filter -->
+            <fieldset class="webmcp-filter__group">
+                <legend>Minimum Rating</legend>
+                <div data-webmcp-field="minRating" data-webmcp-type="select">
+                    <select name="minRating">
+                        <option value="">Any Rating</option>
+                        <option value="4">4+ Stars</option>
+                        <option value="3">3+ Stars</option>
+                        <option value="2">2+ Stars</option>
+                    </select>
+                </div>
+            </fieldset>
+            
+            <!-- Availability Filter -->
+            <fieldset class="webmcp-filter__group">
+                <legend>Availability</legend>
+                <div data-webmcp-field="inStock" data-webmcp-type="boolean">
+                    <label>
+                        <input type="checkbox" name="inStock" checked="checked"/>
+                        In Stock Only
+                    </label>
+                </div>
+            </fieldset>
+            
+            <button type="submit" class="webmcp-filter__apply">Apply Filters</button>
+            <button type="reset" class="webmcp-filter__reset">Clear Filters</button>
+        </form>
+    </aside>
+    
+    <!-- Product Grid -->
+    <main class="webmcp-catalog__products">
+        <!-- Sort Controls -->
+        <div class="webmcp-catalog__controls"
+             data-webmcp-action="sort-controls"
+             data-webmcp-description="Sort and view controls">
+            
+            <div data-webmcp-field="sortBy" data-webmcp-type="select">
+                <label>Sort by:</label>
+                <select name="sortBy" data-webmcp-action="sort">
+                    <option value="relevance">Relevance</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                    <option value="rating">Customer Rating</option>
+                    <option value="newest">Newest First</option>
+                    <option value="bestselling">Best Selling</option>
+                </select>
+            </div>
+            
+            <div data-webmcp-field="viewMode" data-webmcp-type="select">
+                <label>View:</label>
+                <select name="viewMode">
+                    <option value="grid">Grid</option>
+                    <option value="list">List</option>
+                </select>
+            </div>
+            
+            <span class="webmcp-catalog__count" data-webmcp-field="resultCount">
+                Showing <strong>8</strong> of <strong>156</strong> products
+            </span>
+        </div>
+        
+        <!-- Products List -->
+        <div class="webmcp-products__grid"
+             data-webmcp-action="product-list"
+             data-webmcp-description="List of available products">
+            
+            <!-- Product Card 1 -->
+            <article class="webmcp-product"
+                     data-webmcp-product-id="PROD-001"
+                     data-webmcp-product-name="Premium Wireless Headphones"
+                     data-webmcp-product-price="299.99"
+                     data-webmcp-product-category="electronics"
+                     data-webmcp-product-rating="4.8"
+                     data-webmcp-product-stock="42"
+                     data-webmcp-action="product-card"
+                     data-webmcp-description="Premium Wireless Headphones with noise cancellation">
+                <div class="webmcp-product__image">
+                    <img src="https://picsum.photos/seed/headphones/300/300" alt="Premium Wireless Headphones" loading="lazy"/>
+                    <span class="webmcp-product__badge">Bestseller</span>
+                </div>
+                <div class="webmcp-product__info">
+                    <span class="webmcp-product__category">Electronics</span>
+                    <h3 class="webmcp-product__title">Premium Wireless Headphones</h3>
+                    <div class="webmcp-product__rating" aria-label="Rating: 4.8 out of 5">
+                        <span class="stars">★★★★★</span>
+                        <span class="rating-value">4.8</span>
+                        <span class="review-count">(2,341 reviews)</span>
+                    </div>
+                    <div class="webmcp-product__price">
+                        <span class="current-price">$299.99</span>
+                        <span class="original-price">$399.99</span>
+                        <span class="discount">25% off</span>
+                    </div>
+                    <div class="webmcp-product__stock">
+                        <span class="stock-status in-stock">In Stock (42 available)</span>
+                    </div>
+                    <button class="webmcp-product__add-to-cart"
+                            data-webmcp-action="add-to-cart"
+                            data-webmcp-product-id="PROD-001"
+                            data-webmcp-product-name="Premium Wireless Headphones"
+                            data-webmcp-product-price="299.99">
+                        Add to Cart
+                    </button>
+                </div>
+            </article>
+            
+            <!-- Product Card 2 -->
+            <article class="webmcp-product"
+                     data-webmcp-product-id="PROD-002"
+                     data-webmcp-product-name="Smart Fitness Watch"
+                     data-webmcp-product-price="199.99"
+                     data-webmcp-product-category="electronics"
+                     data-webmcp-product-rating="4.5"
+                     data-webmcp-product-stock="28"
+                     data-webmcp-action="product-card"
+                     data-webmcp-description="Smart Fitness Watch with health monitoring">
+                <div class="webmcp-product__image">
+                    <img src="https://picsum.photos/seed/watch/300/300" alt="Smart Fitness Watch" loading="lazy"/>
+                </div>
+                <div class="webmcp-product__info">
+                    <span class="webmcp-product__category">Electronics</span>
+                    <h3 class="webmcp-product__title">Smart Fitness Watch</h3>
+                    <div class="webmcp-product__rating">
+                        <span class="stars">★★★★½</span>
+                        <span class="rating-value">4.5</span>
+                        <span class="review-count">(1,892 reviews)</span>
+                    </div>
+                    <div class="webmcp-product__price">
+                        <span class="current-price">$199.99</span>
+                    </div>
+                    <div class="webmcp-product__stock">
+                        <span class="stock-status in-stock">In Stock (28 available)</span>
+                    </div>
+                    <button class="webmcp-product__add-to-cart"
+                            data-webmcp-action="add-to-cart"
+                            data-webmcp-product-id="PROD-002">
+                        Add to Cart
+                    </button>
+                </div>
+            </article>
+            
+            <!-- Product Card 3 -->
+            <article class="webmcp-product"
+                     data-webmcp-product-id="PROD-003"
+                     data-webmcp-product-name="Organic Cotton T-Shirt"
+                     data-webmcp-product-price="34.99"
+                     data-webmcp-product-category="clothing"
+                     data-webmcp-product-rating="4.3"
+                     data-webmcp-product-stock="150"
+                     data-webmcp-action="product-card"
+                     data-webmcp-description="Comfortable organic cotton t-shirt">
+                <div class="webmcp-product__image">
+                    <img src="https://picsum.photos/seed/tshirt/300/300" alt="Organic Cotton T-Shirt" loading="lazy"/>
+                    <span class="webmcp-product__badge eco">Eco-Friendly</span>
+                </div>
+                <div class="webmcp-product__info">
+                    <span class="webmcp-product__category">Clothing</span>
+                    <h3 class="webmcp-product__title">Organic Cotton T-Shirt</h3>
+                    <div class="webmcp-product__rating">
+                        <span class="stars">★★★★☆</span>
+                        <span class="rating-value">4.3</span>
+                        <span class="review-count">(456 reviews)</span>
+                    </div>
+                    <div class="webmcp-product__price">
+                        <span class="current-price">$34.99</span>
+                    </div>
+                    <div class="webmcp-product__stock">
+                        <span class="stock-status in-stock">In Stock (150 available)</span>
+                    </div>
+                    <button class="webmcp-product__add-to-cart"
+                            data-webmcp-action="add-to-cart"
+                            data-webmcp-product-id="PROD-003">
+                        Add to Cart
+                    </button>
+                </div>
+            </article>
+            
+            <!-- Product Card 4 -->
+            <article class="webmcp-product"
+                     data-webmcp-product-id="PROD-004"
+                     data-webmcp-product-name="Professional Running Shoes"
+                     data-webmcp-product-price="149.99"
+                     data-webmcp-product-category="sports"
+                     data-webmcp-product-rating="4.7"
+                     data-webmcp-product-stock="0"
+                     data-webmcp-action="product-card"
+                     data-webmcp-description="Professional grade running shoes">
+                <div class="webmcp-product__image">
+                    <img src="https://picsum.photos/seed/shoes/300/300" alt="Professional Running Shoes" loading="lazy"/>
+                    <span class="webmcp-product__badge sold-out">Sold Out</span>
+                </div>
+                <div class="webmcp-product__info">
+                    <span class="webmcp-product__category">Sports</span>
+                    <h3 class="webmcp-product__title">Professional Running Shoes</h3>
+                    <div class="webmcp-product__rating">
+                        <span class="stars">★★★★★</span>
+                        <span class="rating-value">4.7</span>
+                        <span class="review-count">(3,102 reviews)</span>
+                    </div>
+                    <div class="webmcp-product__price">
+                        <span class="current-price">$149.99</span>
+                    </div>
+                    <div class="webmcp-product__stock">
+                        <span class="stock-status out-of-stock">Out of Stock</span>
+                    </div>
+                    <button class="webmcp-product__notify"
+                            data-webmcp-action="notify-when-available"
+                            data-webmcp-product-id="PROD-004">
+                        Notify Me
+                    </button>
+                </div>
+            </article>
+            
+            <!-- Product Card 5 -->
+            <article class="webmcp-product"
+                     data-webmcp-product-id="PROD-005"
+                     data-webmcp-product-name="Indoor Plant Collection"
+                     data-webmcp-product-price="49.99"
+                     data-webmcp-product-category="home-garden"
+                     data-webmcp-product-rating="4.6"
+                     data-webmcp-product-stock="65"
+                     data-webmcp-action="product-card"
+                     data-webmcp-description="Set of 3 indoor plants">
+                <div class="webmcp-product__image">
+                    <img src="https://picsum.photos/seed/plants/300/300" alt="Indoor Plant Collection" loading="lazy"/>
+                </div>
+                <div class="webmcp-product__info">
+                    <span class="webmcp-product__category">Home & Garden</span>
+                    <h3 class="webmcp-product__title">Indoor Plant Collection</h3>
+                    <div class="webmcp-product__rating">
+                        <span class="stars">★★★★★</span>
+                        <span class="rating-value">4.6</span>
+                        <span class="review-count">(789 reviews)</span>
+                    </div>
+                    <div class="webmcp-product__price">
+                        <span class="current-price">$49.99</span>
+                    </div>
+                    <div class="webmcp-product__stock">
+                        <span class="stock-status in-stock">In Stock (65 available)</span>
+                    </div>
+                    <button class="webmcp-product__add-to-cart"
+                            data-webmcp-action="add-to-cart"
+                            data-webmcp-product-id="PROD-005">
+                        Add to Cart
+                    </button>
+                </div>
+            </article>
+            
+            <!-- Product Card 6 -->
+            <article class="webmcp-product"
+                     data-webmcp-product-id="PROD-006"
+                     data-webmcp-product-name="Bestselling Novel Collection"
+                     data-webmcp-product-price="24.99"
+                     data-webmcp-product-category="books"
+                     data-webmcp-product-rating="4.9"
+                     data-webmcp-product-stock="200"
+                     data-webmcp-action="product-card"
+                     data-webmcp-description="Collection of 5 bestselling novels">
+                <div class="webmcp-product__image">
+                    <img src="https://picsum.photos/seed/books/300/300" alt="Bestselling Novel Collection" loading="lazy"/>
+                    <span class="webmcp-product__badge">Editor Pick</span>
+                </div>
+                <div class="webmcp-product__info">
+                    <span class="webmcp-product__category">Books</span>
+                    <h3 class="webmcp-product__title">Bestselling Novel Collection</h3>
+                    <div class="webmcp-product__rating">
+                        <span class="stars">★★★★★</span>
+                        <span class="rating-value">4.9</span>
+                        <span class="review-count">(5,432 reviews)</span>
+                    </div>
+                    <div class="webmcp-product__price">
+                        <span class="current-price">$24.99</span>
+                    </div>
+                    <div class="webmcp-product__stock">
+                        <span class="stock-status in-stock">In Stock (200 available)</span>
+                    </div>
+                    <button class="webmcp-product__add-to-cart"
+                            data-webmcp-action="add-to-cart"
+                            data-webmcp-product-id="PROD-006">
+                        Add to Cart
+                    </button>
+                </div>
+            </article>
+            
+        </div>
+        
+        <!-- Pagination -->
+        <nav class="webmcp-catalog__pagination"
+             data-webmcp-action="pagination"
+             data-webmcp-description="Navigate through product pages">
+            <button data-webmcp-action="previous-page" disabled>Previous</button>
+            <span class="webmcp-pagination__pages">
+                <button class="active" data-webmcp-action="go-to-page" data-page="1">1</button>
+                <button data-webmcp-action="go-to-page" data-page="2">2</button>
+                <button data-webmcp-action="go-to-page" data-page="3">3</button>
+                <span>...</span>
+                <button data-webmcp-action="go-to-page" data-page="20">20</button>
+            </span>
+            <button data-webmcp-action="next-page">Next</button>
+        </nav>
+    </main>
+</div>

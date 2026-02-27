@@ -1,0 +1,40 @@
+<!--/*
+    WebMCP Search Component
+    Extends AEM Core Components Search with WebMCP integration
+    
+    This component exposes search functionality to AI agents via WebMCP.
+    AI agents can use this component to search the site.
+*/-->
+<div class="webmcp-search aem-GridComponent"
+     data-cq-resource-path="${resource.path}"
+     data-webmcp-action="search"
+     data-webmcp-description="Search the site for content"
+     data-webmcp-params='{"query": {"type": "string", "description": "Search query"}, "category": {"type": "string", "description": "Optional category filter"}}'>
+    
+    <form action="${searchResultsPath}" 
+          method="GET" 
+          class="webmcp-search-form"
+          data-webmcp-action="search-form"
+          data-webmcp-description="Submit search form">
+        
+        <div class="webmcp-search__input-group">
+            <input type="search" 
+                   name="q" 
+                   class="webmcp-search__input"
+                   placeholder="Search..."
+                   aria-label="Search"
+                   required="true"/>
+            
+            <button type="submit" 
+                    class="webmcp-search__button"
+                    aria-label="Submit search">
+                <span class="glyphicon glyphicon-search"></span>
+            </button>
+        </div>
+        
+        <!-- Hidden fields for WebMCP -->
+        <input type="hidden" 
+               name="_charset_" 
+               value="UTF-8"/>
+    </form>
+</div>

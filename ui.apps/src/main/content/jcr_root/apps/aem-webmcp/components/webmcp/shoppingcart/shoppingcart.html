@@ -1,0 +1,292 @@
+<!--*
+    WebMCP Shopping Cart Component
+    =============================
+    AI AGENT CAPABILITIES:
+    - View cart contents and totals
+    - Update item quantities
+    - Remove items from cart
+    - Apply discount codes
+    - Calculate shipping
+    - Proceed to checkout
+    - Save cart for later
+    
+    DATA STRUCTURE FOR AI:
+    - Cart exposes: items[], subtotal, tax, shipping, total
+    - Item fields: productId, name, price, quantity, subtotal
+    - Actions: updateQuantity, removeItem, applyCoupon, checkout
+*-->
+<div class="webmcp-shopping-cart"
+     data-webmcp-action="shopping-cart"
+     data-webmcp-description="Shopping cart with AI agent support for managing items, quantities, and checkout"
+     data-cart-items='[{"productId":"PROD-001","name":"Premium Wireless Headphones","price":299.99,"quantity":1,"subtotal":299.99,"image":"https://picsum.photos/seed/headphones/100/100"},{"productId":"PROD-003","name":"Organic Cotton T-Shirt","price":34.99,"quantity":2,"subtotal":69.98,"image":"https://picsum.photos/seed/tshirt/100/100"}]'>
+    
+    <div class="webmcp-cart__header">
+        <h2>Shopping Cart</h2>
+        <span class="webmcp-cart__item-count" data-cart-count="3">3 items</span>
+    </div>
+    
+    <!-- Cart Items Table -->
+    <table class="webmcp-cart__items"
+           data-webmcp-action="cart-items"
+           data-webmcp-description="List of items in the shopping cart">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Subtotal</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Cart Item 1 -->
+            <tr class="webmcp-cart__item"
+                data-cart-item-id="PROD-001"
+                data-cart-item-name="Premium Wireless Headphones"
+                data-cart-item-price="299.99"
+                data-cart-item-quantity="1">
+                <td class="webmcp-cart__product">
+                    <img src="https://picsum.photos/seed/headphones/80/80" alt="Product"/>
+                    <div class="product-details">
+                        <a href="/products/headphones" 
+                           data-webmcp-action="view-product"
+                           data-product-id="PROD-001">
+                            Premium Wireless Headphones
+                        </a>
+                        <span class="variant">Color: Black</span>
+                    </div>
+                </td>
+                <td class="webmcp-cart__price">$299.99</td>
+                <td class="webmcp-cart__quantity">
+                    <div class="quantity-controls"
+                         data-webmcp-action="update-quantity"
+                         data-product-id="PROD-001">
+                        <button type="button" 
+                                class="qty-btn minus"
+                                data-webmcp-action="decrease-quantity"
+                                data-product-id="PROD-001">-</button>
+                        <input type="number" 
+                               name="quantity[PROD-001]" 
+                               value="1" 
+                               min="1" 
+                               max="10"
+                               data-webmcp-field="quantity"
+                               data-webmcp-type="integer"
+                               data-webmcp-validation='{"min":1,"max":10}'/>
+                        <button type="button" 
+                                class="qty-btn plus"
+                                data-webmcp-action="increase-quantity"
+                                data-product-id="PROD-001">+</button>
+                    </div>
+                </td>
+                <td class="webmcp-cart__subtotal">$299.99</td>
+                <td class="webmcp-cart__actions">
+                    <button type="button" 
+                            class="btn-remove"
+                            data-webmcp-action="remove-item"
+                            data-product-id="PROD-001"
+                            data-product-name="Premium Wireless Headphones"
+                            title="Remove item">
+                        Remove
+                    </button>
+                    <button type="button"
+                            class="btn-save-later"
+                            data-webmcp-action="save-for-later"
+                            data-product-id="PROD-001">
+                        Save for Later
+                    </button>
+                </td>
+            </tr>
+            
+            <!-- Cart Item 2 -->
+            <tr class="webmcp-cart__item"
+                data-cart-item-id="PROD-003"
+                data-cart-item-name="Organic Cotton T-Shirt"
+                data-cart-item-price="34.99"
+                data-cart-item-quantity="2">
+                <td class="webmcp-cart__product">
+                    <img src="https://picsum.photos/seed/tshirt/80/80" alt="Product"/>
+                    <div class="product-details">
+                        <a href="/products/tshirt"
+                           data-webmcp-action="view-product"
+                           data-product-id="PROD-003">
+                            Organic Cotton T-Shirt
+                        </a>
+                        <span class="variant">Size: M | Color: White</span>
+                    </div>
+                </td>
+                <td class="webmcp-cart__price">$34.99</td>
+                <td class="webmcp-cart__quantity">
+                    <div class="quantity-controls"
+                         data-webmcp-action="update-quantity"
+                         data-product-id="PROD-003">
+                        <button type="button" 
+                                class="qty-btn minus"
+                                data-webmcp-action="decrease-quantity"
+                                data-product-id="PROD-003">-</button>
+                        <input type="number" 
+                               name="quantity[PROD-003]" 
+                               value="2" 
+                               min="1" 
+                               max="20"
+                               data-webmcp-field="quantity"
+                               data-webmcp-type="integer"/>
+                        <button type="button" 
+                                class="qty-btn plus"
+                                data-webmcp-action="increase-quantity"
+                                data-product-id="PROD-003">+</button>
+                    </div>
+                </td>
+                <td class="webmcp-cart__subtotal">$69.98</td>
+                <td class="webmcp-cart__actions">
+                    <button type="button" 
+                            class="btn-remove"
+                            data-webmcp-action="remove-item"
+                            data-product-id="PROD-003">
+                        Remove
+                    </button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <!-- Cart Summary -->
+    <aside class="webmcp-cart__summary"
+           data-webmcp-action="cart-summary"
+           data-webmcp-description="Cart totals and checkout options">
+        
+        <!-- Coupon Code -->
+        <div class="webmcp-cart__coupon"
+             data-webmcp-action="apply-coupon"
+             data-webmcp-description="Apply discount coupon code">
+            <label for="coupon-code">Discount Code</label>
+            <div class="coupon-input-group">
+                <input type="text" 
+                       id="coupon-code" 
+                       name="couponCode"
+                       placeholder="Enter code"
+                       data-webmcp-field="couponCode"
+                       data-webmcp-type="string"
+                       data-webmcp-description="Discount or promo code"/>
+                <button type="button" 
+                        class="btn-apply"
+                        data-webmcp-action="apply-coupon-code">
+                    Apply
+                </button>
+            </div>
+            <span class="coupon-message"></span>
+        </div>
+        
+        <!-- Order Summary -->
+        <div class="webmcp-cart__totals">
+            <div class="webmcp-totals__row">
+                <span>Subtotal</span>
+                <span data-cart-subtotal="$369.97">$369.97</span>
+            </div>
+            <div class="webmcp-totals__row">
+                <span>Estimated Shipping</span>
+                <span data-cart-shipping="$12.99">$12.99</span>
+            </div>
+            <div class="webmcp-totals__row">
+                <span>Tax (8%)</span>
+                <span data-cart-tax="$29.60">$29.60</span>
+            </div>
+            <div class="webmcp-totals__row discount" style="display:none">
+                <span>Discount</span>
+                <span data-cart-discount="-$0.00">-$0.00</span>
+            </div>
+            <div class="webmcp-totals__row total">
+                <span>Total</span>
+                <span data-cart-total="$412.56">$412.56</span>
+            </div>
+        </div>
+        
+        <!-- Shipping Calculator -->
+        <div class="webmcp-cart__shipping-calculator"
+             data-webmcp-action="calculate-shipping"
+             data-webmcp-description="Calculate shipping options">
+            <h4>Shipping Options</h4>
+            <div class="shipping-options"
+                 data-webmcp-field="shippingMethod"
+                 data-webmcp-type="radio">
+                <label class="shipping-option">
+                    <input type="radio" 
+                           name="shipping" 
+                           value="standard" 
+                           checked
+                           data-shipping-price="12.99"
+                           data-shipping-days="5-7 business days"/>
+                    <span class="option-name">Standard Shipping</span>
+                    <span class="option-price">$12.99</span>
+                    <span class="option-days">5-7 business days</span>
+                </label>
+                <label class="shipping-option">
+                    <input type="radio" 
+                           name="shipping" 
+                           value="express"
+                           data-shipping-price="24.99"
+                           data-shipping-days="2-3 business days"/>
+                    <span class="option-name">Express Shipping</span>
+                    <span class="option-price">$24.99</span>
+                    <span class="option-days">2-3 business days</span>
+                </label>
+                <label class="shipping-option">
+                    <input type="radio" 
+                           name="shipping" 
+                           value="overnight"
+                           data-shipping-price="49.99"
+                           data-shipping-days="Next business day"/>
+                    <span class="option-name">Overnight Shipping</span>
+                    <span class="option-price">$49.99</span>
+                    <span class="option-days">Next business day</span>
+                </label>
+            </div>
+        </div>
+        
+        <!-- Checkout Actions -->
+        <div class="webmcp-cart__actions"
+             data-webmcp-action="checkout-actions"
+             data-webmcp-description="Proceed to checkout">
+            <button type="button" 
+                    class="btn-checkout"
+                    data-webmcp-action="proceed-to-checkout"
+                    data-checkout-url="/checkout">
+                Proceed to Checkout
+            </button>
+            <button type="button" 
+                    class="btn-continue-shopping"
+                    data-webmcp-action="continue-shopping"
+                    data-continue-url="/products">
+                Continue Shopping
+            </button>
+        </div>
+        
+        <!-- Trust Badges -->
+        <div class="webmcp-cart__trust">
+            <span>🔒 Secure Checkout</span>
+            <span>🛡️ Buyer Protection</span>
+            <span>↩️ Easy Returns</span>
+        </div>
+    </aside>
+    
+    <!-- Saved for Later -->
+    <section class="webmcp-cart__saved"
+             data-webmcp-action="saved-items"
+             data-webmcp-description="Items saved for later">
+        <h3>Saved for Later (2 items)</h3>
+        <ul class="saved-items-list">
+            <li class="saved-item"
+                data-product-id="PROD-004">
+                <img src="https://picsum.photos/seed/shoes/60/60" alt="Saved product"/>
+                <div class="saved-item-details">
+                    <span class="name">Professional Running Shoes</span>
+                    <span class="price">$149.99</span>
+                </div>
+                <button data-webmcp-action="move-to-cart"
+                        data-product-id="PROD-004">
+                    Move to Cart
+                </button>
+            </li>
+        </ul>
+    </section>
+</div>
