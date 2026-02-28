@@ -282,7 +282,7 @@
             `).join('');
         },
         
-        /**
+         /**
          * Check WebMCP support
          */
         isWebMCPSupported: function() {
@@ -293,32 +293,228 @@
          * Expose WebMCP API for AI agents
          */
         exposeWebMCPAPI: function() {
-            if (!window.navigator.modelContext?.declareAction) return;
+            const self = this;
             
-            const mc = window.navigator.modelContext;
+            // Create comprehensive action handlers
+            const actions = {
+                // Page actions
+                getPageInfo: { 
+                    name: 'Get Page Info', 
+                    description: 'Get current page information including title, URL, and component count',
+                    execute: () => self.getPageInfo()
+                },
+                getComponents: { 
+                    name: 'Get Components', 
+                    description: 'Get all interactive components on the page',
+                    parameters: { category: { type: 'string', description: 'Filter by category' } },
+                    execute: (params) => self.getAllComponents(params?.category)
+                },
+                
+                // Discovery actions
+                findComponent: { 
+                    name: 'Find Component', 
+                    description: 'Find a component by action type',
+                    parameters: { 
+                        type: { type: 'string', description: 'Component action type (e.g., search, form, accordion)' },
+                        index: { type: 'integer', description: 'Index if multiple components of same type' }
+                    },
+                    execute: (params) => self.findComponent(params?.type, params?.index || 0)
+                },
+                findComponentsByCategory: {
+                    name: 'Find Components By Category',
+                    description: 'Find all components in a category',
+                    parameters: { category: { type: 'string', description: 'Category (commerce, navigation, content, layout, form, media, experience)' } },
+                    execute: (params) => self.getAllComponents(params?.category)
+                },
+                
+                // Interaction actions
+                interactComponent: { 
+                    name: 'Interact with Component', 
+                    description: 'Perform an action on a component',
+                    parameters: { 
+                        selector: { type: 'string', description: 'CSS selector of the component' },
+                        action: { type: 'string', description: 'Action to perform (click, expand, collapse, select-tab, next, prev, etc.)' },
+                        options: { type: 'object', description: 'Additional options (e.g., { index: 0 })' }
+                    },
+                    execute: (params) => self.interactComponent(params?.selector, params?.action, params?.options)
+                },
+                
+                // Form actions
+                fillForm: { 
+                    name: 'Fill Form Field', 
+                    description: 'Fill a form field with a value',
+                    parameters: { 
+                        selector: { type: 'string', description: 'CSS selector for input' },
+                        value: { type: 'string', description: 'Value to fill' }
+                    },
+                    execute: (params) => self.fillFormField(params?.selector, params?.value)
+                },
+                submitForm: { 
+                    name: 'Submit Form', 
+                    description: 'Submit a form',
+                    parameters: { selector: { type: 'string', description: 'CSS selector for form' } },
+                    execute: (params) => self.submitForm(params?.selector)
+                },
+                getFormFields: {
+                    name: 'Get Form Fields',
+                    description: 'Get all fields in a form',
+                    parameters: { selector: { type: 'string', description: 'CSS selector for form' } },
+                    execute: (params) => self.getFormFields(params?.selector)
+                },
+                
+                // Navigation actions
+                navigate: { 
+                    name: 'Navigate', 
+                    description: 'Navigate to a URL',
+                    parameters: { url: { type: 'string', description: 'Target URL' } },
+                    execute: (params) => { window.location.href = params?.url; return { success: true, url: params?.url }; }
+                },
+                clickElement: {
+                    name: 'Click Element',
+                    description: 'Click an element by selector',
+                    parameters: { selector: { type: 'string', description: 'CSS selector' } },
+                    execute: (params) => self.interactComponent(params?.selector, 'click')
+                },
+                
+                // Search actions
+                search: { 
+                    name: 'Search', 
+                    description: 'Perform a site search',
+                    parameters: { query: { type: 'string', description: 'Search query' } },
+                    execute: (params) => self.performSearch(params?.query)
+                },
+                getSearchResults: {
+                    name: 'Get Search Results',
+                    description: 'Get current search results if available',
+                    execute: () => self.getSearchResults()
+                },
+                
+                // E-commerce actions
+                addToCart: { 
+                    name: 'Add to Cart', 
+                    description: 'Add a product to shopping cart',
+                    parameters: { 
+                        productSelector: { type: 'string', description: 'CSS selector for product' },
+                        quantity: { type: 'integer', description: 'Quantity to add' }
+                    },
+                    execute: (params) => self.addToCart(params?.productSelector, params?.quantity || 1)
+                },
+                updateCartQuantity: {
+                    name: 'Update Cart Quantity',
+                    description: 'Update item quantity in cart',
+                    parameters: {
+                        itemSelector: { type: 'string', description: 'CSS selector for cart item' },
+                        quantity: { type: 'integer', description: 'New quantity' }
+                    },
+                    execute: (params) => self.updateCartQuantity(params?.itemSelector, params?.quantity)
+                },
+                
+                // Layout actions
+                expandAccordion: {
+                    name: 'Expand Accordion',
+                    description: 'Expand an accordion item',
+                    parameters: { selector: { type: 'string', description: 'CSS selector for accordion' } },
+                    execute: (params) => self.interactComponent(params?.selector, 'expand')
+                },
+                collapseAccordion: {
+                    name: 'Collapse Accordion',
+                    description: 'Collapse an accordion item',
+                    parameters: { selector: { type: 'string', description: 'CSS selector for accordion' } },
+                    execute: (params) => self.interactComponent(params?.selector, 'collapse')
+                },
+                selectTab: {
+                    name: 'Select Tab',
+                    description: 'Switch to a specific tab',
+                    parameters: { 
+                        selector: { type: 'string', description: 'CSS selector for tabs' },
+                        index: { type: 'integer', description: 'Tab index (0-based)' }
+                    },
+                    execute: (params) => self.interactComponent(params?.selector, 'select-tab', { index: params?.index || 0 })
+                },
+                carouselNext: {
+                    name: 'Carousel Next',
+                    description: 'Go to next slide in carousel',
+                    parameters: { selector: { type: 'string', description: 'CSS selector for carousel' } },
+                    execute: (params) => self.interactComponent(params?.selector, 'next')
+                },
+                carouselPrev: {
+                    name: 'Carousel Previous',
+                    description: 'Go to previous slide in carousel',
+                    parameters: { selector: { type: 'string', description: 'CSS selector for carousel' } },
+                    execute: (params) => self.interactComponent(params?.selector, 'prev')
+                },
+                goToSlide: {
+                    name: 'Go To Slide',
+                    description: 'Jump to specific carousel slide',
+                    parameters: { 
+                        selector: { type: 'string', description: 'CSS selector for carousel' },
+                        index: { type: 'integer', description: 'Slide index (0-based)' }
+                    },
+                    execute: (params) => self.interactComponent(params?.selector, 'go-to-slide', { index: params?.index || 0 })
+                },
+                
+                // Utility actions
+                getElementInfo: {
+                    name: 'Get Element Info',
+                    description: 'Get detailed information about an element',
+                    parameters: { selector: { type: 'string', description: 'CSS selector' } },
+                    execute: (params) => self.getElementInfo(params?.selector)
+                },
+                waitForElement: {
+                    name: 'Wait For Element',
+                    description: 'Wait for an element to appear',
+                    parameters: { 
+                        selector: { type: 'string', description: 'CSS selector' },
+                        timeout: { type: 'integer', description: 'Timeout in ms (default: 5000)' }
+                    },
+                    execute: (params) => self.waitForElement(params?.selector, params?.timeout || 5000)
+                },
+                getPageScreenshot: {
+                    name: 'Get Page Screenshot',
+                    description: 'Get base64 screenshot of page (for vision-enabled agents)',
+                    execute: () => self.getPageScreenshot()
+                },
+                getAccessibilityTree: {
+                    name: 'Get Accessibility Tree',
+                    description: 'Get accessibility tree for screen reader/AI',
+                    execute: () => self.getAccessibilityTree()
+                }
+            };
             
-            mc.declareAction({ id: 'getPageInfo', name: 'Get Page Info', description: 'Get current page information', parameters: {} });
-            mc.declareAction({ id: 'getComponents', name: 'Get Components', description: 'Get all interactive components', parameters: { category: { type: 'string' } } });
-            mc.declareAction({ id: 'interactComponent', name: 'Interact with Component', description: 'Interact with a component', parameters: { selector: { type: 'string' }, action: { type: 'string' } } });
-            mc.declareAction({ id: 'findComponent', name: 'Find Component', description: 'Find component by type', parameters: { type: { type: 'string' }, index: { type: 'integer' } } });
-            mc.declareAction({ id: 'fillForm', name: 'Fill Form Field', description: 'Fill a form field', parameters: { selector: { type: 'string' }, value: { type: 'string' } } });
-            mc.declareAction({ id: 'submitForm', name: 'Submit Form', description: 'Submit a form', parameters: { selector: { type: 'string' } } });
-            mc.declareAction({ id: 'navigate', name: 'Navigate', description: 'Navigate to a URL', parameters: { url: { type: 'string' } } });
-            mc.declareAction({ id: 'search', name: 'Search', description: 'Perform site search', parameters: { query: { type: 'string' } } });
-            mc.declareAction({ id: 'addToCart', name: 'Add to Cart', description: 'Add product to cart', parameters: { productSelector: { type: 'string' }, quantity: { type: 'integer' } } });
+            // Register with navigator.modelContext if available
+            if (window.navigator.modelContext?.declareAction) {
+                const mc = window.navigator.modelContext;
+                
+                Object.entries(actions).forEach(([id, action]) => {
+                    try {
+                        mc.declareAction({
+                            id: id,
+                            name: action.name,
+                            description: action.description,
+                            parameters: action.parameters || {}
+                        });
+                    } catch (e) {
+                        self.debug && console.warn('[WebMCP] Could not declare action:', id, e);
+                    }
+                });
+            }
             
+            // Expose global API (works in all browsers)
             window.AEMWebMCP = {
                 version: this.version,
-                getComponents: (c) => this.getAllComponents(c),
-                getComponent: (t, i) => this.findComponent(t, i),
-                interact: (s, a) => this.interactComponent(s, a),
-                fillForm: (s, v) => this.fillFormField(s, v),
-                submitForm: (s) => this.submitForm(s),
-                navigate: (u) => window.location.href = u,
-                search: (q) => this.performSearch(q),
-                addToCart: (s, q) => this.addToCart(s, q),
-                getPageInfo: () => this.getPageInfo()
+                ...Object.fromEntries(
+                    Object.entries(actions).map(([id, action]) => [id, action.execute])
+                )
             };
+            
+            // Also expose for backward compatibility
+            window.AEMWebMCP.interact = (s, a, o) => self.interactComponent(s, a, o);
+            window.AEMWebMCP.fillForm = (s, v) => self.fillFormField(s, v);
+            window.AEMWebMCP.submitForm = (s) => self.submitForm(s);
+            window.AEMWebMCP.navigate = (u) => window.location.href = u;
+            window.AEMWebMCP.search = (q) => self.performSearch(q);
+            window.AEMWebMCP.addToCart = (s, q) => self.addToCart(s, q);
+            window.AEMWebMCP.getPageInfo = () => self.getPageInfo();
         },
         
         /**
@@ -582,6 +778,129 @@
             if (el.className && typeof el.className === 'string') selector += '.' + el.className.split(' ')[0];
             if (el.dataset.webmcpAction) selector += '[data-webmcp-action="' + el.dataset.webmcpAction + '"]';
             return selector;
+        },
+        
+        // ==================== ADVANCED HELPERS ====================
+        getFormFields: function(selector) {
+            const form = document.querySelector(selector);
+            if (!form) return { success: false, error: 'Form not found' };
+            const fields = this.extractFormFields(form);
+            return { success: true, fields: fields };
+        },
+        
+        getSearchResults: function() {
+            const results = document.querySelectorAll('.search-results .result, .search-result, [data-search-result]');
+            if (results.length === 0) {
+                return { success: false, error: 'No search results found' };
+            }
+            return { 
+                success: true, 
+                count: results.length,
+                results: Array.from(results).map(r => ({
+                    title: r.querySelector('h2, h3, .title')?.textContent?.trim(),
+                    url: r.querySelector('a')?.href,
+                    snippet: r.querySelector('p, .description')?.textContent?.trim()
+                }))
+            };
+        },
+        
+        updateCartQuantity: function(itemSelector, quantity) {
+            const item = document.querySelector(itemSelector);
+            if (!item) return { success: false, error: 'Cart item not found' };
+            const qtyInput = item.querySelector('input[type="number"], .quantity input');
+            if (qtyInput) {
+                qtyInput.value = quantity;
+                qtyInput.dispatchEvent(new Event('change', { bubbles: true }));
+                return { success: true, quantity: quantity };
+            }
+            return { success: false, error: 'Quantity input not found' };
+        },
+        
+        getElementInfo: function(selector) {
+            const el = document.querySelector(selector);
+            if (!el) return { success: false, error: 'Element not found' };
+            return {
+                success: true,
+                tag: el.tagName.toLowerCase(),
+                id: el.id || null,
+                classes: el.className?.split(' ').filter(c => c) || [],
+                attributes: Array.from(el.attributes).map(a => ({ name: a.name, value: a.value })),
+                text: el.textContent?.trim().substring(0, 200),
+                webmcp: {
+                    action: el.dataset.webmcpAction,
+                    category: el.dataset.webmcpCategory,
+                    description: el.dataset.webmcpDescription,
+                    interactions: el.dataset.webmcpInteractions
+                }
+            };
+        },
+        
+        waitForElement: function(selector, timeout) {
+            return new Promise((resolve) => {
+                const startTime = Date.now();
+                const check = () => {
+                    const el = document.querySelector(selector);
+                    if (el) {
+                        resolve({ success: true, element: this.getSelector(el) });
+                        return;
+                    }
+                    if (Date.now() - startTime > timeout) {
+                        resolve({ success: false, error: 'Timeout waiting for element' });
+                        return;
+                    }
+                    setTimeout(check, 100);
+                };
+                check();
+            });
+        },
+        
+        getPageScreenshot: function() {
+            // This would require html2canvas or similar library
+            // For now, return info about what would be needed
+            return { 
+                success: false, 
+                error: 'Screenshot requires additional library (html2canvas)',
+                suggestion: 'Use window.scrollTo(0,0) then capture with external tool'
+            };
+        },
+        
+        getAccessibilityTree: function() {
+            const getAriaLabel = (el) => {
+                return el.getAttribute('aria-label') || 
+                       el.getAttribute('aria-labelledby') ||
+                       el.getAttribute('aria-describedby') ||
+                       el.textContent?.trim().substring(0, 50);
+            };
+            
+            const getRole = (el) => el.getAttribute('role') || el.tagName.toLowerCase();
+            
+            const walk = (el, depth = 0) => {
+                if (depth > 3) return null;
+                const nodes = [];
+                Array.from(el.children).forEach(child => {
+                    const node = {
+                        role: getRole(child),
+                        label: getAriaLabel(child),
+                        disabled: child.hasAttribute('aria-disabled'),
+                        expanded: child.getAttribute('aria-expanded'),
+                        selected: child.getAttribute('aria-selected'),
+                        children: walk(child, depth + 1)
+                    };
+                    if (node.role || node.label) nodes.push(node);
+                });
+                return nodes.length > 0 ? nodes : null;
+            };
+            
+            return {
+                pageTitle: document.title,
+                landmarks: {
+                    banner: document.querySelector('[role="banner"]')?.tagName,
+                    main: document.querySelector('[role="main"], main')?.tagName,
+                    navigation: document.querySelectorAll('[role="navigation"], nav').length,
+                    contentinfo: document.querySelector('[role="contentinfo"], footer')?.tagName
+                },
+                tree: walk(document.body)
+            };
         }
     };
     
