@@ -1,0 +1,158 @@
+<!--/*
+    WebMCP Status Component
+    Shows which components are WebMCP-enabled
+*/-->
+<sly data-sly-use.model="aemwebmcp.core.models.webmcp.WebMCPStatusModel"
+     data-sly-use.templates="core/wcm/components/commons/v1/templates.html"
+     data-sly-template="body">
+     
+<div class="aem-webmcp-status" data-cmp-is="aem-webmcp-status">
+    <div class="aem-webmcp-status__header">
+        <h2>🤖 WebMCP Status</h2>
+        <span class="aem-webmcp-status__badge aem-webmcp-status__badge--enabled">Enabled</span>
+    </div>
+    
+    <div class="aem-webmcp-status__summary">
+        <p><strong>${model.totalComponents}</strong> AEM Core Components are WebMCP-enabled</p>
+    </div>
+    
+    <div class="aem-webmcp-status__categories">
+        <h3>Components by Category</h3>
+        <ul class="aem-webmcp-status__category-list">
+            <li data-sly-repeat.category="${model.componentsByCategory}">
+                <span class="category-name">${category.key}</span>
+                <span class="category-count">${category.value}</span>
+            </li>
+        </ul>
+    </div>
+    
+    <div class="aem-webmcp-status__components">
+        <h3>All Supported Components</h3>
+        <table class="aem-webmcp-status__table">
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th>Category</th>
+                    <th>Interactions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr data-sly-repeat.comp="${model.availableComponents}">
+                    <td>${comp.name}</td>
+                    <td><span class="category-tag category-tag--${comp.category}">${comp.category}</span></td>
+                    <td>${comp.interactionsDisplay}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="aem-webmcp-status__footer">
+        <p>AI agents can discover and interact with these components automatically.</p>
+        <a href="/content/aem-webmcp/us/en.html" target="_blank">View Demo Page →</a>
+    </div>
+</div>
+
+<style>
+.aem-webmcp-status {
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+.aem-webmcp-status__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+.aem-webmcp-status__header h2 {
+    margin: 0;
+    font-size: 24px;
+    color: #333;
+}
+.aem-webmcp-status__badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.aem-webmcp-status__badge--enabled {
+    background: #28a745;
+    color: white;
+}
+.aem-webmcp-status__summary {
+    margin-bottom: 20px;
+    font-size: 16px;
+}
+.aem-webmcp-status__categories {
+    margin-bottom: 20px;
+}
+.aem-webmcp-status__categories h3,
+.aem-webmcp-status__components h3 {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 10px;
+}
+.aem-webmcp-status__category-list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.aem-webmcp-status__category-list li {
+    background: #e9ecef;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+}
+.category-name {
+    text-transform: capitalize;
+}
+.category-count {
+    font-weight: 600;
+    margin-left: 6px;
+}
+.aem-webmcp-status__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+.aem-webmcp-status__table th,
+.aem-webmcp-status__table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+}
+.aem-webmcp-status__table th {
+    background: #e9ecef;
+    font-weight: 600;
+}
+.category-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    text-transform: capitalize;
+}
+.category-tag--commerce { background: #ffeeba; color: #856404; }
+.category-tag--navigation { background: #cce5ff; color: #004085; }
+.category-tag--content { background: #d4edda; color: #155724; }
+.category-tag--layout { background: #f8d7da; color: #721c24; }
+.category-tag--form { background: #d1ecf1; color: #0c5460; }
+.category-tag--media { background: #e2e3e5; color: #383d41; }
+.category-tag--experience { background: #f3e5f5; color: #6f42c1; }
+.aem-webmcp-status__footer {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #dee2e6;
+    font-size: 14px;
+    color: #666;
+}
+.aem-webmcp-status__footer a {
+    color: #007bff;
+    text-decoration: none;
+}
+</style>
+
+</sly>
