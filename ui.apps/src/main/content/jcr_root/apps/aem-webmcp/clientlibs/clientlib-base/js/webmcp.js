@@ -5,6 +5,7 @@
  * Detects component type and adds appropriate structured data and actions.
  * 
  * Supports 30+ Core Components with full interaction capabilities.
+ * Version: 1.1.0 - Enhanced with more interactions and debugging
  */
 
 (function (document, window) {
@@ -12,7 +13,7 @@
 
     const AEMWebMCPAutomator = {
         
-        version: '1.0.0',
+        version: '1.1.0',
         debug: window.WEBMCP_DEBUG || false,
         
         /**
@@ -179,8 +180,106 @@
                 this.enhanceAllComponents();
             }
             
+            if (this.debug || window.WEBMCP_SHOW_PANEL) {
+                this.createDebugPanel();
+            }
+            
             this.debug && console.log('[WebMCP] Ready - enhanced', 
                 document.querySelectorAll('[data-webmcp-action]').length, 'components');
+        },
+        
+        /**
+         * Create debug panel to visualize WebMCP components
+         */
+        createDebugPanel: function() {
+            if (document.getElementById('webmcp-debug-panel')) return;
+            
+            const panel = document.createElement('div');
+            panel.id = 'webmcp-debug-panel';
+            panel.innerHTML = `
+                <style>
+                    #webmcp-debug-panel {
+                        position: fixed;
+                        bottom: 10px;
+                        right: 10px;
+                        width: 350px;
+                        max-height: 400px;
+                        background: #1a1a2e;
+                        color: #eee;
+                        font-family: monospace;
+                        font-size: 12px;
+                        padding: 15px;
+                        border-radius: 8px;
+                        z-index: 999999;
+                        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+                        overflow: auto;
+                    }
+                    #webmcp-debug-panel h3 {
+                        margin: 0 0 10px 0;
+                        color: #00d9ff;
+                        font-size: 14px;
+                        border-bottom: 1px solid #333;
+                        padding-bottom: 8px;
+                    }
+                    #webmcp-debug-panel .webmcp-stat {
+                        display: flex;
+                        justify-content: space-between;
+                        padding: 4px 0;
+                        border-bottom: 1px solid #333;
+                    }
+                    #webmcp-debug-panel .webmcp-stat-label { color: #888; }
+                    #webmcp-debug-panel .webmcp-stat-value { color: #00ff88; }
+                    #webmcp-debug-panel .webmcp-components {
+                        margin-top: 10px;
+                        max-height: 250px;
+                        overflow: auto;
+                    }
+                    #webmcp-debug-panel .webmcp-comp-item {
+                        padding: 4px 8px;
+                        margin: 2px 0;
+                        background: #16213e;
+                        border-radius: 4px;
+                        font-size: 11px;
+                    }
+                    #webmcp-debug-panel .webmcp-comp-category { color: #ff6b6b; }
+                    #webmcp-debug-panel .webmcp-comp-action { color: #4ecdc4; }
+                    #webmcp-debug-panel .webmcp-comp-desc { color: #aaa; font-size: 10px; }
+                    #webmcp-debug-panel .close-btn {
+                        position: absolute;
+                        top: 5px;
+                        right: 10px;
+                        cursor: pointer;
+                        color: #666;
+                    }
+                </style>
+                <span class="close-btn" onclick="this.parentElement.remove()">✕</span>
+                <h3>🤖 AEM WebMCP Debug</h3>
+                <div class="webmcp-stats"></div>
+                <div class="webmcp-components"></div>
+            `;
+            document.body.appendChild(panel);
+            
+            const components = this.getAllComponents();
+            const categories = {};
+            components.forEach(c => { categories[c.category] = (categories[c.category] || 0) + 1; });
+            
+            const stats = panel.querySelector('.webmcp-stats');
+            stats.innerHTML = `
+                <div class="webmcp-stat"><span class="webmcp-stat-label">Total Components</span><span class="webmcp-stat-value">${components.length}</span></div>
+                <div class="webmcp-stat"><span class="webmcp-stat-label">Categories</span><span class="webmcp-stat-value">${Object.keys(categories).length}</span></div>
+                ${Object.entries(categories).map(([cat, count]) => 
+                    `<div class="webmcp-stat"><span class="webmcp-stat-label">${cat}</span><span class="webmcp-stat-value">${count}</span></div>`
+                ).join('')}
+            `;
+            
+            const compList = panel.querySelector('.webmcp-components');
+            compList.innerHTML = components.map(c => `
+                <div class="webmcp-comp-item">
+                    <span class="webmcp-comp-category">[${c.category}]</span>
+                    <span class="webmcp-comp-action">${c.action}</span>
+                    <div class="webmcp-comp-desc">${c.description || ''}</div>
+                </div>
+            `).join('');
         },
         
         /**
@@ -334,19 +433,70 @@
         /**
          * Interact with component
          */
-        interactComponent: function(selector, action) {
+        interactComponent: function(selector, action, options) {
             const el = document.querySelector(selector);
             if (!el) return { success: false, error: 'Element not found' };
             
             switch (action) {
                 case 'click': case 'submit':
-                    (el.querySelector('button, a, [role="button"]') || el).click();
+                    const clickable = el.querySelector('button, a, [role="button"]') || el;
+                    clickable.click();
+                    return { success: true, element: this.getSelector(clickable) };
+                    
+                case 'expand': case 'collapse':
+                    const expandable = el.querySelector('[aria-expanded], [data-toggle], .accordion__header, .cmp-accordion__header, [data-cmp-accordion-heading]');
+                    if (expandable) {
+                        expandable.click();
+                        return { success: true, expanded: expandable.getAttribute('aria-expanded') === 'true' };
+                    }
+                    return { success: false, error: 'No expandable element found' };
+                    
+                case 'select-tab':
+                    const tabIndex = options?.index || 0;
+                    const tab = el.querySelectorAll('[role="tab"], .cmp-tabs__tab').item(tabIndex);
+                    if (tab) { tab.click(); return { success: true, tabIndex: tabIndex }; }
+                    return { success: false, error: 'Tab not found at index ' + tabIndex };
+                    
+                case 'next': case 'next-slide':
+                    const nextBtn = el.querySelector('[data-cmp-valuename="next"], .carousel__control--next, .slick-next, [aria-label="next"]');
+                    if (nextBtn) { nextBtn.click(); return { success: true }; }
+                    return { success: false, error: 'Next button not found' };
+                    
+                case 'prev': case 'previous':
+                    const prevBtn = el.querySelector('[data-cmp-valuename="prev"], .carousel__control--prev, .slick-prev, [aria-label="previous"]');
+                    if (prevBtn) { prevBtn.click(); return { success: true }; }
+                    return { success: false, error: 'Previous button not found' };
+                    
+                case 'go-to-slide':
+                    const slideIndex = options?.index || 0;
+                    const slide = el.querySelectorAll('.carousel__item, .slick-slide').item(slideIndex);
+                    if (slide) { slide.click(); return { success: true, slideIndex: slideIndex }; }
+                    return { success: false, error: 'Slide not found at index ' + slideIndex };
+                    
+                case 'select-option':
+                    const optionValue = options?.value;
+                    const option = el.querySelector(`option[value="${optionValue}"], input[value="${optionValue}"], radio[value="${optionValue}"]`);
+                    if (option) { option.click(); return { success: true, value: optionValue }; }
+                    return { success: false, error: 'Option not found: ' + optionValue };
+                    
+                case 'download':
+                    const downloadLink = el.querySelector('a[href*=".pdf"], a[download], [data-download-url]');
+                    if (downloadLink) { downloadLink.click(); return { success: true }; }
+                    return { success: false, error: 'Download link not found' };
+                    
+                case 'navigate':
+                    const navLink = el.querySelector('a');
+                    if (navLink) { window.location.href = navLink.href; return { success: true, url: navLink.href }; }
+                    return { success: false, error: 'Navigation link not found' };
+                    
+                case 'scroll-into-view':
+                    el.scrollIntoView({ behavior: 'smooth' });
                     return { success: true };
-                case 'expand':
-                    const expandable = el.querySelector('[aria-expanded], [data-toggle]');
-                    if (expandable) expandable.click();
-                    return { success: !!expandable };
-                case 'collapse': return this.interactComponent(selector, 'expand');
+                    
+                case 'focus':
+                    el.focus();
+                    return { success: true };
+                    
                 default: return { success: false, error: 'Unknown action: ' + action };
             }
         },
@@ -389,7 +539,7 @@
         addToCart: function(selector, quantity) {
             const product = document.querySelector(selector);
             if (!product) return { success: false, error: 'Product not found' };
-            const addButton = product.querySelector('button:contains("Add to Cart")');
+            const addButton = product.querySelector('button') || product.querySelector('[data-add-to-cart], .add-to-cart, [aria-label*="cart"], [title*="Cart"]');
             if (addButton) { addButton.click(); return { success: true }; }
             return { success: false, error: 'Add to cart button not found' };
         },

@@ -2,82 +2,251 @@
 <jcr:root xmlns:sling="http://sling.apache.org/jcr/sling/1.0" xmlns:cq="http://www.day.com/jcr/cq/1.0" xmlns:jcr="http://www.jcp.org/jcr/1.0" xmlns:nt="http://www.jcp.org/jcr/nt/1.0"
     jcr:primaryType="cq:Page">
     <jcr:content
-        pageTitle="AEM WebMCP"
+        pageTitle="AEM WebMCP Demo"
         jcr:primaryType="cq:PageContent"
-        jcr:title="en"
+        jcr:title="WebMCP Demo"
         cq:contextHubPath="/etc/cloudsettings/default/contexthub"
         cq:contextHubSegmentsPath="/etc/segmentation/contexthub"
         cq:template="/conf/aem-webmcp/settings/wcm/templates/page-content"
         sling:resourceType="aem-webmcp/components/page"
-    >
+        jcr:description="Demo page showcasing WebMCP AI agent capabilities with AEM Core Components">
         <root
             jcr:primaryType="nt:unstructured"
             sling:resourceType="aem-webmcp/components/container"
             layout="responsiveGrid">
-            <container
+            
+            <!-- Hero Section with Title -->
+            <hero
                 jcr:primaryType="nt:unstructured"
                 sling:resourceType="aem-webmcp/components/container">
                 <title
                     jcr:primaryType="nt:unstructured"
-                    sling:resourceType="aem-webmcp/components/title"/>
-                <container
+                    sling:resourceType="aem-webmcp/components/title"
+                    jcr:title="AEM WebMCP Demo"
+                    type="h1"/>
+                <text
                     jcr:primaryType="nt:unstructured"
-                    sling:resourceType="aem-webmcp/components/container"
-                    layout="responsiveGrid">
-                    <teaser
-                        jcr:description="&lt;p>Don't stop half way, go for the top!&lt;/p>&#xd;&#xa;"
+                    sling:resourceType="aem-webmcp/components/text"
+                    text="&lt;p>This page demonstrates &lt;b>WebMCP (Web Model Context Protocol)&lt;/b> integration with AEM Core Components. AI agents can automatically discover and interact with all components below.&lt;/p>"/>
+            </hero>
+            
+            <!-- Interactive Components Demo Section -->
+            <demo-section
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="aem-webmcp/components/container"
+                layout="responsiveGrid">
+                <title
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/title"
+                    jcr:title="Interactive Components"
+                    type="h2"/>
+                    
+                <!-- Search Component -->
+                <search
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/search"
+                    searchRoot="/content"
+                    minimumSearchLength="3"
+                    displaySuggestions="true"/>
+                    
+                <!-- Form Components -->
+                <form-container
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/form/container"
+                    action="/bin/query"
+                    method="post"
+                    id="contact-form">
+                    <text
                         jcr:primaryType="nt:unstructured"
-                        jcr:title="Epic Journey"
-                        sling:resourceType="aem-webmcp/components/teaser"
-                        actionsEnabled="false"
-                        descriptionFromPage="false"
-                        textIsRich="true"
-                        titleFromPage="false">
-                        <cq:responsive jcr:primaryType="nt:unstructured">
-                            <default
+                        sling:resourceType="aem-webmcp/components/form/text"
+                        fieldLabel="Name"
+                        name="name"
+                        required="true"/>
+                    <email
+                        jcr:primaryType="nt:unstructured"
+                        sling:resourceType="aem-webmcp/components/form/text"
+                        fieldLabel="Email"
+                        name="email"
+                        type="email"
+                        required="true"/>
+                    <options
+                        jcr:primaryType="nt:unstructured"
+                        sling:resourceType="aem-webmcp/components/form/options"
+                        fieldLabel="Interest"
+                        name="interest"
+                        type="radio">
+                        <options
+                            jcr:primaryType="nt:unstructured">
+                            <option1
                                 jcr:primaryType="nt:unstructured"
-                                offset="0"
-                                width="4"/>
-                        </cq:responsive>
-                    </teaser>
-                    <teaser_copy
-                        jcr:description="&lt;p>Don't stop half way, go for the top!&lt;/p>&#xd;&#xa;"
-                        jcr:primaryType="nt:unstructured"
-                        jcr:title="Epic Journey"
-                        sling:resourceType="aem-webmcp/components/teaser"
-                        actionsEnabled="false"
-                        descriptionFromPage="false"
-                        textIsRich="true"
-                        titleFromPage="false">
-                        <cq:responsive jcr:primaryType="nt:unstructured">
-                            <default
+                                text="General Inquiry"
+                                value="general"/>
+                            <option2
                                 jcr:primaryType="nt:unstructured"
-                                offset="0"
-                                width="4"/>
-                        </cq:responsive>
-                    </teaser_copy>
-                    <teaser_copy_1579324932
-                        jcr:description="&lt;p>Don't stop half way, go for the top!&lt;/p>&#xd;&#xa;"
-                        jcr:primaryType="nt:unstructured"
-                        jcr:title="Epic Journey"
-                        sling:resourceType="aem-webmcp/components/teaser"
-                        actionsEnabled="false"
-                        descriptionFromPage="false"
-                        textIsRich="true"
-                        titleFromPage="false">
-                        <cq:responsive jcr:primaryType="nt:unstructured">
-                            <default
+                                text="Product Demo"
+                                value="demo"/>
+                            <option3
                                 jcr:primaryType="nt:unstructured"
-                                offset="0"
-                                width="4"/>
-                        </cq:responsive>
-                    </teaser_copy_1579324932>
-                    <helloworld
+                                text="Support"
+                                value="support"/>
+                        </options>
+                    </options>
+                    <submit
                         jcr:primaryType="nt:unstructured"
-                        sling:resourceType="aem-webmcp/components/helloworld"
-                        text="lalala :)"/>
-                </container>
-            </container>
+                        sling:resourceType="aem-webmcp/components/form/button"
+                        text="Submit"
+                        type="submit"/>
+                </form-container>
+            </demo-section>
+            
+            <!-- Layout Components Section -->
+            <layout-section
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="aem-webmcp/components/container"
+                layout="responsiveGrid">
+                <title
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/title"
+                    jcr:title="Layout Components"
+                    type="h2"/>
+                    
+                <!-- Accordion -->
+                <accordion
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/accordion"
+                    expandedLevel="1"
+                    headingElement="h3">
+                    <item1
+                        jcr:primaryType="nt:unstructured"
+                        jcr:title="What is WebMCP?">
+                        <text
+                            jcr:primaryType="nt:unstructured"
+                            sling:resourceType="aem-webmcp/components/text"
+                            text="&lt;p>WebMCP (Web Model Context Protocol) is a browser API that allows websites to expose structured tools to AI agents, enabling precise interactions without screen scraping.&lt;/p>"/>
+                    </item1>
+                    <item2
+                        jcr:primaryType="nt:unstructured"
+                        jcr:title="How does it work with AEM?">
+                        <text
+                            jcr:primaryType="nt:unstructured"
+                            sling:resourceType="aem-webmcp/components/text"
+                            text="&lt;p>This integration automatically detects AEM Core Components and adds WebMCP attributes, making your site AI-agent ready without custom development.&lt;/p>"/>
+                    </item2>
+                    <item3
+                        jcr:primaryType="nt:unstructured"
+                        jcr:title="What can AI agents do?">
+                        <text
+                            jcr:primaryType="nt:unstructured"
+                            sling:resourceType="aem-webmcp/components/text"
+                            text="&lt;p>AI agents can: search the site, fill forms, navigate menus, expand accordions, switch tabs, interact with carousels, and more - all through structured APIs.&lt;/p>"/>
+                    </item3>
+                </accordion>
+                
+                <!-- Tabs -->
+                <tabs
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/tabs">
+                    <tab1
+                        jcr:primaryType="nt:unstructured"
+                        jcr:title="Features">
+                        <text
+                            jcr:primaryType="nt:unstructured"
+                            sling:resourceType="aem-webmcp/components/text"
+                            text="&lt;ul>&lt;li>Automatic component detection&lt;/li>&lt;li>Zero configuration&lt;/li>&lt;li>30+ components supported&lt;/li>&lt;li>JSON-LD structured data&lt;/li>&lt;/ul>"/>
+                    </tab1>
+                    <tab2
+                        jcr:primaryType="nt:unstructured"
+                        jcr:title="Benefits">
+                        <text
+                            jcr:primaryType="nt:unstructured"
+                            sling:resourceType="aem-webmcp/components/text"
+                            text="&lt;ul>&lt;li>AI-ready websites&lt;/li>&lt;li>Better SEO (JSON-LD)&lt;/li>&lt;li>Improved accessibility&lt;/li>&lt;li>Future-proof architecture&lt;/li>&lt;/ul>"/>
+                    </tab2>
+                    <tab3
+                        jcr:primaryType="nt:unstructured"
+                        jcr:title="Get Started">
+                        <text
+                            jcr:primaryType="nt:unstructured"
+                            sling:resourceType="aem-webmcp/components/text"
+                            text="&lt;p>Deploy the aem-webmcp package to your AEM instance and your site will automatically be enhanced with WebMCP capabilities.&lt;/p>"/>
+                    </tab3>
+                </tabs>
+            </layout-section>
+            
+            <!-- Content Components Section -->
+            <content-section
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="aem-webmcp/components/container"
+                layout="responsiveGrid">
+                <title
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/title"
+                    jcr:title="Content Components"
+                    type="h2"/>
+                    
+                <!-- Teasers -->
+                <teaser1
+                    jcr:description="&lt;p>Learn how WebMCP works with AEM&lt;/p>"
+                    jcr:primaryType="nt:unstructured"
+                    jcr:title="Documentation"
+                    sling:resourceType="aem-webmcp/components/teaser"
+                    linkURL="/content/aem-webmcp/us/en"
+                    titleFromPage="false"/>
+                <teaser2
+                    jcr:description="&lt;p>Browse the API reference&lt;/p>"
+                    jcr:primaryType="nt:unstructured"
+                    jcr:title="API Reference"
+                    sling:resourceType="aem-webmcp/components/teaser"
+                    linkURL="/content/aem-webmcp/us/en"
+                    titleFromPage="false"/>
+                <teaser3
+                    jcr:description="&lt;p>See example implementations&lt;/p>"
+                    jcr:primaryType="nt:unstructured"
+                    jcr:title="Examples"
+                    sling:resourceType="aem-webmcp/components/teaser"
+                    linkURL="/content/aem-webmcp/us/en"
+                    titleFromPage="false"/>
+                    
+                <!-- Download -->
+                <download
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/download"
+                    description="Download the WebMCP specification"
+                    title="WebMCP Spec PDF"/>
+            </content-section>
+            
+            <!-- Navigation Components Section -->
+            <nav-section
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="aem-webmcp/components/container"
+                layout="responsiveGrid">
+                <title
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/title"
+                    jcr:title="Navigation"
+                    type="h2"/>
+                    
+                <!-- Breadcrumb -->
+                <breadcrumb
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/breadcrumb"
+                    startLevel="2"
+                    showHidden="true"/>
+            </nav-section>
+            
+            <!-- Footer Info -->
+            <footer-section
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="aem-webmcp/components/container">
+                <separator
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/separator"/>
+                <text
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/text"
+                    text="&lt;p>Powered by AEM WebMCP - AI Agent Ready Components&lt;/p>"/>
+            </footer-section>
+            
         </root>
     </jcr:content>
 </jcr:root>
