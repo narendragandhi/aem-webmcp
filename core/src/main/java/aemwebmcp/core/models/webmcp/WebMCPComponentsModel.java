@@ -20,19 +20,41 @@ public class WebMCPComponentsModel {
     private static final Map<String, ComponentDefinition> COMPONENT_DEFINITIONS = new HashMap<>();
     
     static {
-        COMPONENT_DEFINITIONS.put("core/wcm/components/search", new ComponentDefinition("search", "Site search", Arrays.asList("submit"), "commerce"));
-        COMPONENT_DEFINITIONS.put("core/wcm/components/cart", new ComponentDefinition("shopping-cart", "Shopping cart", Arrays.asList("checkout"), "commerce"));
-        COMPONENT_DEFINITIONS.put("core/wcm/components/navigation", new ComponentDefinition("navigation", "Navigation", Arrays.asList("navigate"), "navigation"));
+        COMPONENT_DEFINITIONS.put("core/wcm/components/search", new ComponentDefinition("search", "Site search", Arrays.asList("submit", "clear"), "commerce"));
+        COMPONENT_DEFINITIONS.put("core/wcm/components/cart", new ComponentDefinition("shopping-cart", "Shopping cart", Arrays.asList("update-quantity", "remove-item", "checkout"), "commerce"));
+        COMPONENT_DEFINITIONS.put("core/wcm/components/product", new ComponentDefinition("product", "Product display", Arrays.asList("add-to-cart", "add-to-wishlist"), "commerce"));
+        COMPONENT_DEFINITIONS.put("core/wcm/components/featuredproducts", new ComponentDefinition("featured-products", "Featured products", Arrays.asList("view-all"), "commerce"));
+        
+        COMPONENT_DEFINITIONS.put("core/wcm/components/navigation", new ComponentDefinition("navigation", "Navigation", Arrays.asList("navigate", "expand", "collapse"), "navigation"));
+        COMPONENT_DEFINITIONS.put("core/wcm/components/languagenavigation", new ComponentDefinition("language-navigation", "Language selector", Arrays.asList("select-language"), "navigation"));
         COMPONENT_DEFINITIONS.put("core/wcm/components/breadcrumb", new ComponentDefinition("breadcrumb", "Breadcrumb", Arrays.asList("navigate"), "navigation"));
+        
         COMPONENT_DEFINITIONS.put("core/wcm/components/text", new ComponentDefinition("text", "Text", Collections.emptyList(), "content"));
         COMPONENT_DEFINITIONS.put("core/wcm/components/title", new ComponentDefinition("title", "Title", Collections.emptyList(), "content"));
         COMPONENT_DEFINITIONS.put("core/wcm/components/image", new ComponentDefinition("image", "Image", Collections.emptyList(), "content"));
         COMPONENT_DEFINITIONS.put("core/wcm/components/teaser", new ComponentDefinition("teaser", "Teaser", Arrays.asList("click"), "content"));
+        COMPONENT_DEFINITIONS.put("core/wcm/components/download", new ComponentDefinition("download", "Download", Arrays.asList("download"), "content"));
+        COMPONENT_DEFINITIONS.put("core/wcm/components/contentfragment", new ComponentDefinition("content-fragment", "Content fragment", Collections.emptyList(), "content"));
+        COMPONENT_DEFINITIONS.put("core/wcm/components/contentfragmentlist", new ComponentDefinition("content-fragment-list", "Content fragment list", Collections.emptyList(), "content"));
+        COMPONENT_DEFINITIONS.put("core/wcm/components/embed", new ComponentDefinition("embed", "Embedded content", Collections.emptyList(), "content"));
+        
         COMPONENT_DEFINITIONS.put("core/wcm/components/container", new ComponentDefinition("container", "Container", Collections.emptyList(), "layout"));
-        COMPONENT_DEFINITIONS.put("core/wcm/components/accordion", new ComponentDefinition("accordion", "Accordion", Arrays.asList("expand"), "layout"));
-        COMPONENT_DEFINITIONS.put("core/wcm/components/tabs", new ComponentDefinition("tabs", "Tabs", Arrays.asList("select"), "layout"));
-        COMPONENT_DEFINITIONS.put("core/wcm/components/carousel", new ComponentDefinition("carousel", "Carousel", Arrays.asList("next", "prev"), "layout"));
-        COMPONENT_DEFINITIONS.put("core/wcm/components/form/container", new ComponentDefinition("form", "Form", Arrays.asList("submit"), "form"));
+        COMPONENT_DEFINITIONS.put("core/wcm/components/accordion", new ComponentDefinition("accordion", "Accordion", Arrays.asList("expand", "collapse", "expand-all"), "layout"));
+        COMPONENT_DEFINITIONS.put("core/wcm/components/tabs", new ComponentDefinition("tabs", "Tabs", Arrays.asList("select-tab", "next", "prev"), "layout"));
+        COMPONENT_DEFINITIONS.put("core/wcm/components/carousel", new ComponentDefinition("carousel", "Carousel", Arrays.asList("next", "prev", "go-to-slide", "play", "pause"), "layout"));
+        COMPONENT_DEFINITIONS.put("core/wcm/components/progressbar", new ComponentDefinition("progress-bar", "Progress bar", Collections.emptyList(), "layout"));
+        COMPONENT_DEFINITIONS.put("core/wcm/components/separator", new ComponentDefinition("separator", "Separator", Collections.emptyList(), "layout"));
+        COMPONENT_DEFINITIONS.put("core/wcm/components/tableofcontents", new ComponentDefinition("table-of-contents", "Table of contents", Collections.emptyList(), "layout"));
+        
+        COMPONENT_DEFINITIONS.put("core/wcm/components/form/container", new ComponentDefinition("form", "Form", Arrays.asList("submit", "reset"), "form"));
+        COMPONENT_DEFINITIONS.put("core/wcm/components/form/text", new ComponentDefinition("form-field", "Form text field", Collections.emptyList(), "form"));
+        COMPONENT_DEFINITIONS.put("core/wcm/components/form/button", new ComponentDefinition("form-button", "Form button", Collections.emptyList(), "form"));
+        COMPONENT_DEFINITIONS.put("core/wcm/components/form/hidden", new ComponentDefinition("form-hidden", "Hidden field", Collections.emptyList(), "form"));
+        COMPONENT_DEFINITIONS.put("core/wcm/components/form/options", new ComponentDefinition("form-options", "Form options", Collections.emptyList(), "form"));
+        
+        COMPONENT_DEFINITIONS.put("core/wcm/components/pdfviewer", new ComponentDefinition("pdf-viewer", "PDF viewer", Arrays.asList("download", "print", "zoom"), "media"));
+        
+        COMPONENT_DEFINITIONS.put("core/wcm/components/experiencefragment", new ComponentDefinition("experience-fragment", "Experience fragment", Collections.emptyList(), "experience"));
     }
 
     @Self

@@ -389,7 +389,7 @@
         addToCart: function(selector, quantity) {
             const product = document.querySelector(selector);
             if (!product) return { success: false, error: 'Product not found' };
-            const addButton = product.querySelector('button:contains("Add to Cart")');
+            const addButton = product.querySelector('button') || product.querySelector('[data-add-to-cart], .add-to-cart, [aria-label*="cart"], [title*="Cart"]');
             if (addButton) { addButton.click(); return { success: true }; }
             return { success: false, error: 'Add to cart button not found' };
         },
