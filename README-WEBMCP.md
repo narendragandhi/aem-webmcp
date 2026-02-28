@@ -101,6 +101,16 @@ Add to your page or console:
 window.WEBMCP_DEBUG = true;
 ```
 
+#### Enable Debug Panel
+To visualize all detected WebMCP components on the page:
+```javascript
+window.WEBMCP_SHOW_PANEL = true;
+```
+This displays an overlay panel showing:
+- Total components detected
+- Components by category
+- Each component's action, category, and description
+
 #### Disable for Specific Components
 Add to any element:
 ```html
