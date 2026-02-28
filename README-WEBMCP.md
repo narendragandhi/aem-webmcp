@@ -185,6 +185,37 @@ aem-webmcp/
 - `core/wcm/components/form/button` → Button
 - `core/wcm/components/form/options` → Radio/checkbox/select
 
+## Sample AI Agent
+
+A sample AI agent script is provided in `docs/sample-agent.js` that demonstrates:
+
+```javascript
+// In browser console on WebMCP-enabled page:
+
+// 1. Initialize agent
+const agent = new AEMWebMCPAgent();
+
+// 2. Discover all components
+await agent.discover();
+
+// 3. Run complete demo journey
+await agent.demoJourney();
+
+// 4. Get AI-friendly summary
+const summary = agent.getSummary();
+// Returns: { page, components[], capabilities[] }
+```
+
+### Available Agent Methods
+- `discover()` - Find all WebMCP components
+- `findComponent(action, index)` - Find component by action type
+- `search(query)` - Search the site
+- `fillForm(selector, value)` - Fill form field
+- `submitForm(selector)` - Submit form
+- `interact(selector, action, options)` - Interact with component
+- `addToCart(selector, qty)` - Add to cart
+- `navigate(url)` - Navigate to URL
+
 ## Browser Support
 
 - **WebMCP Enabled Browsers**: Chrome with `--enable-features=WebMCPExperimentalFlag` (Early Preview)
