@@ -4,7 +4,7 @@
  * Runs TinyLlama 1.1B locally in browser via transformers.js
  * No GPU required - uses WebAssembly for CPU inference
  * 
- * @version 1.0.0
+ * @version 1.1.0 - Production Ready
  */
 
 (function (document, window) {
@@ -16,14 +16,22 @@
         pipeline: null,
         isLoading: false,
         isReady: false,
+        isOpen: false,
         sessionId: null,
+        retryCount: 0,
+        maxRetries: 3,
         
         // Config
         config: {
             modelId: 'Xenova/TinyLlama-1.1B-Chat-v1.0',
             maxTokens: 512,
             temperature: 0.7,
-            device: null // 'cpu' or 'webgpu'
+            device: null,
+            modelTimeout: 120000, // 2 minutes
+            cdnUrls: [
+                'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js',
+                'https://unpkg.com/@xenova/transformers@2.17.2/dist/transformers.min.js'
+            ]
         },
         
         // WebMCP Functions available to AI
@@ -159,10 +167,13 @@
             
             if (!chatWindow || !toggle) return;
             
-            if (chatWindow.style.display === 'none') {
+            this.isOpen = !this.isOpen;
+            
+            if (this.isOpen) {
                 chatWindow.style.display = 'flex';
                 toggle.style.display = 'none';
-                document.getElementById('aem-webai-input')?.focus();
+                const input = document.getElementById('aem-webai-input');
+                if (input) input.focus();
             } else {
                 chatWindow.style.display = 'none';
                 toggle.style.display = 'flex';
@@ -231,44 +242,71 @@
                     await this.loadTransformers();
                 }
                 
-                // Create pipeline
-                this.pipeline = await window.transformers.pipeline(
+                // Timeout handling
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Model loading timeout')), this.config.modelTimeout)
+                );
+                
+                const loadPromise = window.transformers.pipeline(
                     'text-generation',
                     this.config.modelId,
                     {
                         device: this.config.device,
-                        dtype: 'q4', // Quantized 4-bit for smaller download
+                        dtype: 'q4',
                         progress_callback: (progress) => {
                             console.log('[WebAI] Loading:', Math.round(progress * 100) + '%');
                         }
                     }
                 );
                 
+                this.pipeline = await Promise.race([loadPromise, timeoutPromise]);
+                
                 this.isReady = true;
+                this.retryCount = 0;
                 this.updateStatus('ready');
                 console.log('[WebAI] Model loaded successfully!');
                 
             } catch (error) {
                 console.error('[WebAI] Failed to load model:', error);
-                this.updateStatus('error', 'Load failed');
-                this.addMessage('ai', 'Sorry, I failed to load the AI model. Please refresh the page and try again.');
+                
+                // Retry logic
+                if (this.retryCount < this.maxRetries) {
+                    this.retryCount++;
+                    console.log('[WebAI] Retrying...', this.retryCount + '/' + this.maxRetries);
+                    this.updateStatus('loading', 'Retrying...');
+                    setTimeout(() => this.loadModel(), 2000);
+                } else {
+                    this.updateStatus('error', 'Load failed');
+                    this.addMessage('ai', 'Sorry, I failed to load the AI model after multiple attempts. Please refresh the page and try again. Alternatively, you can still use the WebMCP features directly.');
+                }
             }
             
             this.isLoading = false;
         },
         
-        // Load transformers.js from CDN
-        loadTransformers: function() {
+        // Load transformers.js from CDN with fallback
+        loadTransformers: function(urlIndex = 0) {
             return new Promise((resolve, reject) => {
                 if (window.transformers) {
                     resolve();
                     return;
                 }
                 
+                if (urlIndex >= this.config.cdnUrls.length) {
+                    reject(new Error('Failed to load transformers.js from all CDNs'));
+                    return;
+                }
+                
                 const script = document.createElement('script');
-                script.src = 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js';
-                script.onload = resolve;
-                script.onerror = reject;
+                script.src = this.config.cdnUrls[urlIndex];
+                script.onload = () => {
+                    console.log('[WebAI] Loaded transformers from:', this.config.cdnUrls[urlIndex]);
+                    resolve();
+                };
+                script.onerror = () => {
+                    console.warn('[WebAI] CDN failed, trying next...', urlIndex + 1);
+                    this.loadTransformers(urlIndex + 1).then(resolve).catch(reject);
+                };
                 document.head.appendChild(script);
             });
         },
