@@ -1,0 +1,60 @@
+<!--/*
+    WebAI Chat Component
+    Floating AI chat widget powered by TinyLlama
+*/-->
+<sly data-sly-use.model="aemwebmcp.core.models.webai.WebAIChatModel"
+     data-sly-use.clientlib="/libs/granite/sightly/templates/clientlib.html">
+     
+<div class="aem-webai-chat" data-cmp-is="aem-webai-chat"
+     data-model-config="${model.jsonConfig @ context='unsafe'}">
+    
+    <!-- Chat Toggle Button -->
+    <button class="aem-webai-chat__toggle" 
+            aria-label="Toggle AI Chat"
+            onclick="AEMWebAI.toggle()">
+        <span class="aem-webai-chat__icon">🤖</span>
+        <span class="aem-webai-chat__badge" style="display: none;">●</span>
+    </button>
+    
+    <!-- Chat Window -->
+    <div class="aem-webai-chat__window" style="display: none;">
+        <div class="aem-webai-chat__header">
+            <h3>AI Assistant</h3>
+            <div class="aem-webai-chat__status">
+                <span class="aem-webai-chat__status-dot"></span>
+                <span class="aem-webai-chat__status-text">Ready</span>
+            </div>
+            <button class="aem-webai-chat__close" onclick="AEMWebAI.toggle()">✕</button>
+        </div>
+        
+        <div class="aem-webai-chat__messages" id="aem-webai-messages">
+            <div class="aem-webai-chat__message aem-webai-chat__message--ai">
+                <div class="aem-webai-chat__avatar">🤖</div>
+                <div class="aem-webai-chat__bubble">
+                    Hello! I'm an AI assistant powered by TinyLlama running locally in your browser. 
+                    I can help you navigate this site, search for content, fill forms, and more. 
+                    What would you like to do?
+                </div>
+            </div>
+        </div>
+        
+        <div class="aem-webai-chat__input-area">
+            <input type="text" 
+                   class="aem-webai-chat__input" 
+                   id="aem-webai-input"
+                   placeholder="Ask me anything..."
+                   onkeypress="if(event.key==='Enter')AEMWebAI.send()">
+            <button class="aem-webai-chat__send" onclick="AEMWebAI.send()">➤</button>
+        </div>
+        
+        <div class="aem-webai-chat__footer">
+            <span class="aem-webai-chat__model">TinyLlama 1.1B</span>
+            <button class="aem-webai-chat__clear" onclick="AEMWebAI.clear()">Clear</button>
+        </div>
+    </div>
+</div>
+
+<sly data-sly-call="${clientlib.js @ categories='aem-webai'}"/>
+<sly data-sly-call="${clientlib.css @ categories='aem-webai'}"/>
+
+</sly>

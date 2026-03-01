@@ -1,0 +1,228 @@
+<!--/*
+    WebAI Chat Styles
+*/-->
+<style>
+.aem-webai-chat {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 99999;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.aem-webai-chat__toggle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.5);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.aem-webai-chat__toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 25px rgba(102, 126, 234, 0.7);
+}
+
+.aem-webai-chat__badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 16px;
+    height: 16px;
+    background: #f44336;
+    border-radius: 50%;
+    font-size: 10px;
+    color: white;
+}
+
+.aem-webai-chat__window {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    width: 380px;
+    height: 520px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.aem-webai-chat__header {
+    padding: 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.aem-webai-chat__header h3 {
+    margin: 0;
+    flex: 1;
+    font-size: 16px;
+}
+
+.aem-webai-chat__status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    opacity: 0.9;
+}
+
+.aem-webai-chat__status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4caf50;
+}
+
+.aem-webai-chat__close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px;
+    opacity: 0.8;
+}
+
+.aem-webai-chat__close:hover {
+    opacity: 1;
+}
+
+.aem-webai-chat__messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    background: #f5f7fa;
+}
+
+.aem-webai-chat__message {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.aem-webai-chat__message--user {
+    flex-direction: row-reverse;
+}
+
+.aem-webai-chat__avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.aem-webai-chat__message--ai .aem-webai-chat__avatar {
+    background: #e8eaf6;
+}
+
+.aem-webai-chat__message--user .aem-webai-chat__avatar {
+    background: #e8f5e9;
+}
+
+.aem-webai-chat__bubble {
+    max-width: 75%;
+    padding: 12px 16px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.aem-webai-chat__message--ai .aem-webai-chat__bubble {
+    background: white;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.aem-webai-chat__message--user .aem-webai-chat__bubble {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.aem-webai-chat__input-area {
+    padding: 12px;
+    background: white;
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 8px;
+}
+
+.aem-webai-chat__input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid #e8eaf6;
+    border-radius: 24px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.aem-webai-chat__input:focus {
+    border-color: #667eea;
+}
+
+.aem-webai-chat__send {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.aem-webai-chat__send:hover {
+    transform: scale(1.05);
+}
+
+.aem-webai-chat__footer {
+    padding: 8px 16px;
+    background: #f5f7fa;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #888;
+}
+
+.aem-webai-chat__clear {
+    background: none;
+    border: none;
+    color: #667eea;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.aem-webai-chat__clear:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+    .aem-webai-chat__window {
+        width: calc(100vw - 40px);
+        right: 20px;
+        left: 20px;
+        height: 60vh;
+    }
+}
+</style>

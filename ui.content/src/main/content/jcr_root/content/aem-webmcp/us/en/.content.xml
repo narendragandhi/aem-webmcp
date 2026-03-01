@@ -10,6 +10,12 @@
         cq:template="/conf/aem-webmcp/settings/wcm/templates/page-content"
         sling:resourceType="aem-webmcp/components/page"
         jcr:description="Demo page showcasing WebMCP AI agent capabilities with AEM Core Components">
+        
+        <!-- AI Chat Widget -->
+        <webaichat
+            jcr:primaryType="nt:unstructured"
+            sling:resourceType="aem-webmcp/components/webai/chat"/>
+            
         <root
             jcr:primaryType="nt:unstructured"
             sling:resourceType="aem-webmcp/components/container"

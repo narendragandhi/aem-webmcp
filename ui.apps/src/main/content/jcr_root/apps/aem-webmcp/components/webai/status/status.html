@@ -1,0 +1,39 @@
+<!--/*
+    WebAI Status Component
+    Shows AI model loading status
+*/-->
+<div class="aem-webai-status">
+    <div class="aem-webai-status__indicator">
+        <span class="aem-webai-status__dot"></span>
+        <span class="aem-webai-status__label">AI Status</span>
+    </div>
+    <div class="aem-webai-status__info">
+        <span class="aem-webai-status__model">TinyLlama 1.1B</span>
+    </div>
+</div>
+
+<style>
+.aem-webai-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    background: #f0f0f0;
+    border-radius: 16px;
+    font-size: 12px;
+    font-family: system-ui, sans-serif;
+}
+.aem-webai-status__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ccc;
+}
+.aem-webai-status__label {
+    color: #666;
+}
+.aem-webai-status__model {
+    font-weight: 500;
+    color: #333;
+}
+</style>
