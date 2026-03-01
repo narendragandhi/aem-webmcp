@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component(service = WebAIFunctionRegistry.class)
 public class WebAIFunctionRegistry {
@@ -152,7 +153,7 @@ public class WebAIFunctionRegistry {
     public List<Map<String, Object>> getFunctionsAsList() {
         return functions.values().stream()
             .map(AIFunction::toMap)
-            .toList();
+            .collect(Collectors.toList());
     }
 
     public int getFunctionCount() {
