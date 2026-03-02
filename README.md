@@ -1,124 +1,86 @@
-# Sample AEM project template
+# AEM WebMCP - AI Agent Ready
 
-This is a project template for AEM-based applications. It is intended as a best-practice set of examples as well as a potential starting point to develop your own functionality.
+> Google WebMCP (Web Model Context Protocol) integration for AEM Core Components
 
-## Modules
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![AEM Version](https://img.shields.io/badge/AEM-6.5%2B+-yellow.svg)]()
+[![Core Components](https://img.shields.io/badge/Core%20Components-2.0%2B-green.svg)]()
 
-The main parts of the template are:
+## Overview
 
-* [core:](core/README.md) Java bundle containing all core functionality like OSGi services, listeners or schedulers, as well as component-related Java code such as servlets or request filters.
-* [it.tests:](it.tests/README.md) Java based integration tests
-* [ui.apps:](ui.apps/README.md) contains the /apps (and /etc) parts of the project, ie JS&CSS clientlibs, components, and templates
-* [ui.content:](ui.content/README.md) contains sample content using the components from the ui.apps
-* ui.config: contains runmode specific OSGi configs for the project
-* [ui.frontend:](ui.frontend.general/README.md) an optional dedicated front-end build mechanism (Angular, React or general Webpack project)
-* [ui.tests:](ui.tests/README.md) Cypress based UI tests (for other frameworks check [aem-test-samples](https://github.com/adobe/aem-test-samples) repository
-* all: a single content package that embeds all of the compiled modules (bundles and content packages) including any vendor dependencies
-* analyse: this module runs analysis on the project which provides additional validation for deploying into AEMaaCS
+AEM WebMCP automatically enhances Adobe Experience Manager sites with WebMCP capabilities, enabling AI agents to interact with your site in a structured, reliable way - no custom component development required.
 
-## How to build
+## What is WebMCP?
 
-To build all the modules run in the project root directory the following command with Maven 3:
+WebMCP (Web Model Context Protocol) is a browser API being developed by Google that allows websites to expose structured tools to AI agents. Instead of AI agents clicking around blindly, they can:
 
-    mvn clean install
+- Understand site structure and components
+- Fill forms with proper field validation
+- Navigate precisely without guessing
+- Perform complex e-commerce actions
 
-To build all the modules and deploy the `all` package to a local instance of AEM, run in the project root directory the following command:
+## Features
 
-    mvn clean install -PautoInstallSinglePackage
+- **50+ AEM Core Components** automatically detected and enhanced
+- **Zero configuration** - auto-loads via clientlib
+- **Consent-based** API exposure for AI agents
+- **Debug panel** for development
+- **Accessibility tree** support
+- **Production-ready** with OWASP security scanning
 
-Or to deploy it to a publish instance, run
+## Quick Start
 
-    mvn clean install -PautoInstallSinglePackagePublish
+```bash
+# Build the project
+mvn clean install
 
-Or alternatively
+# Deploy to AEM Author
+mvn install -PautoInstallSinglePackage -Daem.host=localhost -Daem.port=4502
+```
 
-    mvn clean install -PautoInstallSinglePackage -Daem.port=4503
+## Configuration
 
-Or to deploy only the bundle to the author, run
+```javascript
+// Enable debug
+window.WEBMCP_DEBUG = true;
 
-    mvn clean install -PautoInstallBundle
+// Show debug panel
+window.WEBMCP_SHOW_PANEL = true;
 
-Or to deploy only a single content package, run in the sub-module directory (i.e `ui.apps`)
-
-    mvn clean install -PautoInstallPackage
+// Enable AI agent API (requires consent)
+window.WEBMCP_CONSENT = true;
+```
 
 ## Documentation
 
-The build process also generates documentation in the form of README.md files in each module directory for easy reference. Depending on the options you select at build time, the content may be customized to your project.
+- [Getting Started](docs/GETTING-STARTED.md)
+- [API Reference](docs/API-REFERENCE.md)
+- [Sample AI Agent](docs/sample-agent.js)
 
-## Testing
+## Supported Components
 
-There are three levels of testing contained in the project:
+| Category | Components |
+|----------|------------|
+| Commerce | Search, Cart, Product, Featured Products |
+| Navigation | Navigation, Language Nav, Breadcrumb |
+| Content | Text, Title, Image, Teaser, Download, Embed |
+| Layout | Container, Accordion, Tabs, Carousel |
+| Forms | Form, Text, Button, Hidden, Options |
+| Media | PDF Viewer |
+| Experience | Experience Fragment |
 
-### Unit tests
+## Requirements
 
-This show-cases classic unit testing of the code contained in the bundle. To
-test, execute:
+- AEM 6.5+ or AEM as a Cloud Service
+- AEM Core Components 2.0+
+- Maven 3.6+
 
-    mvn clean test
+## License
 
-### Integration tests
+Copyright 2024 Adobe Systems Incorporated. Licensed under Apache License 2.0.
 
-This allows running integration tests that exercise the capabilities of AEM via
-HTTP calls to its API. To run the integration tests, run:
+## Resources
 
-    mvn clean verify -Plocal
-
-Test classes must be saved in the `src/main/java` directory (or any of its
-subdirectories), and must be contained in files matching the pattern `*IT.java`.
-
-The configuration provides sensible defaults for a typical local installation of
-AEM. If you want to point the integration tests to different AEM author and
-publish instances, you can use the following system properties via Maven's `-D`
-flag.
-
-| Property              | Description                                         | Default value           |
-|-----------------------|-----------------------------------------------------|-------------------------|
-| `it.author.url`       | URL of the author instance                          | `http://localhost:4502` |
-| `it.author.user`      | Admin user for the author instance                  | `admin`                 |
-| `it.author.password`  | Password of the admin user for the author instance  | `admin`                 |
-| `it.publish.url`      | URL of the publish instance                         | `http://localhost:4503` |
-| `it.publish.user`     | Admin user for the publish instance                 | `admin`                 |
-| `it.publish.password` | Password of the admin user for the publish instance | `admin`                 |
-
-The integration tests in this archetype use the [AEM Testing
-Clients](https://github.com/adobe/aem-testing-clients) and showcase some
-recommended [best
-practices](https://github.com/adobe/aem-testing-clients/wiki/Best-practices) to
-be put in use when writing integration tests for AEM.
-
-## Static Analysis
-
-The `analyse` module performs static analysis on the project for deploying into AEMaaCS. It is automatically
-run when executing
-
-    mvn clean install
-
-from the project root directory. Additional information about this analysis and how to further configure it
-can be found here https://github.com/adobe/aemanalyser-maven-plugin
-
-### UI tests
-
-They will test the UI layer of your AEM application using Cypress framework.
-
-Check README file in `ui.tests` module for more details.
-
-Examples of UI tests in different frameworks can be found here: https://github.com/adobe/aem-test-samples
-
-## ClientLibs
-
-The frontend module is made available using an [AEM ClientLib](https://helpx.adobe.com/experience-manager/6-5/sites/developing/using/clientlibs.html). When executing the NPM build script, the app is built and the [`aem-clientlib-generator`](https://github.com/wcm-io-frontend/aem-clientlib-generator) package takes the resulting build output and transforms it into such a ClientLib.
-
-A ClientLib will consist of the following files and directories:
-
-- `css/`: CSS files which can be requested in the HTML
-- `css.txt` (tells AEM the order and names of files in `css/` so they can be merged)
-- `js/`: JavaScript files which can be requested in the HTML
-- `js.txt` (tells AEM the order and names of files in `js/` so they can be merged
-- `resources/`: Source maps, non-entrypoint code chunks (resulting from code splitting), static assets (e.g. icons), etc.
-
-## Maven settings
-
-The project comes with the auto-public repository configured. To setup the repository in your Maven settings, refer to:
-
-    http://helpx.adobe.com/experience-manager/kb/SetUpTheAdobeMavenRepository.html
+- [WebMCP Documentation](https://developer.chrome.com/blog/webmcp-epp)
+- [AEM Core Components](https://github.com/adobe/aem-core-wcm-components)
+- [WebMCP W3C Spec](https://github.com/WICG/web-mcp)

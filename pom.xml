@@ -48,6 +48,7 @@
     <aem.sdk.api>2026.2.24464.20260214T050318Z-260100</aem.sdk.api>
     <aemanalyser.version>1.6.6</aemanalyser.version>
     <componentGroupName>AEM WebMCP</componentGroupName>
+    <nvd.api.key>${env.NVD_API_KEY}</nvd.api.key>
   </properties>
   <build>
     <plugins>
@@ -101,6 +102,29 @@
         <configuration>
           <release>11</release>
         </configuration>
+      </plugin>
+      <!-- OWASP Dependency Check -->
+      <plugin>
+        <groupId>org.owasp</groupId>
+        <artifactId>dependency-check-maven</artifactId>
+        <version>12.2.0</version>
+        <executions>
+          <execution>
+            <id>owasp-check</id>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <failBuildOnCVSS>7</failBuildOnCVSS>
+              <nvdApiKey>${nvd.api.key}</nvdApiKey>
+              <nvdApiDelay>6000</nvdApiDelay>
+              <excludes>
+                <exclude>**/test/**/*.jar</exclude>
+              </excludes>
+              <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
     <pluginManagement>
@@ -504,6 +528,39 @@ Bundle-DocURL:
             </plugin>
           </plugins>
         </pluginManagement>
+      </build>
+    </profile>
+    <!-- Production Profile: Optimized for production deployments -->
+    <profile>
+      <id>production</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <properties>
+        <skipTests>true</skipTests>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.owasp</groupId>
+            <artifactId>dependency-check-maven</artifactId>
+            <executions>
+              <execution>
+                <id>owasp-check</id>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+                <configuration>
+                  <failBuildOnCVSS>9</failBuildOnCVSS>
+                  <nvdApiKey>${nvd.api.key}</nvdApiKey>
+                  <nvdApiDelay>6000</nvdApiDelay>
+                  <outputDirectory>${project.build.directory}/dependency-check</outputDirectory>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
       </build>
     </profile>
   </profiles>

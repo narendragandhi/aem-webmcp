@@ -114,12 +114,61 @@ window.WEBMCP_DEBUG = true;
 window.WEBMCP_SHOW_PANEL = true;
 ```
 
+### Disable WebMCP Completely
+```javascript
+window.WEBMCP_ENABLED = false;
+```
+
+### Consent-Based API Exposure
+By default, WebMCP exposes actions via `navigator.modelContext`. To enable:
+```javascript
+// Opt-in to expose WebMCP actions to AI agents
+window.WEBMCP_CONSENT = true;
+
+// Or auto-consent (for development only)
+window.WEBMCP_AUTO_CONSENT = true;
+```
+
 ### Disable for Specific Elements
 ```html
 <div data-webmcp-disabled="true">
     <!-- This won't be enhanced -->
 </div>
 ```
+
+## Building
+
+### Standard Build
+```bash
+mvn clean install
+```
+
+### Production Build
+Skips tests and uses higher CVSS threshold:
+```bash
+mvn clean install -Pproduction
+```
+
+### Skip OWASP Check
+```bash
+mvn clean install -Dowasp.skip=true
+```
+
+### Set NVD API Key
+Get a free key from https://nvd.nist.gov/developers/request-an-api-key
+```bash
+export NVD_API_KEY=your-key-here
+mvn clean install
+```
+
+### Build Profiles
+
+| Profile | Purpose |
+|---------|---------|
+| default | Full build with tests |
+| production | Optimized for production (skip tests, CVSS 9+) |
+| autoInstallBundle | Deploy bundle only to AEM |
+| autoInstallPackage | Deploy content package to AEM |
 
 ## Testing
 

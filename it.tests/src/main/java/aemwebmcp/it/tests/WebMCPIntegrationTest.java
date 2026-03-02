@@ -136,4 +136,36 @@ public class WebMCPIntegrationTest {
         assertTrue("Should declare fillForm action", content.contains("fillForm"));
         assertTrue("Should declare submitForm action", content.contains("submitForm"));
     }
+
+    @Test
+    public void testConsentMechanismExists() throws ClientException {
+        SlingHttpResponse response = adminAuthor.doGet("/etc/clientlibs/aem-webmcp/clientlib-webmcp/js/webmcp.js", 200);
+        String content = response.getContent();
+        assertTrue("Should have WEBMCP_ENABLED flag", content.contains("WEBMCP_ENABLED"));
+        assertTrue("Should have WEBMCP_CONSENT flag", content.contains("WEBMCP_CONSENT"));
+        assertTrue("Should have canExposeAPI method", content.contains("canExposeAPI"));
+    }
+
+    @Test
+    public void testDebugPanelExists() throws ClientException {
+        SlingHttpResponse response = adminAuthor.doGet("/etc/clientlibs/aem-webmcp/clientlib-webmcp/js/webmcp.js", 200);
+        String content = response.getContent();
+        assertTrue("Should have debug panel", content.contains("webmcp-debug-panel"));
+        assertTrue("Should have WEBMCP_SHOW_PANEL flag", content.contains("WEBMCP_SHOW_PANEL"));
+    }
+
+    @Test
+    public void testAccessibilityTreeSupport() throws ClientException {
+        SlingHttpResponse response = adminAuthor.doGet("/etc/clientlibs/aem-webmcp/clientlib-webmcp/js/webmcp.js", 200);
+        String content = response.getContent();
+        assertTrue("Should have accessibility tree support", content.contains("getAccessibilityTree"));
+        assertTrue("Should support aria attributes", content.contains("aria-"));
+    }
+
+    @Test
+    public void testWebMCPSupportedCheck() throws ClientException {
+        SlingHttpResponse response = adminAuthor.doGet("/etc/clientlibs/aem-webmcp/clientlib-webmcp/js/webmcp.js", 200);
+        String content = response.getContent();
+        assertTrue("Should check for modelContext support", content.contains("modelContext"));
+    }
 }

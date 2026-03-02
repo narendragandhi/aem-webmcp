@@ -15,6 +15,8 @@
         
         version: '1.1.0',
         debug: window.WEBMCP_DEBUG || false,
+        enabled: window.WEBMCP_ENABLED !== false,
+        consentGiven: window.WEBMCP_CONSENT === true,
         
         /**
          * Complete Core Components mapping to WebMCP actions
@@ -173,6 +175,11 @@
          * Initialize the automator
          */
         init: function() {
+            if (!this.enabled) {
+                this.debug && console.log('[WebMCP] Disabled via WEBMCP_ENABLED flag');
+                return;
+            }
+            
             this.debug && console.log('[WebMCP] Initializing AEM WebMCP Automator v' + this.version);
             
             if (this.isWebMCPSupported()) {
@@ -186,6 +193,18 @@
             
             this.debug && console.log('[WebMCP] Ready - enhanced', 
                 document.querySelectorAll('[data-webmcp-action]').length, 'components');
+        },
+        
+        /**
+         * Check if consent is given for WebMCP exposure
+         */
+        canExposeAPI: function() {
+            if (this.consentGiven) return true;
+            if (window.WEBMCP_AUTO_CONSENT === true) {
+                this.consentGiven = true;
+                return true;
+            }
+            return false;
         },
         
         /**
@@ -294,6 +313,7 @@
          */
         exposeWebMCPAPI: function() {
             const self = this;
+            const withConsent = this.canExposeAPI();
             
             // Create comprehensive action handlers
             const actions = {
@@ -481,8 +501,8 @@
                 }
             };
             
-            // Register with navigator.modelContext if available
-            if (window.navigator.modelContext?.declareAction) {
+            // Register with navigator.modelContext if available (requires consent)
+            if (withConsent && window.navigator.modelContext?.declareAction) {
                 const mc = window.navigator.modelContext;
                 
                 Object.entries(actions).forEach(([id, action]) => {
