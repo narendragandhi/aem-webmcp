@@ -77,7 +77,7 @@ window.WEBMCP_CONSENT = true;
 
 ## License
 
-Copyright 2024 Adobe Systems Incorporated. Licensed under Apache License 2.0.
+Copyright 2024. Licensed under Apache License 2.0.
 
 ## Resources
 
