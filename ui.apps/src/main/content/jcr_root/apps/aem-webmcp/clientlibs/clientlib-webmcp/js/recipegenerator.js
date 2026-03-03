@@ -1,7 +1,7 @@
 /**
  * AEM WebMCP Recipe Generator
  * Generates recipes based on user-provided ingredients
- * Exposes WebMCP tools for AI agent interaction
+ * Uses spec-compliant MCP-B tool registration
  */
 
 (function(document, window) {
@@ -186,6 +186,62 @@
         }
     ];
 
+    // MCP-B Spec-Compliant Tool Definitions
+    const MCP_TOOLS = {
+        generateRecipes: {
+            name: "generateRecipes",
+            description: "Generate recipe suggestions based on available ingredients. Returns a list of matching recipes sorted by ingredient relevance.",
+            inputSchema: {
+                type: "object",
+                properties: {
+                    ingredients: {
+                        type: "array",
+                        items: { type: "string" },
+                        description: "List of ingredients available to cook with"
+                    },
+                    filters: {
+                        type: "object",
+                        properties: {
+                            vegetarian: { type: "boolean", description: "Filter for vegetarian recipes" },
+                            quick: { type: "boolean", description: "Filter for quick recipes under 30 minutes" },
+                            healthy: { type: "boolean", description: "Filter for healthy recipes" }
+                        },
+                        description: "Optional filters to apply"
+                    }
+                },
+                required: ["ingredients"]
+            }
+        },
+        getRecipeDetails: {
+            name: "getRecipeDetails",
+            description: "Get detailed information about a specific recipe including full ingredients list and step-by-step instructions.",
+            inputSchema: {
+                type: "object",
+                properties: {
+                    recipeName: {
+                        type: "string",
+                        description: "Name of the recipe to get details for"
+                    }
+                },
+                required: ["recipeName"]
+            }
+        },
+        searchRecipes: {
+            name: "searchRecipes",
+            description: "Search recipes by name or ingredient keyword.",
+            inputSchema: {
+                type: "object",
+                properties: {
+                    query: {
+                        type: "string",
+                        description: "Search query - can match recipe name or ingredients"
+                    }
+                },
+                required: ["query"]
+            }
+        }
+    };
+
     class RecipeGenerator {
         constructor(element) {
             this.element = element;
@@ -203,52 +259,177 @@
                 generateBtn.addEventListener('click', () => this.generateRecipes());
             }
 
-            // Register WebMCP tools
-            this.registerWebMTools();
+            // Register MCP-B spec-compliant tools
+            this.registerMCPTools();
         }
 
-        registerWebMTools() {
-            if (window.AEMWebMCPAutomator) {
-                window.AEMWebMCPAutomator.registerTool({
+        /**
+         * Register tools using MCP-B spec-compliant approach
+         * Supports both native navigator.modelContext and fallback
+         */
+        registerMCPTools() {
+            const tools = [
+                {
                     name: "generateRecipes",
                     description: "Generate recipe suggestions based on available ingredients",
-                    parameters: {
-                        type: "object",
-                        properties: {
-                            ingredients: {
-                                type: "array",
-                                items: { type: "string" },
-                                description: "List of ingredients available"
-                            },
-                            filters: {
-                                type: "object",
-                                properties: {
-                                    vegetarian: { type: "boolean" },
-                                    quick: { type: "boolean" },
-                                    healthy: { type: "boolean" }
-                                },
-                                description: "Optional filters"
-                            }
-                        },
-                        required: ["ingredients"]
-                    }
-                }, (params) => this.generateRecipesFromAI(params));
-
-                window.AEMWebMCPAutomator.registerTool({
-                    name: "getRecipeDetails",
+                    inputSchema: MCP_TOOLS.generateRecipes.inputSchema,
+                    handler: (params) => this.handleGenerateRecipes(params)
+                },
+                {
+                    name: "getRecipeDetails", 
                     description: "Get detailed information about a specific recipe",
-                    parameters: {
-                        type: "object",
-                        properties: {
-                            recipeName: {
-                                type: "string",
-                                description: "Name of the recipe"
-                            }
-                        },
-                        required: ["recipeName"]
-                    }
-                }, (params) => this.getRecipeDetails(params.recipeName));
+                    inputSchema: MCP_TOOLS.getRecipeDetails.inputSchema,
+                    handler: (params) => this.handleGetRecipeDetails(params)
+                },
+                {
+                    name: "searchRecipes",
+                    description: "Search recipes by name or ingredient",
+                    inputSchema: MCP_TOOLS.searchRecipes.inputSchema,
+                    handler: (params) => this.handleSearchRecipes(params)
+                }
+            ];
+
+            // Try native WebMCP first (navigator.modelContext)
+            if (window.navigator?.modelContext) {
+                this.registerWithNativeModelContext(tools);
             }
+            
+            // Also register with our fallback automator
+            if (window.AEMWebMCPAutomator) {
+                this.registerWithAutomator(tools);
+            }
+
+            // Expose globally for direct access
+            window.AEMWebMCP = window.AEMWebMCP || {};
+            window.AEMWebMCP.RecipeGenerator = {
+                generate: (ingredients, filters) => this.handleGenerateRecipes({ ingredients, filters }),
+                getDetails: (name) => this.handleGetRecipeDetails({ recipeName: name }),
+                search: (query) => this.handleSearchRecipes({ query }),
+                getAllRecipes: () => RECIPE_DATABASE.map(r => r.name)
+            };
+        }
+
+        /**
+         * Register with native navigator.modelContext (WebMCP spec)
+         */
+        registerWithNativeModelContext(tools) {
+            try {
+                const registeredTools = tools.map(tool => ({
+                    name: tool.name,
+                    description: tool.description,
+                    inputSchema: tool.inputSchema,
+                    handle: tool.handler
+                }));
+
+                if (window.navigator.modelContext.register) {
+                    window.navigator.modelContext.register(registeredTools);
+                    console.log('[MCP-B] Registered tools with native navigator.modelContext');
+                }
+            } catch (e) {
+                console.warn('[MCP-B] Native registration failed:', e);
+            }
+        }
+
+        /**
+         * Register with fallback automator
+         */
+        registerWithAutomator(tools) {
+            tools.forEach(tool => {
+                window.AEMWebMCPAutomator.registerTool({
+                    name: tool.name,
+                    description: tool.description,
+                    parameters: tool.inputSchema
+                }, tool.handler);
+            });
+        }
+
+        // Tool Handlers
+        handleGenerateRecipes(params) {
+            const { ingredients = [], filters = {} } = params;
+            
+            const recipes = RECIPE_DATABASE.filter(recipe => {
+                if (filters.vegetarian && !recipe.vegetarian) return false;
+                if (filters.quick && !recipe.quick) return false;
+                if (filters.healthy && !recipe.healthy) return false;
+
+                if (ingredients.length === 0) return true;
+
+                const recipeIngredients = recipe.ingredients.map(i => i.toLowerCase());
+                return ingredients.some(ing => 
+                    recipeIngredients.some(ri => ri.includes(ing.toLowerCase()) || ing.toLowerCase().includes(ri))
+                );
+            }).sort((a, b) => {
+                const aMatches = ingredients.filter(ing => 
+                    a.ingredients.some(ai => ai.toLowerCase().includes(ing.toLowerCase()) || ing.toLowerCase().includes(ai.toLowerCase()))
+                ).length;
+                const bMatches = ingredients.filter(ing => 
+                    b.ingredients.some(bi => bi.toLowerCase().includes(ing.toLowerCase()) || ing.toLowerCase().includes(bi.toLowerCase()))
+                ).length;
+                return bMatches - aMatches;
+            });
+
+            return {
+                content: [{
+                    type: "text",
+                    text: JSON.stringify({
+                        success: true,
+                        count: recipes.length,
+                        recipes: recipes.map(r => ({
+                            name: r.name,
+                            time: r.time,
+                            servings: r.servings,
+                            difficulty: r.difficulty,
+                            matchCount: ingredients.filter(ing => 
+                                r.ingredients.some(ri => ri.toLowerCase().includes(ing.toLowerCase()))
+                            ).length
+                        }))
+                    }, null, 2)
+                }]
+            };
+        }
+
+        handleGetRecipeDetails(params) {
+            const { recipeName } = params;
+            const recipe = RECIPE_DATABASE.find(r => 
+                r.name.toLowerCase() === recipeName.toLowerCase()
+            );
+
+            if (!recipe) {
+                return {
+                    content: [{
+                        type: "text",
+                        text: JSON.stringify({ success: false, error: "Recipe not found" }, null, 2)
+                    }]
+                };
+            }
+
+            return {
+                content: [{
+                    type: "text",
+                    text: JSON.stringify({ success: true, recipe }, null, 2)
+                }]
+            };
+        }
+
+        handleSearchRecipes(params) {
+            const { query } = params;
+            const lowerQuery = query.toLowerCase();
+
+            const recipes = RECIPE_DATABASE.filter(r => 
+                r.name.toLowerCase().includes(lowerQuery) ||
+                r.ingredients.some(i => i.toLowerCase().includes(lowerQuery))
+            );
+
+            return {
+                content: [{
+                    type: "text",
+                    text: JSON.stringify({
+                        success: true,
+                        count: recipes.length,
+                        recipes: recipes.map(r => ({ name: r.name, ingredients: r.ingredients }))
+                    }, null, 2)
+                }]
+            };
         }
 
         generateRecipes() {
@@ -261,77 +442,17 @@
                 healthy: this.element.querySelector('#healthy')?.checked || false
             };
 
-            const recipes = this.findMatchingRecipes(ingredients, filters);
-            this.displayRecipes(recipes);
-        }
-
-        generateRecipesFromAI(params) {
-            const ingredients = params.ingredients || [];
-            const filters = params.filters || {};
+            const result = this.handleGenerateRecipes({ ingredients, filters });
+            const data = JSON.parse(result.content[0].text);
             
-            const recipes = this.findMatchingRecipes(ingredients, filters);
-            
-            return {
-                success: true,
-                count: recipes.length,
-                recipes: recipes.map(r => ({
-                    name: r.name,
-                    time: r.time,
-                    servings: r.servings,
-                    difficulty: r.difficulty,
-                    ingredients: r.ingredients,
-                    instructions: r.instructions
-                }))
-            };
-        }
-
-        getRecipeDetails(recipeName) {
-            const recipe = RECIPE_DATABASE.find(r => 
-                r.name.toLowerCase() === recipeName.toLowerCase()
-            );
-            
-            if (recipe) {
-                return { success: true, recipe };
-            }
-            return { success: false, error: "Recipe not found" };
-        }
-
-        findMatchingRecipes(ingredients, filters) {
-            if (!ingredients || ingredients.length === 0) {
-                return [];
-            }
-
-            return RECIPE_DATABASE.filter(recipe => {
-                // Check filters
-                if (filters.vegetarian && !recipe.vegetarian) return false;
-                if (filters.quick && !recipe.quick) return false;
-                if (filters.healthy && !recipe.healthy) return false;
-
-                // Check ingredient match (at least one ingredient must match)
-                const recipeIngredients = recipe.ingredients.map(i => i.toLowerCase());
-                const hasMatch = ingredients.some(ing => 
-                    recipeIngredients.some(ri => ri.includes(ing) || ing.includes(ri))
-                );
-
-                return hasMatch;
-            }).sort((a, b) => {
-                // Sort by number of matching ingredients
-                const aMatches = ingredients.filter(ing => 
-                    a.ingredients.some(ai => ai.includes(ing) || ing.includes(ai))
-                ).length;
-                const bMatches = ingredients.filter(ing => 
-                    b.ingredients.some(bi => bi.includes(ing) || ing.includes(bi))
-                ).length;
-                return bMatches - aMatches;
-            });
+            this.displayRecipes(data.recipes);
         }
 
         displayRecipes(recipes) {
-            // Clear existing recipes (keep template)
             const existing = this.resultsContainer.querySelectorAll('.recipe-card:not(.template)');
             existing.forEach(el => el.remove());
 
-            if (recipes.length === 0) {
+            if (!recipes || recipes.length === 0) {
                 this.resultsContainer.style.display = 'none';
                 this.noResults.style.display = 'block';
                 return;
@@ -340,7 +461,10 @@
             this.resultsContainer.style.display = 'block';
             this.noResults.style.display = 'none';
 
-            recipes.forEach(recipe => {
+            recipes.forEach(recipeData => {
+                const recipe = RECIPE_DATABASE.find(r => r.name === recipeData.name);
+                if (!recipe) return;
+
                 const card = this.template.cloneNode(true);
                 card.classList.remove('template');
                 
@@ -373,19 +497,5 @@
         const generators = document.querySelectorAll('.aem-webmcp-recipegenerator');
         generators.forEach(el => new RecipeGenerator(el));
     });
-
-    // Expose for AI agents
-    window.AEMWebMCP = window.AEMWebMCP || {};
-    window.AEMWebMCP.RecipeGenerator = {
-        generate: (ingredients, filters) => {
-            const gen = new RecipeGenerator(document.querySelector('.aem-webmcp-recipegenerator'));
-            return gen.generateRecipesFromAI({ ingredients, filters });
-        },
-        getRecipe: (name) => {
-            const gen = new RecipeGenerator(document.querySelector('.aem-webmcp-recipegenerator'));
-            return gen.getRecipeDetails(name);
-        },
-        getAllRecipes: () => RECIPE_DATABASE.map(r => r.name)
-    };
 
 })(document, window);

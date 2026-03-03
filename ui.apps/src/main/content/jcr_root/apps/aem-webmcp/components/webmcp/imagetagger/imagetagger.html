@@ -1,0 +1,56 @@
+<div class="aem-webmcp-imagetagger" 
+     data-cq-resource-path="${resource.path}"
+     data-resource-type="aem-webmcp/components/webmcp/imagetagger"
+     data-weblmcp-enabled="true">
+    
+    <div class="image-tagger">
+        <h2>AI Image Tagger</h2>
+        <p class="description">Upload an image to automatically detect objects, faces, and generate tags using MediaPipe</p>
+        
+        <div class="upload-area">
+            <input type="file" 
+                   id="image-upload" 
+                   accept="image/*"
+                   data-weblmcp-field="image"
+                   data-weblmcp-type="file">
+            <div class="upload-placeholder">
+                <span class="icon">📷</span>
+                <span>Click or drag image here</span>
+            </div>
+        </div>
+        
+        <div class="results" id="tagging-results" style="display: none;">
+            <div class="preview">
+                <img id="preview-image" src="" alt="Preview">
+            </div>
+            
+            <div class="tags-section">
+                <h3>Detected Tags</h3>
+                <div class="tags" id="detected-tags"></div>
+            </div>
+            
+            <div class="confidence-section">
+                <h3>Confidence Scores</h3>
+                <div class="confidence-chart" id="confidence-chart"></div>
+            </div>
+            
+            <div class="actions">
+                <button class="copy-tags-btn" data-weblmcp-action="copyTags">
+                    Copy All Tags
+                </button>
+                <button class="apply-tags-btn" data-weblmcp-action="applyTags">
+                    Apply to Asset
+                </button>
+            </div>
+        </div>
+        
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Analyzing image with MediaPipe...</p>
+        </div>
+        
+        <div class="error" id="error-message" style="display: none;">
+            <p>Error: <span id="error-text"></span></p>
+        </div>
+    </div>
+</div>

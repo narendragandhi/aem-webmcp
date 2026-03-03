@@ -1,3 +1,4 @@
 #base=js
 webmcp.js
 recipegenerator.js
+imagetagger.js
