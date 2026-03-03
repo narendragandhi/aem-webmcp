@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AEM WebMCP Components Test</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        h1 { color: #333; border-bottom: 2px solid #00d9ff; padding-bottom: 10px; }
+        .component-section { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .component-section h2 { color: #0066cc; margin-top: 0; }
+        
+        /* Recipe Generator Styles */
+        .recipe-generator { max-width: 800px; }
+        .ingredients-input { display: flex; gap: 10px; margin: 15px 0; }
+        .ingredients-input input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .generate-btn { background: #0066cc; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        .filter-options { display: flex; gap: 15px; margin: 10px 0; }
+        .recipe-card { background: #f9f9f9; padding: 15px; margin: 10px 0; border-radius: 4px; border-left: 4px solid #0066cc; }
+        .recipe-title { margin: 0 0 10px; color: #333; }
+        .recipe-meta { font-size: 0.9em; color: #666; margin-bottom: 10px; }
+        .recipe-meta span { margin-right: 15px; }
+        
+        /* Image Tagger Styles */
+        .upload-area { border: 2px dashed #ccc; padding: 40px; text-align: center; cursor: pointer; margin: 15px 0; }
+        .upload-area.drag-over { border-color: #0066cc; background: #e6f2ff; }
+        .upload-placeholder .icon { font-size: 48px; display: block; margin-bottom: 10px; }
+        .preview img { max-width: 300px; border-radius: 4px; }
+        .tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+        .tag { background: #e6f2ff; padding: 5px 12px; border-radius: 15px; font-size: 0.9em; }
+        .confidence-chart { margin: 15px 0; }
+        .confidence-bar { display: flex; align-items: center; margin: 5px 0; }
+        .confidence-bar .label { width: 120px; font-size: 0.9em; }
+        .confidence-bar .bar { flex: 1; height: 8px; background: #eee; border-radius: 4px; margin: 0 10px; }
+        .confidence-bar .bar .fill { height: 100%; background: #0066cc; border-radius: 4px; }
+        .confidence-bar .value { width: 50px; text-align: right; font-size: 0.85em; }
+        
+        #test-results { background: #1a1a2e; color: #00ff88; padding: 20px; border-radius: 8px; font-family: monospace; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>AEM WebMCP Components Test</h1>
+    
+    <!-- Recipe Generator -->
+    <div class="component-section">
+        <h2>Recipe Generator</h2>
+        <!-- Include recipe generator HTML -->
+        <div class="aem-webmcp-recipegenerator" data-cq-resource-path="/content/recipe-generator">
+            <div class="recipe-generator">
+                <p>Enter ingredients you have, and we'll suggest delicious recipes!</p>
+                <div class="ingredients-input">
+                    <input type="text" id="ingredients" placeholder="e.g., chicken, garlic, tomato" value="chicken, garlic">
+                    <button type="button" class="generate-btn">Generate Recipes</button>
+                </div>
+                <div class="filter-options">
+                    <label><input type="checkbox" id="vegetarian"> Vegetarian</label>
+                    <label><input type="checkbox" id="quick"> Quick (&lt;30 min)</label>
+                    <label><input type="checkbox" id="healthy"> Healthy</label>
+                </div>
+                <div class="results" id="recipe-results">
+                    <div class="recipe-card template" style="display:none;">
+                        <h3 class="recipe-title"></h3>
+                        <div class="recipe-meta">
+                            <span class="time"></span>
+                            <span class="servings"></span>
+                            <span class="difficulty"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="no-results" style="display: none;">
+                    <p>No recipes found. Try different ingredients!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Image Tagger -->
+    <div class="component-section">
+        <h2>AI Image Tagger</h2>
+        <div class="aem-webmcp-imagetagger" data-cq-resource-path="/content/image-tagger">
+            <div class="image-tagger">
+                <p>Upload an image to automatically detect objects using MediaPipe</p>
+                <div class="upload-area">
+                    <input type="file" id="image-upload" accept="image/*" style="display:none;">
+                    <div class="upload-placeholder">
+                        <span class="icon">📷</span>
+                        <span>Click or drag image here</span>
+                    </div>
+                </div>
+                <div class="results" id="tagging-results" style="display:none;">
+                    <div class="preview">
+                        <img id="preview-image" src="" alt="Preview">
+                    </div>
+                    <div class="tags-section">
+                        <h3>Detected Tags</h3>
+                        <div class="tags" id="detected-tags"></div>
+                    </div>
+                    <div class="confidence-section">
+                        <h3>Confidence Scores</h3>
+                        <div class="confidence-chart" id="confidence-chart"></div>
+                    </div>
+                </div>
+                <div class="loading" id="loading" style="display:none;">
+                    <p>Analyzing image with MediaPipe...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Test Results -->
+    <div class="component-section">
+        <h2>WebMCP API Test Results</h2>
+        <div id="test-results">Running tests...</div>
+    </div>
+    
+    <script>
+        window.WEBMCP_DEBUG = true;
+        window.WEBMCP_CONSENT = true;
+    </script>
+    <script src="webmcp.js"></script>
+    <script src="recipegenerator.js"></script>
+    <script src="imagetagger.js"></script>
+    <script>
+        setTimeout(function() {
+            const results = [];
+            results.push('=== AEM WebMCP Components Test ===\n');
+            
+            // Test Recipe Generator
+            results.push('Recipe Generator:');
+            results.push('  - AEMWebMCP.RecipeGenerator exists: ' + (typeof window.AEMWebMCP !== 'undefined' && typeof window.AEMWebMCP.RecipeGenerator !== 'undefined'));
+            
+            if (window.AEMWebMCP && window.AEMWebMCP.RecipeGenerator) {
+                const recipes = window.AEMWebMCP.RecipeGenerator.generate(['chicken', 'garlic'], {});
+                results.push('  - generate() works: ' + recipes.success);
+                results.push('  - recipes found: ' + recipes.count);
+                
+                const details = window.AEMWebMCP.RecipeGenerator.getRecipe('Garlic Butter Chicken');
+                results.push('  - getRecipe() works: ' + details.success);
+                
+                results.push('  - getAllRecipes(): ' + window.AEMWebMCP.RecipeGenerator.getAllRecipes().length + ' recipes');
+            }
+            
+            // Test Image Tagger
+            results.push('\nImage Tagger:');
+            results.push('  - AEMWebMCP.ImageTagger exists: ' + (typeof window.AEMWebMCP !== 'undefined' && typeof window.AEMWebMCP.ImageTagger !== 'undefined'));
+            
+            if (window.AEMWebMCP && window.AEMWebMCP.ImageTagger) {
+                const tagResult = window.AEMWebMCP.ImageTagger.tag('test');
+                results.push('  - tag() works: ' + tagResult.success);
+            }
+            
+            // Check MCP-B registration
+            results.push('\nMCP-B Compliance:');
+            results.push('  - navigator.modelContext: ' + (typeof window.navigator !== 'undefined' && typeof window.navigator.modelContext !== 'undefined'));
+            results.push('  - AEMWebMCPAutomator: ' + (typeof window.AEMWebMCPAutomator !== 'undefined'));
+            
+            results.push('\n=== All Tests Complete ===');
+            document.getElementById('test-results').textContent = results.join('\n');
+        }, 1500);
+    </script>
+</body>
+</html>
