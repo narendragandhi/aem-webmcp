@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AEM WebMCP Test Page</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        h1 { color: #333; border-bottom: 2px solid #00d9ff; padding-bottom: 10px; }
+        .component-section { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .component-section h2 { color: #0066cc; margin-top: 0; }
+        
+        /* AEM Core Component Patterns */
+        .search[data-resource-type="core/wcm/components/search/v2/search"] {
+            border: 2px solid #e0e0e0;
+            padding: 15px;
+            border-radius: 4px;
+            background: #fafafa;
+        }
+        .navigation[data-resource-type="core/wcm/components/navigation/v1/navigation"] {
+            background: #333;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .navigation ul { list-style: none; padding: 0; margin: 0; display: flex; gap: 20px; }
+        .navigation a { color: white; text-decoration: none; }
+        
+        .form-container[data-resource-type="core/wcm/components/form/container"] {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 4px;
+        }
+        .form-container label { display: block; margin: 10px 0 5px; font-weight: bold; }
+        .form-container input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .form-container button { background: #0066cc; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        
+        .accordion[data-resource-type="core/wcm/components/accordion"] {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .accordion__item { border-bottom: 1px solid #ddd; }
+        .accordion__header { background: #f5f5f5; padding: 15px; cursor: pointer; font-weight: bold; }
+        .accordion__content { padding: 15px; display: none; }
+        .accordion__item.expanded .accordion__content { display: block; }
+        
+        .tabs[data-resource-type="core/wcm/components/tabs"] { margin-top: 20px; }
+        .tabs__list { display: flex; border-bottom: 2px solid #ddd; }
+        .tabs__tab { padding: 10px 20px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+        .tabs__tab[aria-selected="true"] { border-bottom-color: #0066cc; color: #0066cc; }
+        
+        .shopping-cart[data-resource-type="core/wcm/components/cart"] {
+            background: #fff8e0;
+            padding: 20px;
+            border-radius: 4px;
+            border: 2px solid #ffc107;
+        }
+        .cart-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; }
+        
+        .breadcrumb[data-resource-type="core/wcm/components/breadcrumb"] { padding: 10px 0; }
+        .breadcrumb ol { display: flex; list-style: none; padding: 0; margin: 0; gap: 10px; }
+        
+        .carousel[data-resource-type="core/wcm/components/carousel"] {
+            background: #000;
+            padding: 20px;
+            border-radius: 4px;
+            color: white;
+            text-align: center;
+        }
+        
+        .teaser[data-resource-type="core/wcm/components/teaser"] {
+            border: 2px solid #0066cc;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .teaser__image { height: 150px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .teaser__content { padding: 15px; }
+        
+        #test-results { background: #1a1a2e; color: #00ff88; padding: 20px; border-radius: 8px; font-family: monospace; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>AEM WebMCP Test Page</h1>
+    <p>This page demonstrates the AEM WebMCP integration with mock AEM Core Components.</p>
+    
+    <!-- Search Component -->
+    <div class="component-section">
+        <h2>Search Component</h2>
+        <div class="search" data-resource-type="core/wcm/components/search/v2/search" data-cq-resource-path="/content/my-site/search">
+            <input type="search" placeholder="Search..." name="q">
+            <button>Search</button>
+        </div>
+    </div>
+    
+    <!-- Navigation Component -->
+    <div class="component-section">
+        <h2>Navigation Component</h2>
+        <nav class="navigation" data-resource-type="core/wcm/components/navigation/v1/navigation" data-cq-resource-path="/content/my-site/nav">
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/products">Products</a></li>
+                <li><a href="/about">About</a></li>
+                <li><a href="/contact">Contact</a></li>
+            </ul>
+        </nav>
+    </div>
+    
+    <!-- Breadcrumb Component -->
+    <div class="component-section">
+        <h2>Breadcrumb Component</h2>
+        <nav class="breadcrumb" data-resource-type="core/wcm/components/breadcrumb/v2/breadcrumb" aria-label="Breadcrumb">
+            <ol>
+                <li><a href="/">Home</a></li>
+                <li><a href="/products">Products</a></li>
+                <li><a href="/products/electronics">Electronics</a></li>
+                <li>Smartphones</li>
+            </ol>
+        </nav>
+    </div>
+    
+    <!-- Form Container Component -->
+    <div class="component-section">
+        <h2>Form Container Component</h2>
+        <form class="form-container" data-resource-type="core/wcm/components/form/container" data-cq-resource-path="/content/my-site/contact-form">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+            
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+            
+            <label for="message">Message:</label>
+            <input type="text" id="message" name="message">
+            
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+    
+    <!-- Accordion Component -->
+    <div class="component-section">
+        <h2>Accordion Component</h2>
+        <div class="accordion" data-resource-type="core/wcm/components/accordion">
+            <div class="accordion__item">
+                <div class="accordion__header">What is WebMCP?</div>
+                <div class="accordion__content">WebMCP (Web Model Context Protocol) is a browser API being developed by Google that allows websites to expose structured tools to AI agents.</div>
+            </div>
+            <div class="accordion__item">
+                <div class="accordion__header">How does it work?</div>
+                <div class="accordion__content">AI agents can discover and interact with page components through a standardized protocol, enabling reliable automation.</div>
+            </div>
+            <div class="accordion__item">
+                <div class="accordion__header">Why use AEM WebMCP?</div>
+                <div class="accordion__content">Automatically enhances AEM Core Components with AI agent capabilities without requiring custom development.</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tabs Component -->
+    <div class="component-section">
+        <h2>Tabs Component</h2>
+        <div class="tabs" data-resource-type="core/wcm/components/tabs" role="tablist">
+            <div class="tabs__list">
+                <button class="tabs__tab" role="tab" aria-selected="true">Overview</button>
+                <button class="tabs__tab" role="tab" aria-selected="false">Features</button>
+                <button class="tabs__tab" role="tab" aria-selected="false">Pricing</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Shopping Cart Component -->
+    <div class="component-section">
+        <h2>Shopping Cart Component</h2>
+        <div class="shopping-cart" data-resource-type="core/wcm/components/cart">
+            <h3>Your Cart</h3>
+            <div class="cart-item">
+                <span class="item-name">iPhone 15 Pro</span>
+                <span class="price">$999.00</span>
+            </div>
+            <div class="cart-item">
+                <span class="item-name">AirPods Pro</span>
+                <span class="price">$249.00</span>
+            </div>
+            <div style="margin-top: 15px; font-weight: bold;">
+                Total: $1,248.00
+            </div>
+        </div>
+    </div>
+    
+    <!-- Carousel Component -->
+    <div class="component-section">
+        <h2>Carousel Component</h2>
+        <div class="carousel" data-resource-type="core/wcm/components/carousel">
+            <div class="carousel__item">Slide 1 - Welcome</div>
+            <div class="carousel__item">Slide 2 - Features</div>
+            <div class="carousel__item">Slide 3 - Contact</div>
+        </div>
+    </div>
+    
+    <!-- Teaser Component -->
+    <div class="component-section">
+        <h2>Teaser Component</h2>
+        <div class="teaser" data-resource-type="core/wcm/components/teaser">
+            <div class="teaser__image"></div>
+            <div class="teaser__content">
+                <h3>Special Offer</h3>
+                <p>Get 20% off on all products this week!</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Test Results Panel -->
+    <div class="component-section">
+        <h2>WebMCP Test Results</h2>
+        <div id="test-results">Running tests...</div>
+    </div>
+    
+    <script>
+        // Enable debug mode
+        window.WEBMCP_DEBUG = true;
+        window.WEBMCP_SHOW_PANEL = true;
+    </script>
+    <script src="webmcp.js"></script>
+    <script>
+        // Wait for WebMCP to initialize
+        setTimeout(function() {
+            const results = [];
+            
+            // Test 1: Check if AEMWebMCP global object exists
+            results.push('=== AEM WebMCP Test Results ===\n');
+            results.push('Test 1: Global AEMWebMCP object');
+            results.push('  Exists: ' + (typeof window.AEMWebMCP !== 'undefined'));
+            
+            // Test 2: Check WebMCP Automator
+            results.push('\nTest 2: AEMWebMCPAutomator');
+            results.push('  Exists: ' + (typeof window.AEMWebMCPAutomator !== 'undefined'));
+            results.push('  Version: ' + (window.AEMWebMCPAutomator?.version || 'N/A'));
+            
+            // Test 3: Get page info
+            results.push('\nTest 3: getPageInfo()');
+            try {
+                const pageInfo = window.AEMWebMCP.getPageInfo();
+                results.push('  Title: ' + pageInfo.title);
+                results.push('  URL: ' + pageInfo.url);
+                results.push('  Components detected: ' + pageInfo.components);
+            } catch(e) {
+                results.push('  Error: ' + e.message);
+            }
+            
+            // Test 4: Get all components
+            results.push('\nTest 4: getComponents()');
+            try {
+                const components = window.AEMWebMCP.getComponents();
+                results.push('  Total components: ' + components.length);
+                results.push('  Categories found:');
+                const categories = {};
+                components.forEach(c => {
+                    categories[c.category] = (categories[c.category] || 0) + 1;
+                });
+                Object.entries(categories).forEach(([cat, count]) => {
+                    results.push('    - ' + cat + ': ' + count);
+                });
+            } catch(e) {
+                results.push('  Error: ' + e.message);
+            }
+            
+            // Test 5: Form fields extraction
+            results.push('\nTest 5: getFormFields(".form-container")');
+            try {
+                const fields = window.AEMWebMCP.getFormFields('.form-container');
+                results.push('  Success: ' + fields.success);
+                if (fields.fields) {
+                    results.push('  Fields: ' + fields.fields.map(f => f.name + '(' + f.type + ')').join(', '));
+                }
+            } catch(e) {
+                results.push('  Error: ' + e.message);
+            }
+            
+            // Test 6: Navigation detection
+            results.push('\nTest 6: Find navigation component');
+            try {
+                const nav = window.AEMWebMCP.findComponent('navigation');
+                results.push('  Found: ' + (nav !== null));
+            } catch(e) {
+                results.push('  Error: ' + e.message);
+            }
+            
+            // Test 7: Element info
+            results.push('\nTest 7: getElementInfo(".search")');
+            try {
+                const info = window.AEMWebMCP.getElementInfo('.search');
+                results.push('  Success: ' + info.success);
+                results.push('  Tag: ' + info.tag);
+                results.push('  WebMCP Action: ' + info.webmcp?.action);
+                results.push('  Category: ' + info.webmcp?.category);
+            } catch(e) {
+                results.push('  Error: ' + e.message);
+            }
+            
+            // Test 8: Fill form
+            results.push('\nTest 8: fillForm("#name", "Test User")');
+            try {
+                const result = window.AEMWebMCP.fillForm('#name', 'Test User');
+                results.push('  Success: ' + result.success);
+            } catch(e) {
+                results.push('  Error: ' + e.message);
+            }
+            
+            // Test 9: Component interactions
+            results.push('\nTest 9: Get interactions for accordion');
+            try {
+                const info = window.AEMWebMCP.getElementInfo('.accordion');
+                results.push('  Interactions: ' + (info.webmcp?.interactions || 'none'));
+            } catch(e) {
+                results.push('  Error: ' + e.message);
+            }
+            
+            results.push('\n=== All Tests Complete ===');
+            
+            document.getElementById('test-results').textContent = results.join('\n');
+        }, 1500);
+    </script>
+</body>
+</html>

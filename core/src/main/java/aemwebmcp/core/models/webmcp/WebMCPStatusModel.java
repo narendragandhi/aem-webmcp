@@ -17,6 +17,26 @@ import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Sling Model that provides WebMCP status information for AEM pages.
+ * 
+ * <p>This model is used by the WebMCP status component to display
+ * information about available AI agent-compatible components on the page.</p>
+ * 
+ * <p>Supported component categories include:</p>
+ * <ul>
+ *   <li>Commerce - search, cart, product components</li>
+ *   <li>Navigation - navigation, breadcrumb, language navigation</li>
+ *   <li>Content - text, title, image, teaser, download, embed</li>
+ *   <li>Layout - container, accordion, tabs, carousel</li>
+ *   <li>Form - form containers and fields</li>
+ *   <li>Media - PDF viewer</li>
+ *   <li>Experience - experience fragments</li>
+ * </ul>
+ *
+ * @since 1.0.0
+ * @see <a href="https://developer.chrome.com/blog/webmcp-epp">WebMCP Documentation</a>
+ */
 @Model(adaptables = SlingHttpServletRequest.class)
 public class WebMCPStatusModel {
 
@@ -55,6 +75,10 @@ public class WebMCPStatusModel {
     private int totalComponents;
     private Map<String, Integer> componentsByCategory;
 
+    /**
+     * Initializes the model by populating the available components list
+     * and computing category statistics.
+     */
     @PostConstruct
     protected void init() {
         availableComponents = COMPONENTS.values().stream()
@@ -67,22 +91,46 @@ public class WebMCPStatusModel {
             .collect(Collectors.groupingBy(ComponentInfo::getCategory, Collectors.summingInt(c -> 1)));
     }
 
+    /**
+     * Gets the list of all available WebMCP-compatible components.
+     *
+     * @return list of component info objects sorted by category and name
+     */
     public List<ComponentInfo> getAvailableComponents() {
         return availableComponents;
     }
     
+    /**
+     * Gets the total count of supported components.
+     *
+     * @return total number of supported AEM Core Components
+     */
     public int getTotalComponents() {
         return totalComponents;
     }
     
+    /**
+     * Gets a map of component counts grouped by category.
+     *
+     * @return map with category names as keys and component counts as values
+     */
     public Map<String, Integer> getComponentsByCategory() {
         return componentsByCategory;
     }
     
+    /**
+     * Indicates whether WebMCP is enabled on the current page.
+     *
+     * @return always returns true as WebMCP is enabled by default
+     */
     public boolean isEnabled() {
         return true;
     }
     
+    /**
+     * Inner class representing information about a single WebMCP-compatible component.
+     * Contains the component name, category, and supported interactions.
+     */
     public static class ComponentInfo {
         private final String name;
         private final String category;

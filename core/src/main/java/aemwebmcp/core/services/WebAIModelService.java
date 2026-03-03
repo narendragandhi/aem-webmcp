@@ -80,4 +80,12 @@ public class WebAIModelService {
     public void setTemperature(float temperature) {
         this.temperature = temperature;
     }
+
+    public boolean supportsStreaming() {
+        return true;
+    }
+
+    public String getRuntime() {
+        return "transformers.js";
+    }
 }

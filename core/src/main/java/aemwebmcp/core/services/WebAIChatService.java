@@ -93,4 +93,16 @@ public class WebAIChatService {
     public int getSessionCount() {
         return sessions.size();
     }
+
+    public int getActiveSessionCount() {
+        return sessions.size();
+    }
+
+    public ChatMessage getLastMessage(String sessionId) {
+        List<ChatMessage> history = sessions.get(sessionId);
+        if (history == null || history.isEmpty()) {
+            return null;
+        }
+        return history.get(history.size() - 1);
+    }
 }

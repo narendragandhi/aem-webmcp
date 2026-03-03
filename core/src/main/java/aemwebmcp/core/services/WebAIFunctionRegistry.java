@@ -159,4 +159,29 @@ public class WebAIFunctionRegistry {
     public int getFunctionCount() {
         return functions.size();
     }
+
+    public void unregisterFunction(String name) {
+        functions.remove(name);
+        LOG.debug("Unregistered function: {}", name);
+    }
+
+    public List<AIFunction> getFunctionsByCategory(String category) {
+        return functions.values().stream()
+            .filter(fn -> fn.getDescription().toLowerCase().contains(category.toLowerCase()))
+            .collect(Collectors.toList());
+    }
+
+    public String getToolsJson() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\"tools\":[");
+        List<Map<String, Object>> funcs = getFunctionsAsList();
+        for (int i = 0; i < funcs.size(); i++) {
+            if (i > 0) sb.append(",");
+            sb.append("{\"type\":\"function\",\"function\":");
+            sb.append(funcs.get(i).toString().replace("'", "\""));
+            sb.append("}");
+        }
+        sb.append("]}");
+        return sb.toString();
+    }
 }

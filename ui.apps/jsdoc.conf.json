@@ -1,0 +1,10 @@
+{
+  "source": {
+    "include": ["."],
+    "includePattern": "src/main/content/jcr_root/apps/aem-webmcp/clientlibs/.+\\.js$"
+  },
+  "opts": {
+    "destination": "target/jsdoc",
+    "template": "node_modules/minami"
+  }
+}

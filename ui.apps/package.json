@@ -1,0 +1,15 @@
+{
+  "name": "aem-webmcp",
+  "version": "1.1.0",
+  "description": "AEM WebMCP Auto-Enhancer",
+  "scripts": {
+    "jsdoc": "jsdoc src/main/content/jcr_root/apps/aem-webmcp/clientlibs/clientlib-webmcp/js/webmcp.js src/main/content/jcr_root/apps/aem-webmcp/clientlibs/clientlib-webai/js/webai.js src/main/content/jcr_root/apps/aem-webmcp/clientlibs/clientlib-base/js/webmcp.js -d target/jsdoc",
+    "docs": "jsdoc src/main/content/jcr_root/apps/aem-webmcp/clientlibs/clientlib-webmcp/js/webmcp.js src/main/content/jcr_root/apps/aem-webmcp/clientlibs/clientlib-webai/js/webai.js src/main/content/jcr_root/apps/aem-webmcp/clientlibs/clientlib-base/js/webmcp.js -d target/jsdoc",
+    "lint": "eslint src/main/content/jcr_root/apps/aem-webmcp/clientlibs/**/*.js"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "jsdoc": "^4.0.5",
+    "minami": "^1.2.3"
+  }
+}
