@@ -1,0 +1,60 @@
+<div class="aem-webmcp-recipegenerator" 
+     data-cq-resource-path="${resource.path}"
+     data-resource-type="aem-webmcp/components/webmcp/recipegenerator"
+     data-weblmcp-enabled="true">
+    
+    <div class="recipe-generator">
+        <h2>Recipe Generator</h2>
+        <p class="description">Enter ingredients you have, and we'll suggest delicious recipes!</p>
+        
+        <div class="ingredients-input">
+            <label for="ingredients">Your Ingredients (comma separated):</label>
+            <input type="text" 
+                   id="ingredients" 
+                   placeholder="e.g., chicken, rice, garlic, tomato"
+                   data-weblmcp-field="ingredients"
+                   data-weblmcp-type="string">
+            <button type="button" class="generate-btn" data-weblmcp-action="generate">
+                Generate Recipes
+            </button>
+        </div>
+        
+        <div class="filter-options">
+            <label>
+                <input type="checkbox" id="vegetarian" value="vegetarian">
+                Vegetarian
+            </label>
+            <label>
+                <input type="checkbox" id="quick" value="quick">
+                Quick (&lt;30 min)
+            </label>
+            <label>
+                <input type="checkbox" id="healthy" value="healthy">
+                Healthy
+            </label>
+        </div>
+        
+        <div class="results" id="recipe-results">
+            <div class="recipe-card template">
+                <h3 class="recipe-title"></h3>
+                <div class="recipe-meta">
+                    <span class="time"></span>
+                    <span class="servings"></span>
+                    <span class="difficulty"></span>
+                </div>
+                <div class="recipe-ingredients">
+                    <h4>Ingredients:</h4>
+                    <ul></ul>
+                </div>
+                <div class="recipe-instructions">
+                    <h4>Instructions:</h4>
+                    <ol></ol>
+                </div>
+            </div>
+        </div>
+        
+        <div class="no-results" style="display: none;">
+            <p>No recipes found. Try different ingredients!</p>
+        </div>
+    </div>
+</div>
