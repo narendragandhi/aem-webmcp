@@ -11,6 +11,7 @@
     "@mcp-b/transports": "^2.0.9",
     "@mcp-b/webmcp-types": "^2.0.9",
     "@mediapipe/tasks-vision": "^0.10.9",
+    "@mediapipe/tasks-audio": "^0.10.9",
     "@litertjs/core": "^0.2.0",
     "zod": "^3.24.0"
   },

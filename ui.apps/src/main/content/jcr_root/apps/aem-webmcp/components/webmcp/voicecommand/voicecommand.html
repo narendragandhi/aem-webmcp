@@ -1,0 +1,43 @@
+<div class="aem-webmcp-voicecommand" 
+     data-cq-resource-path="${resource.path}"
+     data-resource-type="aem-webmcp/components/webmcp/voicecommand"
+     data-weblmcp-enabled="true">
+    
+    <div class="voice-command">
+        <h2>Voice Command</h2>
+        <p class="description">Use voice commands to navigate and interact with the page</p>
+        
+        <div class="voice-controls">
+            <button type="button" class="mic-button" id="mic-toggle" data-weblmcp-action="toggleListening">
+                <span class="mic-icon">🎤</span>
+                <span class="mic-text">Click to speak</span>
+            </button>
+            
+            <div class="voice-status" id="voice-status">
+                <span class="status-dot"></span>
+                <span class="status-text">Ready</span>
+            </div>
+        </div>
+        
+        <div class="transcript-area">
+            <label>Transcript:</label>
+            <div class="transcript" id="transcript">...</div>
+        </div>
+        
+        <div class="commands-list">
+            <h3>Available Commands:</h3>
+            <ul>
+                <li>"Go to [page]" - Navigate to a page</li>
+                <li>"Click [element]" - Click an element</li>
+                <li>"Search for [query]" - Perform search</li>
+                <li>"Scroll up/down" - Scroll the page</li>
+                <li>"Read page" - Read page content aloud</li>
+            </ul>
+        </div>
+        
+        <div class="command-history">
+            <h3>Command History:</h3>
+            <div class="history-list" id="command-history"></div>
+        </div>
+    </div>
+</div>
