@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jcr:root xmlns:sling="http://sling.apache.org/jcr/sling/1.0" xmlns:cq="http://www.day.com/jcr/cq/1.0" xmlns:jcr="http://www.jcp.org/jcr/1.0" xmlns:nt="http://www.jcp.org/jcr/nt/1.0"
+    jcr:primaryType="cq:Page">
+    <jcr:content
+        pageTitle="FAQ - AEM WebMCP Demo"
+        jcr:primaryType="cq:PageContent"
+        jcr:title="FAQ"
+        cq:contextHubPath="/etc/cloudsettings/default/contexthub"
+        cq:contextHubSegmentsPath="/etc/segmentation/contexthub"
+        cq:template="/conf/aem-webmcp/settings/wcm/templates/page-content"
+        sling:resourceType="aem-webmcp/components/page"
+        jcr:description="FAQ page with accordion, tabs, and social sharing components for WebMCP AI agent testing">
+        
+        <root
+            jcr:primaryType="nt:unstructured"
+            sling:resourceType="aem-webmcp/components/container"
+            layout="responsiveGrid">
+            
+            <!-- Hero Section -->
+            <hero
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="aem-webmcp/components/container">
+                <title
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/title"
+                    jcr:title="Frequently Asked Questions"
+                    type="h1"/>
+                <text
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/text"
+                    text="&lt;p>Find answers to common questions. AI agents can interact with the accordion, tabs, and share this page.&lt;/p>"/>
+            </hero>
+            
+            <!-- Tabs Section -->
+            <tabs-section
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="aem-webmcp/components/container"
+                layout="responsiveGrid">
+                <title
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/title"
+                    jcr:title="Quick Links"
+                    type="h2"/>
+                    
+                <tabs
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/tabs">
+                    <getting-started
+                        jcr:primaryType="nt:unstructured"
+                        jcr:title="Getting Started">
+                        <text
+                            jcr:primaryType="nt:unstructured"
+                            sling:resourceType="aem-webmcp/components/text"
+                            text="&lt;ul>&lt;li>Deploy the aem-webmcp package to AEM&lt;/li>&lt;li>WebMCP auto-enhances all Core Components&lt;/li>&lt;li>Open browser console to see debug info&lt;/li>&lt;/ul>"/>
+                    </getting-started>
+                    <compatibility
+                        jcr:primaryType="nt:unstructured"
+                        jcr:title="Compatibility">
+                        <text
+                            jcr:primaryType="nt:unstructured"
+                            sling:resourceType="aem-webmcp/components/text"
+                            text="&lt;ul>&lt;li>AEM as a Cloud Service&lt;/li>&lt;li>AEM 6.5+&lt;/li>&lt;li>AEM Core Components 2.0+&lt;/li>&lt;li>Chrome with WebMCP flag (experimental)&lt;/li>&lt;/ul>"/>
+                    </compatibility>
+                    <support
+                        jcr:primaryType="nt:unstructured"
+                        jcr:title="Support">
+                        <text
+                            jcr:primaryType="nt:unstructured"
+                            sling:resourceType="aem-webmcp/components/text"
+                            text="&lt;p>For issues and questions:&lt;/p>&lt;ul>&lt;li>Check the GitHub issues&lt;/li>&lt;li>Review the documentation&lt;/li>&lt;li>Contact the development team&lt;/li>&lt;/ul>"/>
+                    </support>
+                </tabs>
+            </tabs-section>
+            
+            <!-- FAQ Accordion -->
+            <faq-section
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="aem-webmcp/components/container"
+                layout="responsiveGrid">
+                <title
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/title"
+                    jcr:title="Common Questions"
+                    type="h2"/>
+                    
+                <faq-accordion
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/accordion"
+                    expandedLevel="1"
+                    headingElement="h3">
+                    
+                    <faq1
+                        jcr:primaryType="nt:unstructured"
+                        jcr:title="What is WebMCP?">
+                        <text
+                            jcr:primaryType="nt:unstructured"
+                            sling:resourceType="aem-webmcp/components/text"
+                            text="&lt;p>WebMCP (Web Model Context Protocol) is a browser API being developed by Google that allows websites to expose structured tools to AI agents. Instead of clicking around blindly, AI agents can understand your site's structure and interact with components programmatically.&lt;/p>"/>
+                    </faq1>
+                    
+                    <faq2
+                        jcr:primaryType="nt:unstructured"
+                        jcr:title="Does this work with all AEM components?">
+                        <text
+                            jcr:primaryType="nt:unstructured"
+                            sling:resourceType="aem-webmcp/components/text"
+                            text="&lt;p>Yes! The aem-webmcp package automatically detects and enhances 50+ AEM Core Components including:&lt;/p>&lt;ul>&lt;li>Search, Cart, Products (Commerce)&lt;/li>&lt;li>Navigation, Breadcrumb (Navigation)&lt;/li>&lt;li>Forms - text, textarea, date, dropdown, checkbox, radio, file upload&lt;/li>&lt;li>Accordion, Tabs, Carousel (Layout)&lt;/li>&lt;li>And many more!&lt;/li>&lt;/ul>"/>
+                    </faq2>
+                    
+                    <faq3
+                        jcr:primaryType="nt:unstructured"
+                        jcr:title="Do I need to modify my components?">
+                        <text
+                            jcr:primaryType="nt:unstructured"
+                            sling:resourceType="aem-webmcp/components/text"
+                            text="&lt;p>No! The WebMCP integration is automatic. Just deploy the package and it works with your existing Core Components. No custom development required.&lt;/p>"/>
+                    </faq3>
+                    
+                    <faq4
+                        jcr:primaryType="nt:unstructured"
+                        jcr:title="What can AI agents actually do?">
+                        <text
+                            jcr:primaryType="nt:unstructured"
+                            sling:resourceType="aem-webmcp/components/text"
+                            text="&lt;p>AI agents can:&lt;/p>&lt;ul>&lt;li>Search the site&lt;/li>&lt;li>Fill and submit forms (all field types)&lt;/li>&lt;li>Navigate menus and pages&lt;/li>&lt;li>Expand/collapse accordions&lt;/li>&lt;li>Switch tabs&lt;/li>&lt;li>Control carousels&lt;/li>&lt;li>Add products to cart&lt;/li>&lt;li>And more!&lt;/li>&lt;/ul>"/>
+                    </faq4>
+                    
+                    <faq5
+                        jcr:primaryType="nt:unstructured"
+                        jcr:title="Is this secure?">
+                        <text
+                            jcr:primaryType="nt:unstructured"
+                            sling:resourceType="aem-webmcp/components/text"
+                            text="&lt;p>Yes. WebMCP exposure requires explicit consent. Users must opt-in via the WEBMCP_CONSENT flag. Additionally, all interactions happen through standard HTML elements - no new attack surfaces are created.&lt;/p>"/>
+                    </faq5>
+                    
+                    <faq6
+                        jcr:primaryType="nt:unstructured"
+                        jcr:title="Which browsers support WebMCP?">
+                        <text
+                            jcr:primaryType="nt:unstructured"
+                            sling:resourceType="aem-webmcp/components/text"
+                            text="&lt;p>Currently WebMCP is an experimental feature in Chrome (enable with --enable-features=WebMCPExperimentalFlag). The JavaScript API works in all browsers - the AI agent capabilities are what require WebMCP support.&lt;/p>"/>
+                    </faq6>
+                    
+                </faq-accordion>
+            </faq-section>
+            
+            <!-- Additional Info with Carousel -->
+            <carousel-section
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="aem-webmcp/components/container"
+                layout="responsiveGrid">
+                <title
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/title"
+                    jcr:title="Feature Highlights"
+                    type="h2"/>
+                    
+                <carousel
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/carousel"
+                    autoplay="false"
+                    autoPauseDuration="5000"
+                    showActiveAsset="true">
+                    
+                    <slide1
+                        jcr:primaryType="nt:unstructured">
+                        <title
+                            jcr:primaryType="nt:unstructured"
+                            sling:resourceType="aem-webmcp/components/title"
+                            jcr:title="Zero Configuration"
+                            type="h3"/>
+                        <text
+                            jcr:primaryType="nt:unstructured"
+                            sling:resourceType="aem-webmcp/components/text"
+                            text="&lt;p>Just deploy and it works automatically with all your existing Core Components.&lt;/p>"/>
+                    </slide1>
+                    
+                    <slide2
+                        jcr:primaryType="nt:unstructured">
+                        <title
+                            jcr:primaryType="nt:unstructured"
+                            sling:resourceType="aem-webmcp/components/title"
+                            jcr:title="50+ Components"
+                            type="h3"/>
+                        <text
+                            jcr:primaryType="nt:unstructured"
+                            sling:resourceType="aem-webmcp/components/text"
+                            text="&lt;p>Support for all major AEM Core Components out of the box.&lt;/p>"/>
+                    </slide2>
+                    
+                    <slide3
+                        jcr:primaryType="nt:unstructured">
+                        <title
+                            jcr:primaryType="nt:unstructured"
+                            sling:resourceType="aem-webmcp/components/title"
+                            jcr:title="AI Agent Ready"
+                            type="h3"/>
+                        <text
+                            jcr:primaryType="nt:unstructured"
+                            sling:resourceType="aem-webmcp/components/text"
+                            text="&lt;p>Enables AI agents to interact with your site through structured APIs.&lt;/p>"/>
+                    </slide3>
+                    
+                </carousel>
+            </carousel-section>
+            
+            <!-- Social Sharing -->
+            <social-section
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="aem-webmcp/components/container">
+                <title
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/title"
+                    jcr:title="Share This Page"
+                    type="h3"/>
+                <text
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/text"
+                    text="&lt;p>AI agents can interact with social sharing buttons.&lt;/p>"/>
+                <sharing
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/sharing"
+                    displayIcons="true"
+                    displayText="true"/>
+            </social-section>
+            
+            <!-- Progress Section -->
+            <progress-section
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="aem-webmcp/components/container">
+                <title
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/title"
+                    jcr:title="Page Completion"
+                    type="h3"/>
+                <text
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/text"
+                    text="&lt;p>Demo of progress bar component (for AI agent interaction testing):&lt;/p>"/>
+                <progressbar
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/progressbar"
+                    value="75"
+                    max="100"/>
+            </progress-section>
+            
+            <!-- Download Section -->
+            <download-section
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="aem-webmcp/components/container">
+                <title
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/title"
+                    jcr:title="Resources"
+                    type="h3"/>
+                <download
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/download"
+                    description="Download WebMCP documentation (PDF)"
+                    title="WebMCP Documentation"/>
+            </download-section>
+            
+            <!-- Breadcrumb -->
+            <breadcrumb-section
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="aem-webmcp/components/container">
+                <breadcrumb
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/breadcrumb"
+                    startLevel="1"
+                    showHidden="true"/>
+            </breadcrumb-section>
+            
+        </root>
+    </jcr:content>
+</jcr:root>

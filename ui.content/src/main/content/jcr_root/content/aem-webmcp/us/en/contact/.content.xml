@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jcr:root xmlns:sling="http://sling.apache.org/jcr/sling/1.0" xmlns:cq="http://www.day.com/jcr/cq/1.0" xmlns:jcr="http://www.jcp.org/jcr/1.0" xmlns:nt="http://www.jcp.org/jcr/nt/1.0"
+    jcr:primaryType="cq:Page">
+    <jcr:content
+        pageTitle="Contact Us - AEM WebMCP Demo"
+        jcr:primaryType="cq:PageContent"
+        jcr:title="Contact Us"
+        cq:contextHubPath="/etc/cloudsettings/default/contexthub"
+        cq:contextHubSegmentsPath="/etc/segmentation/contexthub"
+        cq:template="/conf/aem-webmcp/settings/wcm/templates/page-content"
+        sling:resourceType="aem-webmcp/components/page"
+        jcr:description="Contact form demo page with all form field types for WebMCP AI agent testing">
+        
+        <root
+            jcr:primaryType="nt:unstructured"
+            sling:resourceType="aem-webmcp/components/container"
+            layout="responsiveGrid">
+            
+            <!-- Hero Section -->
+            <hero
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="aem-webmcp/components/container">
+                <title
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/title"
+                    jcr:title="Contact Us"
+                    type="h1"/>
+                <text
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/text"
+                    text="&lt;p>This form demonstrates all major form field types. AI agents can fill every field and submit the form programmatically.&lt;/p>"/>
+            </hero>
+            
+            <!-- Contact Form with All Field Types -->
+            <form-section
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="aem-webmcp/components/container"
+                layout="responsiveGrid">
+                <title
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/title"
+                    jcr:title="Send a Message"
+                    type="h2"/>
+                    
+                <contact-form
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/form/container"
+                    action="/bin/query"
+                    method="post"
+                    id="contact-form"
+                    formTitle="Contact Form">
+                    
+                    <!-- Text Input - Name -->
+                    <name-field
+                        jcr:primaryType="nt:unstructured"
+                        sling:resourceType="aem-webmcp/components/form/text"
+                        fieldLabel="Full Name"
+                        name="fullName"
+                        placeholder="Enter your full name"
+                        required="true"/>
+                    
+                    <!-- Email Input -->
+                    <email-field
+                        jcr:primaryType="nt:unstructured"
+                        sling:resourceType="aem-webmcp/components/form/text"
+                        fieldLabel="Email Address"
+                        name="email"
+                        type="email"
+                        placeholder="you@example.com"
+                        required="true"/>
+                    
+                    <!-- Phone Input -->
+                    <phone-field
+                        jcr:primaryType="nt:unstructured"
+                        sling:resourceType="aem-webmcp/components/form/text"
+                        fieldLabel="Phone Number"
+                        name="phone"
+                        type="tel"
+                        placeholder="+1 (555) 123-4567"/>
+                    
+                    <!-- Textarea - Message -->
+                    <message-field
+                        jcr:primaryType="nt:unstructured"
+                        sling:resourceType="aem-webmcp/components/form/textarea"
+                        fieldLabel="Your Message"
+                        name="message"
+                        placeholder="Type your message here..."
+                        rows="5"
+                        required="true"/>
+                    
+                    <!-- Dropdown/Select - Department -->
+                    <department-field
+                        jcr:primaryType="nt:unstructured"
+                        sling:resourceType="aem-webmcp/components/form/dropdown"
+                        fieldLabel="Department"
+                        name="department"
+                        required="true">
+                        <options
+                            jcr:primaryType="nt:unstructured">
+                            <option1
+                                jcr:primaryType="nt:unstructured"
+                                text="Sales"
+                                value="sales"/>
+                            <option2
+                                jcr:primaryType="nt:unstructured"
+                                text="Support"
+                                value="support"/>
+                            <option3
+                                jcr:primaryType="nt:unstructured"
+                                text="Marketing"
+                                value="marketing"/>
+                            <option4
+                                jcr:primaryType="nt:unstructured"
+                                text="General Inquiry"
+                                value="general"/>
+                        </options>
+                    </department-field>
+                    
+                    <!-- Date Picker - Preferred Contact Date -->
+                    <date-field
+                        jcr:primaryType="nt:unstructured"
+                        sling:resourceType="aem-webmcp/components/form/date"
+                        fieldLabel="Preferred Contact Date"
+                        name="preferredDate"
+                        type="date"/>
+                    
+                    <!-- Radio Buttons - Contact Preference -->
+                    <contact-pref
+                        jcr:primaryType="nt:unstructured"
+                        sling:resourceType="aem-webmcp/components/form/options"
+                        fieldLabel="Preferred Contact Method"
+                        name="contactPreference"
+                        type="radio"
+                        required="true">
+                        <options
+                            jcr:primaryType="nt:unstructured">
+                            <option1
+                                jcr:primaryType="nt:unstructured"
+                                text="Email"
+                                value="email"/>
+                            <option2
+                                jcr:primaryType="nt:unstructured"
+                                text="Phone"
+                                value="phone"/>
+                            <option3
+                                jcr:primaryType="nt:unstructured"
+                                text="Both"
+                                value="both"/>
+                        </options>
+                    </contact-pref>
+                    
+                    <!-- Checkboxes - Interests -->
+                    <interests
+                        jcr:primaryType="nt:unstructured"
+                        sling:resourceType="aem-webmcp/components/form/options"
+                        fieldLabel="I'm interested in (select all that apply)"
+                        name="interests"
+                        type="checkbox">
+                        <options
+                            jcr:primaryType="nt:unstructured">
+                            <option1
+                                jcr:primaryType="nt:unstructured"
+                                text="New Products"
+                                value="products"/>
+                            <option2
+                                jcr:primaryType="nt:unstructured"
+                                text="Special Offers"
+                                value="offers"/>
+                            <option3
+                                jcr:primaryType="nt:unstructured"
+                                text="Newsletter"
+                                value="newsletter"/>
+                            <option4
+                                jcr:primaryType="nt:unstructured"
+                                text="Events"
+                                value="events"/>
+                        </options>
+                    </interests>
+                    
+                    <!-- File Upload -->
+                    <attachment
+                        jcr:primaryType="nt:unstructured"
+                        sling:resourceType="aem-webmcp/components/form/fileupload"
+                        fieldLabel="Attach File (optional)"
+                        name="attachment"
+                        mimeTypes=".pdf,.doc,.docx,.jpg,.png"/>
+                    
+                    <!-- Hidden Field -->
+                    <source
+                        jcr:primaryType="nt:unstructured"
+                        sling:resourceType="aem-webmcp/components/form/hidden"
+                        name="formSource"
+                        value="webmcp-demo"/>
+                    
+                    <!-- Submit Button -->
+                    <submit-btn
+                        jcr:primaryType="nt:unstructured"
+                        sling:resourceType="aem-webmcp/components/form/button"
+                        text="Send Message"
+                        type="submit"/>
+                    
+                    <!-- Reset Button -->
+                    <reset-btn
+                        jcr:primaryType="nt:unstructured"
+                        sling:resourceType="aem-webmcp/components/form/button"
+                        text="Clear Form"
+                        type="reset"/>
+                        
+                </contact-form>
+            </form-section>
+            
+            <!-- Alternative Login Form Demo -->
+            <login-section
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="aem-webmcp/components/container"
+                layout="responsiveGrid">
+                <title
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/title"
+                    jcr:title="Demo Login Form"
+                    type="h2"/>
+                    
+                <login-form
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/form/container"
+                    action="/bin/query"
+                    method="post"
+                    id="login-form">
+                    
+                    <username
+                        jcr:primaryType="nt:unstructured"
+                        sling:resourceType="aem-webmcp/components/form/text"
+                        fieldLabel="Username or Email"
+                        name="username"
+                        required="true"/>
+                    
+                    <password
+                        jcr:primaryType="nt:unstructured"
+                        sling:resourceType="aem-webmcp/components/form/text"
+                        fieldLabel="Password"
+                        name="password"
+                        type="password"
+                        required="true"/>
+                    
+                    <remember
+                        jcr:primaryType="nt:unstructured"
+                        sling:resourceType="aem-webmcp/components/form/options"
+                        fieldLabel="Remember Me"
+                        name="remember"
+                        type="checkbox">
+                        <options
+                            jcr:primaryType="nt:unstructured">
+                            <option1
+                                jcr:primaryType="nt:unstructured"
+                                text="Keep me logged in"
+                                value="yes"/>
+                        </options>
+                    </remember>
+                    
+                    <login-btn
+                        jcr:primaryType="nt:unstructured"
+                        sling:resourceType="aem-webmcp/components/form/button"
+                        text="Log In"
+                        type="submit"/>
+                </login-form>
+            </login-section>
+            
+            <!-- Breadcrumb -->
+            <breadcrumb-section
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="aem-webmcp/components/container">
+                <breadcrumb
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/breadcrumb"
+                    startLevel="1"
+                    showHidden="true"/>
+            </breadcrumb-section>
+            
+        </root>
+    </jcr:content>
+</jcr:root>

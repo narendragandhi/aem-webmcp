@@ -40,6 +40,13 @@
             'core/wcm/components/commerce/product': { category: 'commerce', action: 'product', description: 'Product display', interactions: ['add-to-cart', 'add-to-wishlist'] },
             'core/wcm/components/product': { category: 'commerce', action: 'product', description: 'Product display', interactions: ['add-to-cart'] },
             'core/wcm/components/commerce/featuredproducts': { category: 'commerce', action: 'featured-products', description: 'Featured products', interactions: ['view-all'] },
+            
+            'core/wcm/components/commerce/productlist': { category: 'commerce', action: 'product-list', description: 'Product list', interactions: ['filter', 'sort', 'paginate'],
+                getData: function(el) { return { products: el.querySelectorAll('.product-item, [data-product]').length }; }
+            },
+            'core/wcm/components/commerce/wishlist': { category: 'commerce', action: 'wishlist', description: 'Wishlist', interactions: ['add', 'remove', 'view'] },
+            'core/wcm/components/commerce/checkout': { category: 'commerce', action: 'checkout', description: 'Checkout', interactions: ['proceed', 'back', 'apply-coupon'] },
+            'core/wcm/components/commerce/orders': { category: 'commerce', action: 'order-history', description: 'Order history', interactions: ['view', 'reorder'] },
 
             // ==================== NAVIGATION COMPONENTS ====================
             'core/wcm/components/navigation/v1/navigation': { category: 'navigation', action: 'navigation', description: 'Site navigation', interactions: ['navigate', 'expand', 'collapse'],
@@ -149,6 +156,32 @@
             'core/wcm/components/form/text/v2/text': { category: 'form', action: 'form-field', fieldType: 'text' },
             'core/wcm/components/form/text': { category: 'form', action: 'form-field', fieldType: 'text' },
             
+            'core/wcm/components/form/textarea/v1/textarea': { category: 'form', action: 'form-field', fieldType: 'textarea',
+                getData: function(el) { const t = el.querySelector('textarea'); return { name: t?.name, required: t?.required }; }
+            },
+            'core/wcm/components/form/textarea': { category: 'form', action: 'form-field', fieldType: 'textarea' },
+            
+            'core/wcm/components/form/date/v1/date': { category: 'form', action: 'form-field', fieldType: 'date',
+                getData: function(el) { const i = el.querySelector('input'); return { name: i?.name, required: i?.required }; }
+            },
+            'core/wcm/components/form/date': { category: 'form', action: 'form-field', fieldType: 'date' },
+            
+            'core/wcm/components/form/dropdown/v1/dropdown': { category: 'form', action: 'form-dropdown', fieldType: 'select',
+                getData: function(el) { const s = el.querySelector('select'); return { name: s?.name, options: Array.from(s?.querySelectorAll('option') || []).map(o => o.value) }; }
+            },
+            'core/wcm/components/form/dropdown': { category: 'form', action: 'form-dropdown', fieldType: 'select' },
+            
+            'core/wcm/components/form/checkbox/v1/checkbox': { category: 'form', action: 'form-checkbox', fieldType: 'checkbox' },
+            'core/wcm/components/form/checkbox': { category: 'form', action: 'form-checkbox', fieldType: 'checkbox' },
+            
+            'core/wcm/components/form/radio/v1/radio': { category: 'form', action: 'form-radio', fieldType: 'radio' },
+            'core/wcm/components/form/radio': { category: 'form', action: 'form-radio', fieldType: 'radio' },
+            
+            'core/wcm/components/form/fileupload/v1/fileupload': { category: 'form', action: 'form-file-upload', fieldType: 'file',
+                interactions: ['upload', 'clear'] 
+            },
+            'core/wcm/components/form/fileupload': { category: 'form', action: 'form-file-upload', fieldType: 'file' },
+            
             'core/wcm/components/form/button/v1/button': { category: 'form', action: 'form-button', fieldType: 'button' },
             'core/wcm/components/form/button/v2/button': { category: 'form', action: 'form-button', fieldType: 'button' },
             'core/wcm/components/form/button': { category: 'form', action: 'form-button', fieldType: 'button' },
@@ -168,7 +201,48 @@
             // ==================== EXPERIENCE FRAGMENTS ====================
             'core/wcm/components/experiencefragment/v1/experiencefragment': { category: 'experience', action: 'experience-fragment', description: 'Experience fragment' },
             'core/wcm/components/experiencefragment/v2/experiencefragment': { category: 'experience', action: 'experience-fragment', description: 'Experience fragment' },
-            'core/wcm/components/experiencefragment': { category: 'experience', action: 'experience-fragment', description: 'Experience fragment' }
+            'core/wcm/components/experiencefragment': { category: 'experience', action: 'experience-fragment', description: 'Experience fragment' },
+
+            // ==================== SOCIAL & COMMUNITY COMPONENTS ====================
+            'core/wcm/components/comments': { category: 'social', action: 'comments', description: 'Comments section', interactions: ['post', 'reply', 'like', 'delete'] },
+            'core/wcm/components/comments/v1/comments': { category: 'social', action: 'comments', description: 'Comments', interactions: ['post', 'reply'] },
+            
+            'core/wcm/components/sharing': { category: 'social', action: 'social-share', description: 'Social sharing', interactions: ['share'],
+                getData: function(el) { return { platforms: Array.from(el.querySelectorAll('a')).map(a => ({ label: a.getAttribute('aria-label') || a.href, href: a.href })) }; }
+            },
+            'core/wcm/components/sharing/v1/sharing': { category: 'social', action: 'social-share', description: 'Share content' },
+            
+            'core/wcm/components/voting': { category: 'social', action: 'voting', description: 'Voting/rating', interactions: ['vote-up', 'vote-down', 'rate'],
+                getData: function(el) { return { upVotes: el.querySelectorAll('[aria-label*="up"], .vote-up').length, downVotes: el.querySelectorAll('[aria-label*="down"], .vote-down').length }; }
+            },
+            'core/wcm/components/voting/v1/voting': { category: 'social', action: 'voting', description: 'Vote on content' },
+            
+            // ==================== ADDITIONAL COMMERCE COMPONENTS ====================
+            'core/wcm/components/commerce/price': { category: 'commerce', action: 'price', description: 'Price display', interactions: ['add-to-cart'] },
+            'core/wcm/components/price': { category: 'commerce', action: 'price', description: 'Product price' },
+            
+            'core/wcm/components/commerce/swatch': { category: 'commerce', action: 'swatch', description: 'Color swatch selector', interactions: ['select'] },
+            'core/wcm/components/swatch': { category: 'commerce', action: 'swatch', description: 'Variant selector' },
+            
+            // ==================== ADDITIONAL LAYOUT COMPONENTS ====================
+            'core/wcm/components/list': { category: 'content', action: 'content-list', description: 'Content list',
+                getData: function(el) { return { items: el.querySelectorAll('li, .list-item').length }; }
+            },
+            'core/wcm/components/list/v1/list': { category: 'content', action: 'content-list', description: 'List of content' },
+            
+            'core/wcm/components/carousel/v2/carousel': { category: 'layout', action: 'carousel', description: 'Carousel/slider', interactions: ['next', 'prev', 'go-to-slide', 'play', 'pause'],
+                getData: function(el) { return { slides: el.querySelectorAll('.carousel__item, .cmp-carousel__item').length }; }
+            },
+            
+            // ==================== QUICK SEARCH ====================
+            'core/wcm/components/quicksearch': { category: 'commerce', action: 'quick-search', description: 'Quick search/autocomplete', interactions: ['search', 'select-result'],
+                getData: function(el) { return { suggestions: el.querySelectorAll('.suggestion, [role="option"]').length }; }
+            },
+            
+            // ==================== LANGUAGE STRUCTURE ====================
+            'core/wcm/components/languagenavigation/v2/languagenavigation': { category: 'navigation', action: 'language-navigation', description: 'Language selector', interactions: ['select-language'],
+                getData: function(el) { return { languages: Array.from(el.querySelectorAll('a')).map(a => ({ label: a.textContent.trim(), href: a.href, active: a.classList.contains('active') })) }; }
+            }
         },
         
         /**

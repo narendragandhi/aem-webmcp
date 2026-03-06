@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jcr:root xmlns:sling="http://sling.apache.org/jcr/sling/1.0" xmlns:cq="http://www.day.com/jcr/cq/1.0" xmlns:jcr="http://www.jcp.org/jcr/1.0" xmlns:nt="http://www.jcp.org/jcr/nt/1.0"
+    jcr:primaryType="cq:Page">
+    <jcr:content
+        pageTitle="Shop - AEM WebMCP Demo"
+        jcr:primaryType="cq:PageContent"
+        jcr:title="Shop"
+        cq:contextHubPath="/etc/cloudsettings/default/contexthub"
+        cq:contextHubSegmentsPath="/etc/segmentation/contexthub"
+        cq:template="/conf/aem-webmcp/settings/wcm/templates/page-content"
+        sling:resourceType="aem-webmcp/components/page"
+        jcr:description="E-commerce demo page showcasing shopping cart and product components with WebMCP">
+        
+        <root
+            jcr:primaryType="nt:unstructured"
+            sling:resourceType="aem-webmcp/components/container"
+            layout="responsiveGrid">
+            
+            <!-- Hero Section -->
+            <hero
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="aem-webmcp/components/container">
+                <title
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/title"
+                    jcr:title="Shop"
+                    type="h1"/>
+                <text
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/text"
+                    text="&lt;p>Browse our products and test AI agent e-commerce interactions: add to cart, update quantities, view wishlist, and more.&lt;/p>"/>
+            </hero>
+            
+            <!-- Search Bar -->
+            <search-section
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="aem-webmcp/components/container"
+                layout="fixed">
+                <title
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/title"
+                    jcr:title="Search Products"
+                    type="h3"/>
+                <search
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/search"
+                    searchRoot="/content/aem-webmcp"
+                    minimumSearchLength="2"
+                    displaySuggestions="true"
+                    placeholder="Search products..."/>
+            </search-section>
+            
+            <!-- Product Grid -->
+            <products-section
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="aem-webmcp/components/container"
+                layout="responsiveGrid">
+                <title
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/title"
+                    jcr:title="Featured Products"
+                    type="h2"/>
+                    
+                <!-- Product 1 -->
+                <product1
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/teaser"
+                    jcr:title="Premium Widget"
+                    jcr:description="&lt;p>High-quality widget for all your needs. AI agents can add this to cart.&lt;/p>"
+                    linkURL="/content/aem-webmcp/us/en/shop"
+                    titleFromPage="false"
+                    price="$49.99"/>
+                    
+                <!-- Product 2 -->
+                <product2
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/teaser"
+                    jcr:title="Super Gadget"
+                    jcr:description="&lt;p>Advanced gadget with many features. Try adding to wishlist!&lt;/p>"
+                    linkURL="/content/aem-webmcp/us/en/shop"
+                    titleFromPage="false"
+                    price="$99.99"/>
+                    
+                <!-- Product 3 -->
+                <product3
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/teaser"
+                    jcr:title="Basic Tool"
+                    jcr:description="&lt;p>Simple and reliable tool for everyday use.&lt;/p>"
+                    linkURL="/content/aem-webmcp/us/en/shop"
+                    titleFromPage="false"
+                    price="$19.99"/>
+                    
+                <!-- Product 4 -->
+                <product4
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/teaser"
+                    jcr:title="Deluxe Package"
+                    jcr:description="&lt;p>Complete package with everything you need.&lt;/p>"
+                    linkURL="/content/aem-webmcp/us/en/shop"
+                    titleFromPage="false"
+                    price="$149.99"/>
+            </products-section>
+            
+            <!-- Shopping Cart -->
+            <cart-section
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="aem-webmcp/components/container"
+                layout="responsiveGrid">
+                <title
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/title"
+                    jcr:title="Shopping Cart"
+                    type="h2"/>
+                    
+                <!-- Cart Component -->
+                <cart
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/cart"
+                    cartTitle="Your Cart"
+                    showCartSummary="true"/>
+                    
+                <!-- Checkout Button -->
+                <checkout
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/form/button"
+                    text="Proceed to Checkout"
+                    type="button"/>
+            </cart-section>
+            
+            <!-- Wishlist Section -->
+            <wishlist-section
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="aem-webmcp/components/container"
+                layout="responsiveGrid">
+                <title
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/title"
+                    jcr:title="My Wishlist"
+                    type="h2"/>
+                <text
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/text"
+                    text="&lt;p>Save items for later. AI agents can add/remove items from wishlist.&lt;/p>"/>
+            </wishlist-section>
+            
+            <!-- Language Navigation (for demo) -->
+            <lang-section
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="aem-webmcp/components/container">
+                <title
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/title"
+                    jcr:title="Select Language"
+                    type="h3"/>
+                <languagenavigation
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/languagenavigation"
+                    structureDepth="1"/>
+            </lang-section>
+            
+            <!-- Breadcrumb -->
+            <breadcrumb-section
+                jcr:primaryType="nt:unstructured"
+                sling:resourceType="aem-webmcp/components/container">
+                <breadcrumb
+                    jcr:primaryType="nt:unstructured"
+                    sling:resourceType="aem-webmcp/components/breadcrumb"
+                    startLevel="1"
+                    showHidden="true"/>
+            </breadcrumb-section>
+            
+        </root>
+    </jcr:content>
+</jcr:root>

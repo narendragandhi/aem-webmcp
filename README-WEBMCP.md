@@ -2,241 +2,397 @@
 
 > **Google WebMCP (Web Model Context Protocol) integration for AEM Core Components**
 
-This project provides automatic WebMCP integration for AEM sites built with Adobe Experience Manager Core Components. It enables AI agents to interact with your site in a structured, reliable way - no custom component development required.
+This project provides automatic WebMCP integration for AEM sites built with Adobe Experience Manager Core Components. It enables AI agents to interact with your site in a structured, reliable way.
 
 ## What is WebMCP?
 
-WebMCP (Web Model Context Protocol) is a new browser API being developed by Google that allows websites to expose structured tools to AI agents. Instead of AI agents clicking around blindly, they can:
-
+WebMCP (Web Model Context Protocol) is a browser API being developed by Google that allows websites to expose structured tools to AI agents. Instead of AI agents clicking around blindly, they can:
 - ✅ Understand site structure and components
 - ✅ Fill forms with proper field validation
 - ✅ Navigate precisely without guessing
 - ✅ Perform complex e-commerce actions
 - ✅ Get structured data from components
 
-## Features
+---
 
-### 🤖 Automatic Component Detection
-Automatically detects and enhances **50+ AEM Core Components**:
+## Quick Start
 
-| Category | Components |
-|----------|------------|
-| **Commerce** | Search, Cart, Product, Featured Products |
-| **Navigation** | Navigation, Language Navigation, Breadcrumb |
-| **Content** | Text, Title, Image, Teaser, Download, Embed, Content Fragment |
-| **Layout** | Container, Accordion, Tabs, Carousel, Progress Bar, Separator, TOC |
-| **Forms** | Form Container, Text, Button, Hidden, Options |
-| **Media** | PDF Viewer |
-| **Experience** | Experience Fragment |
-
-### 🚀 Zero Configuration
-- Auto-loaded via clientlib on every page
-- Works with any Core Components already on your page
-- No custom components needed
-
-### 🔧 Rich Interactions
-AI agents can perform actions like:
-- Navigate to any page
-- Fill and submit forms
-- Search the site
-- Add products to cart
-- Expand/collapse accordions
-- Switch tabs
-- Carousel navigation
-
-## Installation
+### Option 1: Quick Demo (5 minutes)
 
 ```bash
-# Build the project
+# Clone and build
+git clone <repo-url>
 cd aem-webmcp
-mvn clean install
+mvn clean install -DskipTests
 
-# Deploy to AEM (author)
+# Deploy to local AEM author
 cd all
 mvn install -PautoInstallSinglePackage -Daem.host=localhost -Daem.port=4502
+
+# Visit demo pages
+# http://localhost:4502/content/aem-webmcp/us/en.html
 ```
 
-## Usage
+### Option 2: Add to Existing AEM Project
 
-### For AI Agents (when WebMCP is enabled)
-
-Once deployed, AI agents with WebMCP support can:
-
-```javascript
-// Get all components on page
-AEMWebMCP.getComponents()
-
-// Get page info
-AEMWebMCP.getPageInfo()
-
-// Search the site
-AEMWebMCP.search('products')
-
-// Find a form and fill it
-AEMWebMCP.fillForm('input[name="email"]', 'user@example.com')
-AEMWebMCP.submitForm('form')
-
-// Navigate to a page
-AEMWebMCP.navigate('/products')
+```bash
+# Add as dependency to your all/pom.xml
+<dependency>
+    <groupId>com.aem</groupId>
+    <artifactId>aem-webmcp.all</artifactId>
+    <version>1.0.0</version>
+    <type>zip</type>
+</dependency>
 ```
 
-### For Developers
+---
 
-The WebMCP automation runs automatically. All Core Components on your page will be enhanced with:
+## Integration Guide
+
+### How to Integrate with Your AEM Project
+
+There are three ways to add WebMCP to your AEM project:
+
+#### 1. Embedded Integration (Recommended for New Projects)
+
+Add to your core bundle's `pom.xml`:
+
+```xml
+<dependency>
+    <groupId>com.aem</groupId>
+    <artifactId>aem-webmcp.core</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
+And add to your content package's `pom.xml`:
+
+```xml
+<dependency>
+    <groupId>com.aem</groupId>
+    <artifactId>aem-webmcp.ui.apps</artifactId>
+    <version>1.0.0</version>
+    <type>zip</type>
+</dependency>
+```
+
+#### 2. Overlay Integration (Recommended for Existing Sites)
+
+Copy only the clientlib to your project:
+
+```bash
+# Copy the WebMCP clientlib to your project
+cp -r ui.apps/src/main/content/jcr_root/apps/aem-webmcp/clientlibs/clientlib-webmcp \
+      ui.apps/src/main/content/jcr_root/apps/<your-project>/clientlibs/
+```
+
+Then include it in your page component:
 
 ```html
-<!-- Automatically added attributes -->
-<div data-webmcp-action="search"
-     data-webmcp-description="Site search functionality"
-     data-webmcp-category="commerce"
-     data-webmcp-interactions="submit,clear"
-     data-webmcp-data="{&quot;query&quot;:&quot;...&quot;}">
+<sly data-sly-call="${clientlib.js @ categories='<your-project>.webmcp'}" />
 ```
 
-### Configuration
+#### 3. Standalone Package (Quickest)
 
-#### Enable Debug Mode
-Add to your page or console:
+Deploy the pre-built package to your AEM:
+
+```bash
+# Upload to AEM Package Manager
+# Or use curl
+curl -u admin:admin -F package=@aem-webmcp.all-1.0.0.zip \
+  http://localhost:4502/crx/packmgr/service.jsp
+```
+
+---
+
+## Configuration
+
+### OSGi Configuration
+
+Create configuration at `ui.config/src/main/content/jcr_root/apps/aem-webmcp/config/org.apache.felix.http.cfg.json`:
+
+```json
+{
+  "webmcp.enabled": true,
+  "webmcp.debug": false,
+  "webmcp.consentRequired": true,
+  "commerce.mockData": true,
+  "commerce.maxCartItems": 50,
+  "commerce.cartTimeoutMinutes": 30,
+  "form.rateLimitPerMinute": 10,
+  "search.maxResults": 20
+}
+```
+
+### Feature Flags
+
+Control features via system properties or OSGi:
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `webmcp.enabled` | `true` | Enable/disable WebMCP |
+| `webmcp.debug` | `false` | Enable debug logging |
+| `webmcp.consentRequired` | `true` | Require user consent |
+| `commerce.mockData` | `true` | Use mock commerce data |
+
+### JavaScript Configuration
+
 ```javascript
-window.WEBMCP_DEBUG = true;
+// In your site footer or clientlib
+window.AEM_WEBMC_CONFIG = {
+    enabled: true,
+    debug: false,
+    consentRequired: true,
+    excludedComponents: ['/my-custom-component/'],
+    componentMapping: {
+        // Custom component mappings
+    }
+};
 ```
 
-#### Enable Debug Panel
-To visualize all detected WebMCP components on the page:
+---
+
+## Best Practices
+
+### 1. Gradual Rollout
+
 ```javascript
-window.WEBMCP_SHOW_PANEL = true;
+// Start with debug mode on author only
+window.WEBMCP_DEBUG = window.location.hostname.includes('author');
 ```
-This displays an overlay panel showing:
-- Total components detected
-- Components by category
-- Each component's action, category, and description
 
-#### Disable for Specific Components
-Add to any element:
+### 2. Consent Management
+
+```javascript
+// Before WebMCP initializes
+window.addEventListener('webmcp:beforeinit', function(e) {
+    if (!hasUserConsent()) {
+        e.preventDefault();
+    }
+});
+
+function hasUserConsent() {
+    // Your consent logic
+    return localStorage.getItem('webmcp-consent') === 'true';
+}
+```
+
+### 3. Performance
+
+The WebMCP clientlib should be loaded:
+- **At end of page** (before `</body>`)
+- **Deferred** to not block rendering
+- **Only on pages** that need AI interaction
+
+### 4. Security
+
+- ✅ CSRF protection enabled by default
+- ✅ Rate limiting on all endpoints
+- ✅ Input sanitization on all inputs
+- ✅ PII not logged
+
+For production, ensure:
+```json
+{
+  "webmcp.consentRequired": true,
+  "form.rateLimitPerMinute": 10
+}
+```
+
+---
+
+## Component Mapping Reference
+
+### Automatic Detection
+
+The following AEM Core Components are automatically detected:
+
+| Category | Resource Type | Action | Interactions |
+|----------|---------------|--------|--------------|
+| **Search** | `core/wcm/components/search` | search | submit, clear |
+| **Cart** | `core/wcm/components/cart` | shopping-cart | add, remove, update |
+| **Form** | `core/wcm/components/form/*` | form | submit, reset |
+| **Navigation** | `core/wcm/components/navigation` | navigation | navigate, expand |
+| **Breadcrumb** | `core/wcm/components/breadcrumb` | breadcrumb | navigate |
+| **Language Nav** | `core/wcm/components/languagenavigation` | language-nav | select |
+| **Accordion** | `core/wcm/components/accordion` | accordion | expand, collapse |
+| **Tabs** | `core/wcm/components/tabs` | tabs | select |
+| **Carousel** | `core/wcm/components/carousel` | carousel | next, prev, play |
+
+### Custom Component Mapping
+
+To add WebMCP support to custom components:
+
+```javascript
+AEMWebMCP.registerComponent('my-project/components/product-card', {
+    category: 'commerce',
+    action: 'product',
+    description: 'Product card with add to cart',
+    interactions: ['add-to-cart', 'view-details'],
+    getData: function(el) {
+        return {
+            name: el.dataset.productName,
+            price: el.dataset.productPrice,
+            sku: el.dataset.productSku
+        };
+    }
+});
+```
+
+---
+
+## API Reference
+
+### JavaScript API
+
+```javascript
+// Initialize
+AEMWebMCP.init();
+
+// Get all components
+const components = AEMWebMCP.getComponents();
+
+// Search
+AEMWebMCP.search('query').then(results => console.log(results));
+
+// Form operations
+AEMWebMCP.fillForm('input[name="email"]', 'test@example.com');
+AEMWebMCP.submitForm('form');
+
+// Cart operations  
+AEMWebMCP.addToCart({ productId: '123', quantity: 1 });
+
+// Navigate
+AEMWebMCP.navigate('/content/mysite/products.html');
+```
+
+### Events
+
+```javascript
+// WebMCP initialized
+window.addEventListener('webmcp:ready', () => console.log('Ready!'));
+
+// Component discovered
+window.addEventListener('webmcp:component', (e) => {
+    console.log('Found:', e.detail);
+});
+
+// Error occurred
+window.addEventListener('webmcp:error', (e) => {
+    console.error('Error:', e.detail);
+});
+```
+
+---
+
+## Troubleshooting
+
+### Components Not Detected
+
+1. Check Core Components are loaded
+2. Verify clientlib is included
+3. Enable debug: `window.WEBMCP_DEBUG = true`
+
+### Forms Not Submitting
+
+1. Check network tab for errors
+2. Verify CSRF token is present
+3. Check rate limiting not triggered
+
+### AI Agent Not Working
+
+1. Verify WebMCP browser flag enabled
+2. Check browser console for errors
+3. Verify consent given: `navigator.modelContext` exists
+
+### Performance Issues
+
+1. Disable debug mode in production
+2. Exclude components that don't need WebMCP
+3. Use lazy loading for clientlib
+
+---
+
+## Frequently Asked Questions
+
+### Q: Does this work with AEM Forms?
+Yes! All AEM Forms Core Components are supported including text, textarea, date, dropdown, checkbox, radio, and file upload.
+
+### Q: Can I use this with AEM Commerce (CIF)?
+Yes, but you'll need to configure the commerce endpoints. The demo uses mock data by default.
+
+### Q: Is this secure?
+Yes. Features include:
+- CSRF protection
+- Rate limiting
+- Input sanitization
+- No PII logging
+- Consent requirement option
+
+### Q: What browsers support WebMCP?
+Currently Chrome with experimental flags. The JavaScript API works in all browsers - AI agent features require WebMCP support.
+
+### Q: How do I disable WebMCP for specific components?
 ```html
-<div data-webmcp-disabled="true">
-    <!-- This component won't be enhanced -->
-</div>
+<div data-webmcp-disabled="true">...</div>
 ```
+
+---
+
+## Migration Guide
+
+### From Version 1.0 to 2.0
+
+1. Update dependencies
+2. Review new OSGi config options
+3. Test rate limiting settings
+4. Update consent handling if used
+
+---
+
+## Support
+
+- **Issues**: GitHub Issues
+- **Documentation**: `/docs` folder
+- **Demo**: `/content/aem-webmcp/us/en.html`
+
+---
 
 ## Architecture
 
 ```
 aem-webmcp/
-├── core/                          # Java bundle
+├── core/                          # OSGi bundle
+│   └── src/main/java/
+│       └── aemwebmcp/core/
+│           ├── servlets/          # REST endpoints
+│           ├── models/            # Sling models
+│           └── services/          # OSGi services
 ├── ui.apps/
 │   └── src/main/content/jcr_root/
 │       └── apps/aem-webmcp/
-│           ├── clientlibs/
-│           │   └── clientlib-webmcp/
-│           │       └── js/webmcp.js    # Main WebMCP automation
-│           └── components/
-│               └── page/
-│                   └── customfooterlibs.html  # Loads WebMCP
+│           ├── clientlibs/        # WebMCP JavaScript
+│           └── components/        # Demo components
+├── ui.config/                     # OSGi configurations
 ├── ui.content/                    # Sample content
-├── all/                           # Combined package
-└── dispatcher/                    # AEM dispatcher config
+└── all/                          # Combined package
 ```
 
-## How It Works
-
-1. **Page Load**: WebMCP JS initializes after DOM is ready
-2. **Component Detection**: Scans page for Core Components by:
-   - `data-cq-resource-path` attribute
-   - `data-resource-type` attribute  
-   - `core-wcm-components-*` CSS classes
-3. **Attribute Enhancement**: Adds WebMCP attributes with:
-   - Action type (search, form, cart, etc.)
-   - Description
-   - Available interactions
-   - Structured data from component
-4. **API Exposure**: Registers actions with browser's `navigator.modelContext`
-
-## Supported Components Reference
-
-### Commerce
-- `core/wcm/components/search` → Search functionality
-- `core/wcm/components/cart` → Shopping cart
-- `core/wcm/components/product` → Product display
-- `core/wcm/components/featuredproducts` → Featured products
-
-### Navigation  
-- `core/wcm/components/navigation` → Main navigation menu
-- `core/wcm/components/languagenavigation` → Language selector
-- `core/wcm/components/breadcrumb` → Breadcrumb trail
-
-### Content
-- `core/wcm/components/text` → Rich text
-- `core/wcm/components/title` → Heading/title
-- `core/wcm/components/image` → Image
-- `core/wcm/components/teaser` → Teaser
-- `core/wcm/components/download` → Download
-- `core/wcm/components/embed` → Embedded content
-
-### Layout
-- `core/wcm/components/container` → Container/parsys
-- `core/wcm/components/accordion` → Accordion
-- `core/wcm/components/tabs` → Tabbed panels
-- `core/wcm/components/carousel` → Carousel/slider
-
-### Forms
-- `core/wcm/components/form/container` → Form container
-- `core/wcm/components/form/text` → Text input
-- `core/wcm/components/form/button` → Button
-- `core/wcm/components/form/options` → Radio/checkbox/select
-
-## Sample AI Agent
-
-A sample AI agent script is provided in `docs/sample-agent.js` that demonstrates:
-
-```javascript
-// In browser console on WebMCP-enabled page:
-
-// 1. Initialize agent
-const agent = new AEMWebMCPAgent();
-
-// 2. Discover all components
-await agent.discover();
-
-// 3. Run complete demo journey
-await agent.demoJourney();
-
-// 4. Get AI-friendly summary
-const summary = agent.getSummary();
-// Returns: { page, components[], capabilities[] }
-```
-
-### Available Agent Methods
-- `discover()` - Find all WebMCP components
-- `findComponent(action, index)` - Find component by action type
-- `search(query)` - Search the site
-- `fillForm(selector, value)` - Fill form field
-- `submitForm(selector)` - Submit form
-- `interact(selector, action, options)` - Interact with component
-- `addToCart(selector, qty)` - Add to cart
-- `navigate(url)` - Navigate to URL
-
-## Browser Support
-
-- **WebMCP Enabled Browsers**: Chrome with `--enable-features=WebMCPExperimentalFlag` (Early Preview)
-- **Fallback**: Site works normally in all browsers - WebMCP features are opt-in
+---
 
 ## Requirements
 
 - AEM as a Cloud Service or AEM 6.5+
 - AEM Core Components 2.0+
 - Maven 3.6+
+- Java 11+
+
+---
 
 ## License
 
 Apache License 2.0
 
-## Resources
-
-- [WebMCP Documentation](https://developer.chrome.com/blog/webmcp-epp)
-- [AEM Core Components](https://github.com/adobe/aem-core-wcm-components)
-- [WebMCP W3C Spec](https://github.com/WICG/web-mcp)
-
 ---
 
-Built with ❤️ for the agentic web
+Built for the agentic web 🚀

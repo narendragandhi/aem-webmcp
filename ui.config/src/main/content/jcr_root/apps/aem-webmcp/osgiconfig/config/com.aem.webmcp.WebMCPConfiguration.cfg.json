@@ -1,0 +1,22 @@
+{
+  "webmcp.enabled": true,
+  "webmcp.debug": false,
+  "webmcp.consentRequired": true,
+  "webmcp.clientlibCategories": [
+    "aem-webmcp.webmcp"
+  ],
+  "commerce.enabled": true,
+  "commerce.mockData": true,
+  "commerce.maxCartItems": 50,
+  "commerce.cartTimeoutMinutes": 30,
+  "commerce.persistToJCR": false,
+  "form.enabled": true,
+  "form.rateLimitPerMinute": 10,
+  "form.maxFieldLength": 5000,
+  "form.maxRequestSize": 1048576,
+  "form.csrfEnabled": true,
+  "search.enabled": true,
+  "search.maxResults": 20,
+  "search.minQueryLength": 2,
+  "search.mockData": true
+}
