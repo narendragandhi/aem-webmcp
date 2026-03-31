@@ -264,6 +264,14 @@ AEMWebMCP.addToCart({ productId: '123', quantity: 1 });
 
 // Navigate
 AEMWebMCP.navigate('/content/mysite/products.html');
+
+// Get screenshot (requires consent)
+AEMWebMCP.getPageScreenshot().then(data => console.log(data));
+
+// Get all available AI tools (server-side definition)
+fetch('/content/aem-webmcp/us/en.webai-tools.json')
+    .then(r => r.json())
+    .then(tools => console.log(tools));
 ```
 
 ### Events

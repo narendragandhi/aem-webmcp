@@ -198,6 +198,12 @@
             'core/wcm/components/pdfviewer/v1/pdfviewer': { category: 'media', action: 'pdf-viewer', description: 'PDF viewer', interactions: ['download', 'print', 'zoom'] },
             'core/wcm/components/pdfviewer': { category: 'media', action: 'pdf-viewer', description: 'PDF viewer' },
 
+            // ==================== AEM WebMCP COMPONENTS ====================
+            'aem-webmcp/components/form/container': { category: 'form', action: 'form', description: 'Contact Form', interactions: ['submit', 'reset'] },
+            'aem-webmcp/components/search': { category: 'search', action: 'search', description: 'Site Search' },
+            'aem-webmcp/components/cart': { category: 'commerce', action: 'shopping-cart', description: 'Shopping Cart' },
+            'aem-webmcp/components/navigation': { category: 'navigation', action: 'navigation', description: 'Site Navigation' },
+            
             // ==================== EXPERIENCE FRAGMENTS ====================
             'core/wcm/components/experiencefragment/v1/experiencefragment': { category: 'experience', action: 'experience-fragment', description: 'Experience fragment' },
             'core/wcm/components/experiencefragment/v2/experiencefragment': { category: 'experience', action: 'experience-fragment', description: 'Experience fragment' },
@@ -256,10 +262,9 @@
             
             this.debug && console.log('[WebMCP] Initializing AEM WebMCP Automator v' + this.version);
             
-            if (this.isWebMCPSupported()) {
-                this.exposeWebMCPAPI();
-                this.enhanceAllComponents();
-            }
+            // Always expose the API for JS-based agents and testing
+            this.exposeWebMCPAPI();
+            this.enhanceAllComponents();
             
             if (this.debug || window.WEBMCP_SHOW_PANEL) {
                 this.createDebugPanel();
@@ -572,6 +577,12 @@
                     name: 'Get Accessibility Tree',
                     description: 'Get accessibility tree for screen reader/AI',
                     execute: () => self.getAccessibilityTree()
+                },
+                speakText: {
+                    name: 'Speak Text',
+                    description: 'Read text aloud using speech synthesis',
+                    parameters: { text: { type: 'string', description: 'Text to speak' } },
+                    execute: (params) => { self.speakText(params?.text); return { success: true }; }
                 }
             };
             
@@ -593,22 +604,100 @@
                 });
             }
             
-            // Expose global API (works in all browsers)
+            // Expose global API with consent check
             window.AEMWebMCP = {
                 version: this.version,
+                consented: !!window.AEM_WEBMCP_CONSENT,
+                
+                _checkConsent: function() {
+                    console.log(`[WebMCP] Checking consent. Internal: ${this.consented}, Global: ${window.AEM_WEBMCP_CONSENT}`);
+                    if (this.consented || window.AEM_WEBMCP_CONSENT === true) {
+                        this.consented = true;
+                        return true;
+                    }
+                    
+                    this._showConsentUI();
+                    return false;
+                },
+
+                _showConsentUI: function() {
+                    if (document.getElementById('webmcp-consent-wrapper')) return;
+
+                    const host = document.createElement('div');
+                    host.id = 'webmcp-consent-wrapper';
+                    document.body.appendChild(host);
+                    
+                    const shadow = host.attachShadow({mode: 'open'});
+                    
+                    // Inject Styles into Shadow DOM
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        :host { font-family: system-ui, -apple-system, sans-serif; }
+                        #bar {
+                            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(150%);
+                            width: 90%; max-width: 600px; background: rgba(255, 255, 255, 0.8);
+                            backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3);
+                            border-radius: 16px; padding: 16px 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+                            display: flex; align-items: center; justify-content: space-between; transition: transform 0.5s ease;
+                        }
+                        #bar.visible { transform: translateX(-50%) translateY(0); }
+                        .message { font-size: 14px; color: #1f2937; }
+                        .actions { display: flex; gap: 12px; }
+                        button { padding: 8px 16px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; }
+                        .btn-allow { background: #6366f1; color: white; }
+                        .btn-deny { background: transparent; color: #6b7280; }
+                    `;
+                    
+                    const bar = document.createElement('div');
+                    bar.id = 'bar';
+                    bar.innerHTML = `
+                        <div class="message"><b>AI Assistant</b> wants to help you with this page.</div>
+                        <div class="actions">
+                            <button class="btn-deny">Not now</button>
+                            <button class="btn-allow">Allow Access</button>
+                        </div>
+                    `;
+                    
+                    shadow.appendChild(style);
+                    shadow.appendChild(bar);
+                    
+                    setTimeout(() => bar.classList.add('visible'), 100);
+
+                    bar.querySelector('.btn-allow').onclick = () => {
+                        this.consented = true;
+                        bar.classList.remove('visible');
+                        setTimeout(() => host.remove(), 500);
+                    };
+
+                    bar.querySelector('.btn-deny').onclick = () => {
+                        bar.classList.remove('visible');
+                        setTimeout(() => host.remove(), 500);
+                    };
+                },
+
+                // Wrap all actions with consent check
                 ...Object.fromEntries(
-                    Object.entries(actions).map(([id, action]) => [id, action.execute])
+                    Object.entries(actions).map(([id, action]) => [
+                        id, 
+                        (...args) => {
+                            if (window.AEMWebMCP._checkConsent()) {
+                                return action.execute(...args);
+                            }
+                            return { success: false, error: 'User consent required' };
+                        }
+                    ])
                 )
             };
             
-            // Also expose for backward compatibility
-            window.AEMWebMCP.interact = (s, a, o) => self.interactComponent(s, a, o);
-            window.AEMWebMCP.fillForm = (s, v) => self.fillFormField(s, v);
-            window.AEMWebMCP.submitForm = (s) => self.submitForm(s);
-            window.AEMWebMCP.navigate = (u) => window.location.href = u;
-            window.AEMWebMCP.search = (q) => self.performSearch(q);
-            window.AEMWebMCP.addToCart = (s, q) => self.addToCart(s, q);
-            window.AEMWebMCP.getPageInfo = () => self.getPageInfo();
+            // Also expose for backward compatibility (all protected by consent)
+            window.AEMWebMCP.interact = (s, a, o) => window.AEMWebMCP._checkConsent() ? self.interactComponent(s, a, o) : { error: 'Consent required' };
+            window.AEMWebMCP.fillForm = (s, v) => window.AEMWebMCP._checkConsent() ? self.fillFormField(s, v) : { error: 'Consent required' };
+            window.AEMWebMCP.submitForm = (s) => window.AEMWebMCP._checkConsent() ? self.submitForm(s) : { error: 'Consent required' };
+            window.AEMWebMCP.navigate = (u) => window.AEMWebMCP._checkConsent() ? (window.location.href = u) : { error: 'Consent required' };
+            window.AEMWebMCP.search = (q) => window.AEMWebMCP._checkConsent() ? self.performSearch(q) : { error: 'Consent required' };
+            window.AEMWebMCP.addToCart = (s, q) => window.AEMWebMCP._checkConsent() ? self.addToCart(s, q) : { error: 'Consent required' };
+            window.AEMWebMCP.getPageInfo = () => window.AEMWebMCP._checkConsent() ? self.getPageInfo() : { error: 'Consent required' };
+            window.AEMWebMCP.getPageScreenshot = () => window.AEMWebMCP._checkConsent() ? self.getPageScreenshot() : Promise.resolve({ error: 'Consent required' });
         },
         
         /**
@@ -662,7 +751,11 @@
          * Normalize resource type
          */
         normalizeResourceType: function(type) {
-            return type.replace(/\/v\d+/g, '').replace(/\/core\/wcm\/components\//, '/core/wcm/components/');
+            if (!type) return '';
+            // Remove versioning (v1, v2, etc.)
+            let normalized = type.replace(/\/v\d+/g, '');
+            // Handle proxy components mapping to core components or base paths
+            return normalized;
         },
         
         /**
@@ -682,12 +775,29 @@
          * Enhance by common patterns
          */
         enhanceByPatterns: function() {
-            const patterns = { 'search': 'search', 'cart': 'shopping-cart', 'form': 'form', 'navigation': 'navigation', 'breadcrumb': 'breadcrumb', 'accordion': 'accordion', 'tabs': 'tabs', 'carousel': 'carousel' };
+            const patterns = { 
+                'search': 'search', 
+                'cart': 'shopping-cart', 
+                'form': 'form',
+                'cmp-form': 'form',
+                'cmp-form-container': 'form',
+                'navigation': 'navigation', 
+                'breadcrumb': 'breadcrumb', 
+                'accordion': 'accordion', 
+                'tabs': 'tabs', 
+                'carousel': 'carousel' 
+            };
             Object.entries(patterns).forEach(([pattern, action]) => {
                 document.querySelectorAll(`.${pattern}:not([data-webmcp-action])`).forEach(el => {
                     el.setAttribute('data-webmcp-action', action);
-                    el.setAttribute('data-webmcp-category', 'auto-detected');
+                    el.setAttribute('data-webmcp-category', action === 'shopping-cart' ? 'commerce' : (action === 'form' ? 'form' : pattern));
                 });
+            });
+
+            // Target form tags and IDs specifically
+            document.querySelectorAll('form:not([data-webmcp-action]), [id*="form"]:not([data-webmcp-action])').forEach(el => {
+                el.setAttribute('data-webmcp-action', 'form');
+                el.setAttribute('data-webmcp-category', 'form');
             });
         },
         
@@ -696,7 +806,10 @@
          */
         getAllComponents: function(category) {
             const components = [];
-            document.querySelectorAll('[data-webmcp-action]').forEach(el => {
+            const allElements = document.querySelectorAll('[data-webmcp-action]');
+            console.log(`[WebMCP] Found ${allElements.length} elements with data-webmcp-action attribute`);
+            
+            allElements.forEach(el => {
                 if (category && el.dataset.webmcpCategory !== category) return;
                 const data = { action: el.dataset.webmcpAction, category: el.dataset.webmcpCategory, description: el.dataset.webmcpDescription, selector: this.getSelector(el), interactions: (el.dataset.webmcpInteractions || '').split(',') };
                 try { if (el.dataset.webmcpData) data.data = JSON.parse(el.dataset.webmcpData); } catch (e) {}
@@ -795,12 +908,26 @@
          * Fill form field
          */
         fillFormField: function(selector, value) {
-            const input = document.querySelector(selector);
-            if (!input) return { success: false, error: 'Input not found' };
-            input.value = value;
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-            input.dispatchEvent(new Event('change', { bubbles: true }));
-            return { success: true };
+            return new Promise((resolve) => {
+                const input = document.querySelector(selector);
+                if (!input) {
+                    resolve({ success: false, error: 'Input not found: ' + selector });
+                    return;
+                }
+                
+                // Design: Add AI Aura
+                input.classList.add('webmcp-ai-active');
+                
+                input.value = value;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+                
+                // Design: Visual pause so human can see what's happening
+                setTimeout(() => {
+                    input.classList.remove('webmcp-ai-active');
+                    resolve({ success: true });
+                }, 400);
+            });
         },
         
         /**
@@ -909,6 +1036,15 @@
             }
             return { success: false, error: 'Quantity input not found' };
         },
+
+        /**
+         * Speak text using Web Speech API
+         */
+        speakText: function(text) {
+            if (!text) return;
+            const utterance = new SpeechSynthesisUtterance(text);
+            window.speechSynthesis.speak(utterance);
+        },
         
         getElementInfo: function(selector) {
             const el = document.querySelector(selector);
@@ -949,13 +1085,34 @@
         },
         
         getPageScreenshot: function() {
-            // This would require html2canvas or similar library
-            // For now, return info about what would be needed
-            return { 
-                success: false, 
-                error: 'Screenshot requires additional library (html2canvas)',
-                suggestion: 'Use window.scrollTo(0,0) then capture with external tool'
-            };
+            return new Promise((resolve) => {
+                if (window.html2canvas) {
+                    this._takeScreenshot(resolve);
+                    return;
+                }
+                
+                // Load html2canvas dynamically
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                script.onload = () => this._takeScreenshot(resolve);
+                script.onerror = () => resolve({ success: false, error: 'Failed to load html2canvas library' });
+                document.head.appendChild(script);
+            });
+        },
+
+        _takeScreenshot: function(resolve) {
+            window.html2canvas(document.body, {
+                ignoreElements: (element) => element.id === 'webmcp-debug-panel',
+                logging: false,
+                useCORS: true
+            }).then(canvas => {
+                resolve({ 
+                    success: true, 
+                    data: canvas.toDataURL('image/jpeg', 0.6) // Compress to save bandwidth/tokens
+                });
+            }).catch(e => {
+                resolve({ success: false, error: 'Screenshot failed: ' + e.message });
+            });
         },
         
         getAccessibilityTree: function() {

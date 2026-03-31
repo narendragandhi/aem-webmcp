@@ -1,0 +1,8 @@
+<sly data-sly-use.options="com.adobe.cq.wcm.core.components.models.form.Options">
+    <div class="cmp-form-dropdown">
+        <label for="${options.id}">${options.title}</label>
+        <select name="${options.name}" id="${options.id}">
+            <option data-sly-repeat.item="${options.items}" value="${item.value}" selected="${item.selected}">${item.text}</option>
+        </select>
+    </div>
+</sly>

@@ -1,0 +1,9 @@
+<sly data-sly-use.text="com.adobe.cq.wcm.core.components.models.form.Text">
+    <div class="cmp-form-text">
+        <label for="${text.id}">${text.title}</label>
+        <textarea id="${text.id}" 
+                  name="${text.name}" 
+                  placeholder="${text.placeholder}"
+                  required="${text.required ? 'true' : ''}">${text.value}</textarea>
+    </div>
+</sly>

@@ -2,6 +2,7 @@ package aemwebmcp.core.services;
 
 import org.junit.jupiter.api.Test;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -10,90 +11,68 @@ class WebAIFunctionRegistryTest {
     @Test
     void testDefaultFunctionsRegistered() {
         WebAIFunctionRegistry registry = new WebAIFunctionRegistry();
-        
-        assertTrue(registry.getFunctionCount() > 0);
-        assertNotNull(registry.getAllFunctions());
+        assertTrue(registry.getFunctionCount() >= 10);
+        assertNotNull(registry.getFunction("getPageInfo"));
+        assertNotNull(registry.getFunction("search"));
+        assertNotNull(registry.getFunction("addToCart"));
     }
 
     @Test
-    void testGetFunction() {
+    void testRegisterCustomFunction() {
         WebAIFunctionRegistry registry = new WebAIFunctionRegistry();
-        
-        WebAIFunctionRegistry.AIFunction searchFn = registry.getFunction("search");
-        assertNotNull(searchFn);
-        assertEquals("search", searchFn.getName());
-    }
-
-    @Test
-    void testGetFunctionNotFound() {
-        WebAIFunctionRegistry registry = new WebAIFunctionRegistry();
-        
-        assertNull(registry.getFunction("nonExistent"));
-    }
-
-    @Test
-    void testRegisterFunction() {
-        WebAIFunctionRegistry registry = new WebAIFunctionRegistry();
-        int initialCount = registry.getFunctionCount();
-        
         Map<String, WebAIFunctionRegistry.FunctionParameter> params = new HashMap<>();
-        params.put("query", new WebAIFunctionRegistry.FunctionParameter("string", "Search query", true));
-        registry.register("customSearch", "Custom search function", params);
+        params.put("param1", new WebAIFunctionRegistry.FunctionParameter("string", "desc", true));
         
-        assertEquals(initialCount + 1, registry.getFunctionCount());
-        assertNotNull(registry.getFunction("customSearch"));
+        registry.register("custom", "custom desc", params);
+        
+        WebAIFunctionRegistry.AIFunction func = registry.getFunction("custom");
+        assertNotNull(func);
+        assertEquals("custom", func.getName());
+        assertEquals("custom desc", func.getDescription());
+        assertEquals(1, func.getParameters().size());
     }
 
     @Test
     void testUnregisterFunction() {
         WebAIFunctionRegistry registry = new WebAIFunctionRegistry();
-        assertNotNull(registry.getFunction("search"));
+        int initialCount = registry.getFunctionCount();
         
         registry.unregisterFunction("search");
-        
+        assertEquals(initialCount - 1, registry.getFunctionCount());
         assertNull(registry.getFunction("search"));
     }
 
     @Test
     void testGetFunctionsByCategory() {
         WebAIFunctionRegistry registry = new WebAIFunctionRegistry();
-        
-        // The default function descriptions don't contain category keywords
-        // This test verifies the method works when no matches found
-        assertNotNull(registry.getFunctionsByCategory("xyz123"));
-    }
-
-    @Test
-    void testAIFunctionToMap() {
-        Map<String, WebAIFunctionRegistry.FunctionParameter> params = new HashMap<>();
-        params.put("q", new WebAIFunctionRegistry.FunctionParameter("string", "Query", true));
-        
-        WebAIFunctionRegistry.AIFunction fn = new WebAIFunctionRegistry.AIFunction("test", "Test function", params);
-        Map<String, Object> map = fn.toMap();
-        
-        assertEquals("test", map.get("name"));
-        assertEquals("Test function", map.get("description"));
-        assertNotNull(map.get("parameters"));
-    }
-
-    @Test
-    void testFunctionParameterToMap() {
-        WebAIFunctionRegistry.FunctionParameter param = 
-            new WebAIFunctionRegistry.FunctionParameter("string", "Test param", true);
-        
-        Map<String, Object> map = param.toMap();
-        
-        assertEquals("string", map.get("type"));
-        assertEquals("Test param", map.get("description"));
-        assertTrue((Boolean) map.get("required"));
+        List<WebAIFunctionRegistry.AIFunction> commerceFuncs = registry.getFunctionsByCategory("cart");
+        assertFalse(commerceFuncs.isEmpty());
+        assertTrue(commerceFuncs.stream().anyMatch(f -> f.getName().equals("addToCart")));
     }
 
     @Test
     void testGetToolsJson() {
         WebAIFunctionRegistry registry = new WebAIFunctionRegistry();
-        
-        String toolsJson = registry.getToolsJson();
-        assertNotNull(toolsJson);
-        assertTrue(toolsJson.contains("function"));
+        String json = registry.getToolsJson();
+        assertNotNull(json);
+        assertTrue(json.contains("\"tools\""));
+        assertTrue(json.contains("\"function\""));
+        assertTrue(json.contains("getPageInfo"));
+    }
+
+    @Test
+    void testFunctionParameterToMap() {
+        WebAIFunctionRegistry.FunctionParameter param = new WebAIFunctionRegistry.FunctionParameter("string", "desc", true);
+        Map<String, Object> map = param.toMap();
+        assertEquals("string", map.get("type"));
+        assertEquals("desc", map.get("description"));
+        assertEquals(true, map.get("required"));
+    }
+
+    @Test
+    void testGetAllFunctions() {
+        WebAIFunctionRegistry registry = new WebAIFunctionRegistry();
+        List<WebAIFunctionRegistry.AIFunction> all = registry.getAllFunctions();
+        assertEquals(registry.getFunctionCount(), all.size());
     }
 }

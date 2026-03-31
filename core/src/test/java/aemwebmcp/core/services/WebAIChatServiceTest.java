@@ -1,110 +1,83 @@
 package aemwebmcp.core.services;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import java.util.Map;
+import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class WebAIChatServiceTest {
 
-    @Test
-    void testAddMessage() {
-        WebAIChatService service = new WebAIChatService();
-        String sessionId = "test-session-1";
-        
-        service.addMessage(sessionId, "user", "Hello AI");
-        
-        assertEquals(1, service.getHistory(sessionId).size());
+    private WebAIChatService service;
+
+    @BeforeEach
+    void setUp() {
+        service = new WebAIChatService();
     }
 
     @Test
-    void testMultipleMessages() {
-        WebAIChatService service = new WebAIChatService();
-        String sessionId = "test-session-2";
+    void testAddAndGetMessage() {
+        service.addMessage("session1", "user", "hello");
+        List<WebAIChatService.ChatMessage> history = service.getHistory("session1");
         
-        service.addMessage(sessionId, "user", "Hello");
-        service.addMessage(sessionId, "assistant", "Hi there!");
-        service.addMessage(sessionId, "user", "How are you?");
-        
-        assertEquals(3, service.getHistory(sessionId).size());
-    }
-
-    @Test
-    void testHistoryLimit() {
-        WebAIChatService service = new WebAIChatService();
-        String sessionId = "test-session-limit";
-        
-        for (int i = 0; i < 25; i++) {
-            service.addMessage(sessionId, "user", "Message " + i);
-        }
-        
-        assertEquals(20, service.getHistory(sessionId).size());
+        assertEquals(1, history.size());
+        assertEquals("user", history.get(0).getRole());
+        assertEquals("hello", history.get(0).getContent());
     }
 
     @Test
     void testClearHistory() {
-        WebAIChatService service = new WebAIChatService();
-        String sessionId = "test-session-clear";
+        service.addMessage("session1", "user", "hello");
+        service.clearHistory("session1");
+        assertTrue(service.getHistory("session1").isEmpty());
+    }
+
+    @Test
+    void testHistoryPruning() {
+        // MAX_HISTORY = 20
+        for (int i = 0; i < 25; i++) {
+            service.addMessage("session1", "user", "msg " + i);
+        }
         
-        service.addMessage(sessionId, "user", "Hello");
-        assertEquals(1, service.getHistory(sessionId).size());
+        List<WebAIChatService.ChatMessage> history = service.getHistory("session1");
+        assertEquals(20, history.size());
+        assertEquals("msg 5", history.get(0).getContent());
+        assertEquals("msg 24", history.get(19).getContent());
+    }
+
+    @Test
+    void testSessionPruning() {
+        // MAX_SESSIONS = 100
+        for (int i = 0; i < 110; i++) {
+            service.addMessage("session" + i, "user", "hello");
+        }
         
-        service.clearHistory(sessionId);
-        assertEquals(0, service.getHistory(sessionId).size());
+        assertTrue(service.getSessionCount() <= 100);
     }
 
     @Test
     void testBuildContext() {
-        WebAIChatService service = new WebAIChatService();
-        String sessionId = "test-session-context";
+        service.addMessage("session1", "user", "hello");
+        service.addMessage("session1", "assistant", "hi there");
         
-        service.addMessage(sessionId, "user", "Hello");
-        service.addMessage(sessionId, "assistant", "Hi there!");
-        
-        String context = service.buildContext(sessionId);
-        assertNotNull(context);
-        assertFalse(context.isEmpty());
-    }
-
-    @Test
-    void testBuildContextEmpty() {
-        WebAIChatService service = new WebAIChatService();
-        
-        String context = service.buildContext("non-existent-session");
-        assertEquals("", context);
-    }
-
-    @Test
-    void testChatMessageToMap() {
-        WebAIChatService.ChatMessage msg = new WebAIChatService.ChatMessage("user", "Test message");
-        
-        assertEquals("user", msg.getRole());
-        assertEquals("Test message", msg.getContent());
-        assertTrue(msg.getTimestamp() > 0);
-        
-        Map<String, Object> map = msg.toMap();
-        assertEquals("user", map.get("role"));
-        assertEquals("Test message", map.get("content"));
-    }
-
-    @Test
-    void testGetActiveSessions() {
-        WebAIChatService service = new WebAIChatService();
-        
-        service.addMessage("session-1", "user", "Hello");
-        service.addMessage("session-2", "user", "World");
-        
-        assertEquals(2, service.getActiveSessionCount());
+        String context = service.buildContext("session1");
+        assertTrue(context.contains("user: hello"));
+        assertTrue(context.contains("assistant: hi there"));
     }
 
     @Test
     void testGetLastMessage() {
-        WebAIChatService service = new WebAIChatService();
-        String sessionId = "test-session-last";
+        service.addMessage("session1", "user", "first");
+        service.addMessage("session1", "user", "last");
         
-        service.addMessage(sessionId, "user", "First");
-        service.addMessage(sessionId, "user", "Last message");
-        
-        WebAIChatService.ChatMessage last = service.getLastMessage(sessionId);
-        assertEquals("Last message", last.getContent());
+        assertEquals("last", service.getLastMessage("session1").getContent());
+        assertNull(service.getLastMessage("unknown"));
+    }
+
+    @Test
+    void testGetSessionCount() {
+        service.addMessage("s1", "u", "m");
+        service.addMessage("s2", "u", "m");
+        assertEquals(2, service.getSessionCount());
+        assertEquals(2, service.getActiveSessionCount());
     }
 }

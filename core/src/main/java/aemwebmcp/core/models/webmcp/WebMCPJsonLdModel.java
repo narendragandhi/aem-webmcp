@@ -12,6 +12,13 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.PostConstruct;
 import java.util.*;
 
+/**
+ * Sling Model for generating JSON-LD structured data for WebMCP.
+ * This model provides Schema.org metadata to help AI agents understand the page structure and capabilities.
+ * 
+ * @since 1.0.0
+ * @author AEM WebMCP Team
+ */
 @Model(adaptables = SlingHttpServletRequest.class)
 public class WebMCPJsonLdModel {
 
@@ -21,9 +28,15 @@ public class WebMCPJsonLdModel {
     @Self
     private SlingHttpServletRequest request;
 
+    /** The generated JSON-LD script tag. */
     private String jsonLdScript;
+    
+    /** Flag indicating if WebMCP components are present on the page. */
     private boolean hasWebMCPComponents;
 
+    /**
+     * Initializes the model by generating the JSON-LD structure based on the current page.
+     */
     @PostConstruct
     protected void init() {
         try {
@@ -111,6 +124,15 @@ public class WebMCPJsonLdModel {
         }
     }
     
+    /**
+     * Creates a ProgramAction schema entry for a specific capability.
+     * 
+     * @param name Action name.
+     * @param description Action description.
+     * @param params Parameter names.
+     * @param paramType Parameter data type.
+     * @return Map representing the action.
+     */
     private Map<String, Object> createAction(String name, String description, String params, String paramType) {
         Map<String, Object> action = new LinkedHashMap<>();
         action.put("@type", "ProgramAction");
@@ -125,6 +147,10 @@ public class WebMCPJsonLdModel {
         return action;
     }
 
+    /**
+     * Determines the base URL of the application.
+     * @return The base URL string.
+     */
     private String getBaseUrl() {
         StringBuffer url = request.getRequestURL();
         if (url != null) {
@@ -136,6 +162,12 @@ public class WebMCPJsonLdModel {
         return "https://localhost:4502";
     }
     
+    /**
+     * Recursively builds breadcrumb items from the page hierarchy.
+     * 
+     * @param page The current page.
+     * @param items List to append breadcrumb items to.
+     */
     private void buildBreadcrumb(Page page, List<Map<String, Object>> items) {
         if (page == null) return;
         
@@ -157,6 +189,15 @@ public class WebMCPJsonLdModel {
         }
     }
 
+    /**
+     * Gets the generated JSON-LD script.
+     * @return HTML script tag with JSON-LD content.
+     */
     public String getJsonLdScript() { return jsonLdScript; }
+
+    /**
+     * Checks if WebMCP components are present.
+     * @return true if components are present, false otherwise.
+     */
     public boolean isHasWebMCPComponents() { return hasWebMCPComponents; }
 }

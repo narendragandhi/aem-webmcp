@@ -28,6 +28,7 @@ import io.wcm.testing.mock.aem.junit5.AemContext;
 import io.wcm.testing.mock.aem.junit5.AemContextExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(AemContextExtension.class)
 class SimpleServletTest {
@@ -45,5 +46,15 @@ class SimpleServletTest {
         fixture.doGet(request, response);
 
         assertEquals("Title = resource title", response.getOutputAsString());
+    }
+
+    @Test
+    void testSearch(AemContext context) throws ServletException, IOException {
+        SearchServlet searchFixture = new SearchServlet();
+        MockSlingHttpServletRequest request = context.request();
+        MockSlingHttpServletResponse response = context.response();
+        request.addRequestParameter("query", "test");
+        searchFixture.doGet(request, response);
+        assertTrue(response.getOutputAsString().contains("\"success\":true"));
     }
 }

@@ -24,24 +24,28 @@ public class CartPersistenceService {
     @Reference
     private ResourceResolverFactory resolverFactory;
 
+    private ResourceResolver getServiceResolver() throws LoginException {
+        Map<String, Object> authInfo = Collections.singletonMap(
+            ResourceResolverFactory.SUBSERVICE, "webmcp-service"
+        );
+        return resolverFactory.getServiceResourceResolver(authInfo);
+    }
+
     public void saveCart(String sessionId, List<CartData> items) {
         if (items == null || items.isEmpty()) {
             deleteCart(sessionId);
             return;
         }
 
-        ResourceResolver resolver = null;
-        try {
-            resolver = resolverFactory.getAdministrativeResourceResolver(null);
+        try (ResourceResolver resolver = getServiceResolver()) {
             Session session = resolver.adaptTo(Session.class);
             
             ensureCartRoot(session);
             
             String cartPath = CART_ROOT + "/" + sessionId;
-            Resource cartResource = resolver.getResource(cartPath);
-            
-            if (cartResource == null) {
-                session.getRootNode().addNode(cartPath.substring(1), "nt:unstructured");
+            if (!session.nodeExists(cartPath)) {
+                Node parent = session.getNode(CART_ROOT);
+                parent.addNode(sessionId, "nt:unstructured");
             }
             
             Node cartNode = session.getNode(cartPath);
@@ -77,19 +81,13 @@ public class CartPersistenceService {
             LOG.error("Login error saving cart: {}", e.getMessage());
         } catch (RepositoryException e) {
             LOG.error("Repository error saving cart: {}", e.getMessage());
-        } finally {
-            if (resolver != null) {
-                resolver.close();
-            }
         }
     }
 
     public List<CartData> loadCart(String sessionId) {
         List<CartData> items = new ArrayList<>();
         
-        ResourceResolver resolver = null;
-        try {
-            resolver = resolverFactory.getAdministrativeResourceResolver(null);
+        try (ResourceResolver resolver = getServiceResolver()) {
             Session session = resolver.adaptTo(Session.class);
             
             String cartPath = CART_ROOT + "/" + sessionId;
@@ -119,19 +117,13 @@ public class CartPersistenceService {
             LOG.error("Login error loading cart: {}", e.getMessage());
         } catch (RepositoryException e) {
             LOG.error("Repository error loading cart: {}", e.getMessage());
-        } finally {
-            if (resolver != null) {
-                resolver.close();
-            }
         }
         
         return items;
     }
 
     public void deleteCart(String sessionId) {
-        ResourceResolver resolver = null;
-        try {
-            resolver = resolverFactory.getAdministrativeResourceResolver(null);
+        try (ResourceResolver resolver = getServiceResolver()) {
             Session session = resolver.adaptTo(Session.class);
             
             String cartPath = CART_ROOT + "/" + sessionId;
@@ -145,17 +137,11 @@ public class CartPersistenceService {
             LOG.error("Login error deleting cart: {}", e.getMessage());
         } catch (RepositoryException e) {
             LOG.error("Repository error deleting cart: {}", e.getMessage());
-        } finally {
-            if (resolver != null) {
-                resolver.close();
-            }
         }
     }
 
     public void cleanupOldCarts(int maxAgeMinutes) {
-        ResourceResolver resolver = null;
-        try {
-            resolver = resolverFactory.getAdministrativeResourceResolver(null);
+        try (ResourceResolver resolver = getServiceResolver()) {
             Session session = resolver.adaptTo(Session.class);
             
             if (!session.nodeExists(CART_ROOT)) {
@@ -181,10 +167,6 @@ public class CartPersistenceService {
             LOG.error("Login error during cleanup: {}", e.getMessage());
         } catch (RepositoryException e) {
             LOG.error("Repository error during cleanup: {}", e.getMessage());
-        } finally {
-            if (resolver != null) {
-                resolver.close();
-            }
         }
     }
 

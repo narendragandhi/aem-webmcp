@@ -1,0 +1,11 @@
+<sly data-sly-use.text="com.adobe.cq.wcm.core.components.models.form.Text">
+    <div class="cmp-form-text">
+        <label for="${text.id}">${text.title}</label>
+        <input type="${text.type}" 
+               id="${text.id}" 
+               name="${text.name}" 
+               value="${text.value}" 
+               placeholder="${text.placeholder}"
+               required="${text.required ? 'true' : ''}"/>
+    </div>
+</sly>

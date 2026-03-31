@@ -1,0 +1,91 @@
+/* 
+    AEM WebMCP - AI Aesthetic & Glassmorphism 
+    World-class design tokens for the Agentic Web
+*/
+:root {
+    --webmcp-ai-glow: rgba(138, 43, 226, 0.6);
+    --webmcp-glass-bg: rgba(255, 255, 255, 0.7);
+    --webmcp-glass-border: rgba(255, 255, 255, 0.3);
+    --webmcp-accent: #6366f1;
+}
+
+/* The AI Aura Animation */
+@keyframes webmcp-pulse-aura {
+    0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+    70% { box-shadow: 0 0 0 15px rgba(99, 102, 241, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+}
+
+.webmcp-ai-active {
+    animation: webmcp-pulse-aura 2s infinite;
+    transition: all 0.3s ease;
+    border-color: var(--webmcp-accent) !important;
+    outline: none !important;
+}
+
+/* Glassmorphism Consent Bar */
+#webmcp-consent-bar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(150%);
+    width: 90%;
+    max-width: 600px;
+    background: var(--webmcp-glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--webmcp-glass-border);
+    border-radius: 16px;
+    padding: 16px 24px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+#webmcp-consent-bar.visible {
+    transform: translateX(-50%) translateY(0);
+}
+
+#webmcp-consent-bar .message {
+    font-size: 14px;
+    color: #1f2937;
+}
+
+#webmcp-consent-bar .actions {
+    display: flex;
+    gap: 12px;
+}
+
+#webmcp-consent-bar button {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#webmcp-consent-bar .btn-allow {
+    background: var(--webmcp-accent);
+    color: white;
+}
+
+#webmcp-consent-bar .btn-allow:hover { background: #4f46e5; }
+
+#webmcp-consent-bar .btn-deny {
+    background: transparent;
+    color: #6b7280;
+}
+
+/* Upgraded Glass Debug Panel */
+#webmcp-debug-panel {
+    background: rgba(15, 23, 42, 0.8) !important;
+    backdrop-filter: blur(10px) !important;
+    border-left: 1px solid rgba(255,255,255,0.1) !important;
+    color: #e2e8f0 !important;
+}

@@ -26,6 +26,8 @@ WebMCP (Web Model Context Protocol) is a browser API being developed by Google t
 - **Consent-based** API exposure for AI agents
 - **Debug panel** for development
 - **Accessibility tree** support
+- **AI Tools API** for discovering capabilities
+- **Screenshot support** for vision-enabled agents
 - **Production-ready** with OWASP security scanning
 
 ## Quick Start

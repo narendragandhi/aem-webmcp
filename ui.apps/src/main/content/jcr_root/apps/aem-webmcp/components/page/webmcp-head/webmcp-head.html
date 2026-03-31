@@ -1,7 +1,10 @@
 <!--/*
-    WebMCP JSON-LD Schema
-    Renders structured data for AI agents and search engines
+    WebMCP Metadata & Security
+    Declares AI capabilities and security constraints
 */-->
+<meta name="webmcp-enabled" content="true">
+<meta name="webmcp-version" content="1.0">
+
 <sly data-sly-use.webmcpJsonLd="aemwebmcp.core.models.webmcp.WebMCPJsonLdModel"
      data-sly-test="${webmcpJsonLd.hasWebMCPComponents}">
     ${webmcpJsonLd.jsonLdScript @ context='unsafe'}

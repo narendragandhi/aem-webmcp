@@ -14,7 +14,12 @@
         { pattern: /^scroll up/i, action: 'scroll', param: 'up' },
         { pattern: /^scroll down/i, action: 'scroll', param: 'down' },
         { pattern: /^read page/i, action: 'read', param: null },
+        { pattern: /^fill form/i, action: 'fill-form', param: null },
         { pattern: /^stop/i, action: 'stop', param: null },
+        { pattern: /^check accessibility/i, action: 'audit', param: null },
+        { pattern: /^what is (.+)/i, action: 'ask', param: 1 },
+        { pattern: /^how do i (.+)/i, action: 'ask', param: 1 },
+        { pattern: /^does (.+)/i, action: 'ask', param: 1 },
         { pattern: /^refresh/i, action: 'refresh', param: null }
     ];
 
@@ -167,6 +172,13 @@
                 }
             }
 
+            // If a form is being filled, send input to FormAgent
+            if (window.AEMFormAgent && window.AEMFormAgent.activeForm) {
+                window.AEMFormAgent.processInput(transcript);
+                this.addToHistory(transcript, 'form-input');
+                return;
+            }
+
             // Unknown command - try to search
             this.executeCommand('search', transcript);
             this.addToHistory(transcript, 'search');
@@ -205,6 +217,37 @@
 
                 case 'read':
                     this.readPageContent();
+                    break;
+
+                case 'fill-form':
+                    if (window.AEMFormAgent) {
+                        this.speak('Sure, let me help you with the form. Scanning for fields...');
+                        window.AEMFormAgent.discoverForm().then(() => {
+                            window.AEMFormAgent.analyzeFields().then(() => {
+                                window.AEMFormAgent.checkProgress();
+                            });
+                        });
+                    } else {
+                        this.speak('Sorry, the form agent is not available.');
+                    }
+                    break;
+
+                case 'audit':
+                    if (window.AEMAuditAgent) {
+                        this.speak('Running accessibility audit...');
+                        window.AEMAuditAgent.scanPage();
+                    } else {
+                        this.speak('Audit agent not available.');
+                    }
+                    break;
+
+                case 'ask':
+                    if (window.AEMContentAgent) {
+                        this.speak('Checking page content...');
+                        window.AEMContentAgent.ask(param);
+                    } else {
+                        this.speak('Content agent not available.');
+                    }
                     break;
 
                 case 'stop':

@@ -1,7 +1,6 @@
 package aemwebmcp.core.servlets;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
@@ -21,6 +20,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
+/**
+ * Servlet for handling search requests in the WebMCP context.
+ */
 @Component(service = { Servlet.class })
 @SlingServletResourceTypes(
         resourceTypes = "aem-webmcp/components/search",
@@ -29,8 +31,6 @@ import java.util.regex.Pattern;
 public class SearchServlet extends SlingSafeMethodsServlet {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger LOG = LoggerFactory.getLogger(SearchServlet.class);
-    private static final Gson GSON = new GsonBuilder().create();
 
     private static final int MAX_QUERY_LENGTH = 100;
     private static final int MAX_RESULTS = 20;
@@ -39,56 +39,35 @@ public class SearchServlet extends SlingSafeMethodsServlet {
 
     private static final Pattern SAFE_QUERY_PATTERN = Pattern.compile("^[a-zA-Z0-9\\s\\-\\.\\,\\!\\?\\'\\\"]{1,100}$");
     private static final Map<String, List<Long>> REQUEST_TIMES = new ConcurrentHashMap<>();
-
     private static final List<Map<String, String>> MOCK_CONTENT = new ArrayList<>();
 
     static {
-        addMockContent();
+        initializeMockContent();
     }
 
-    private static void addMockContent() {
-        addPage("AEM WebMCP Demo", "Main demo page showcasing WebMCP AI agent capabilities with AEM Core Components", 
-                "/content/aem-webmcp/us/en");
-        addPage("Shop - E-commerce Demo", "E-commerce demo page with shopping cart and product components", 
-                "/content/aem-webmcp/us/en/shop");
-        addPage("Contact Us", "Contact form with all field types for WebMCP AI agent testing", 
-                "/content/aem-webmcp/us/en/contact");
-        addPage("FAQ", "Frequently Asked Questions with accordion and tabs", 
-                "/content/aem-webmcp/us/en/faq");
-        addPage("WebMCP Documentation", "Learn how WebMCP works with AEM and AI agents", 
-                "/content/aem-webmcp/us/en/documentation");
-        addProduct("Premium Widget", "High-quality widget for all your needs", 
-                "/content/aem-webmcp/us/en/shop/premium-widget", "49.99");
-        addProduct("Super Gadget", "Advanced gadget with many features", 
-                "/content/aem-webmcp/us/en/shop/super-gadget", "99.99");
-        addProduct("Basic Tool", "Simple and reliable tool for everyday use", 
-                "/content/aem-webmcp/us/en/shop/basic-tool", "19.99");
+    private static void initializeMockContent() {
+        MOCK_CONTENT.clear();
+        addEntry("AEM WebMCP Demo", "Main demo page", "/content/aem-webmcp/us/en", "page");
+        addEntry("Shop", "E-commerce demo", "/content/aem-webmcp/us/en/shop", "page");
+        addEntry("Contact Us", "Contact form", "/content/aem-webmcp/us/en/contact", "page");
+        addEntry("Premium Widget", "Widget", "/content/aem-webmcp/us/en/shop/premium-widget", "product");
     }
 
-    private static void addPage(String title, String description, String path) {
-        Map<String, String> page = new HashMap<>();
-        page.put("title", title);
-        page.put("description", description);
-        page.put("path", path);
-        page.put("type", "page");
-        MOCK_CONTENT.add(page);
-    }
-
-    private static void addProduct(String title, String description, String path, String price) {
-        Map<String, String> product = new HashMap<>();
-        product.put("title", title);
-        product.put("description", description);
-        product.put("path", path);
-        product.put("type", "product");
-        product.put("price", price);
-        MOCK_CONTENT.add(product);
+    private static void addEntry(String title, String description, String path, String type) {
+        Map<String, String> entry = new HashMap<>();
+        entry.put("title", title);
+        entry.put("description", description);
+        entry.put("path", path);
+        entry.put("type", type);
+        MOCK_CONTENT.add(entry);
     }
 
     @Override
     protected void doGet(final SlingHttpServletRequest req,
                           final SlingHttpServletResponse resp) throws ServletException, IOException {
         
-        if (!checkRateLimit(req, resp)) {
+        if (!isWithinRateLimit(req)) {
+            sendError(resp, 429, "Rate limit exceeded");
             return;
         }
         
@@ -96,19 +75,17 @@ public class SearchServlet extends SlingSafeMethodsServlet {
         String fullText = req.getParameter("fullText");
         String searchTerm = (query != null ? query : (fullText != null ? fullText : "")).trim();
         
-        LOG.debug("Processing search request for: {}", maskQuery(searchTerm));
-        
         if (searchTerm.length() > MAX_QUERY_LENGTH) {
-            sendError(resp, SlingHttpServletResponse.SC_BAD_REQUEST, "Query too long");
+            sendError(resp, 400, "Query too long");
             return;
         }
         
-        if (!SAFE_QUERY_PATTERN.matcher(searchTerm).matches() && !searchTerm.isEmpty()) {
-            sendError(resp, SlingHttpServletResponse.SC_BAD_REQUEST, "Invalid query characters");
+        if (!searchTerm.isEmpty() && !SAFE_QUERY_PATTERN.matcher(searchTerm).matches()) {
+            sendError(resp, 400, "Invalid query characters");
             return;
         }
         
-        List<Map<String, String>> results = performSearch(searchTerm);
+        List<Map<String, String>> results = findResults(searchTerm);
         
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
@@ -119,76 +96,40 @@ public class SearchServlet extends SlingSafeMethodsServlet {
         response.put("total", results.size());
         response.put("query", searchTerm);
         
-        resp.getWriter().write(GSON.toJson(response));
+        try {
+            resp.getWriter().write(new ObjectMapper().writeValueAsString(response));
+        } catch (Exception e) {
+            resp.getWriter().write("{\"success\":false}");
+        }
     }
 
-    private boolean checkRateLimit(SlingHttpServletRequest req, SlingHttpServletResponse resp) throws IOException {
-        String clientId = getClientIdentifier(req);
+    private boolean isWithinRateLimit(SlingHttpServletRequest req) {
+        String clientId = req.getRemoteAddr();
+        if (clientId == null) clientId = "unknown";
         List<Long> times = REQUEST_TIMES.computeIfAbsent(clientId, k -> new ArrayList<>());
-        
         long now = System.currentTimeMillis();
-        long windowStart = now - (RATE_LIMIT_WINDOW_SECONDS * 1000);
+        long window = now - (RATE_LIMIT_WINDOW_SECONDS * 1000);
         
         synchronized (times) {
-            times.removeIf(t -> t < windowStart);
-            
-            if (times.size() >= RATE_LIMIT_REQUESTS) {
-                LOG.warn("Rate limit exceeded for search client: {}", clientId);
-                sendError(resp, 429, "Rate limit exceeded");
-                return false;
-            }
-            
+            times.removeIf(t -> t < window);
+            if (times.size() >= RATE_LIMIT_REQUESTS) return false;
             times.add(now);
+            return true;
         }
-        
-        return true;
     }
 
-    private String getClientIdentifier(SlingHttpServletRequest req) {
-        String remoteAddr = req.getRemoteAddr();
-        String forwarded = req.getHeader("X-Forwarded-For");
-        return forwarded != null ? forwarded : remoteAddr;
-    }
-
-    private List<Map<String, String>> performSearch(String searchTerm) {
+    private List<Map<String, String>> findResults(String term) {
         List<Map<String, String>> results = new ArrayList<>();
-        
-        if (searchTerm.isEmpty()) {
-            return results;
-        }
-        
-        String lowerTerm = searchTerm.toLowerCase();
-        
+        if (term.isEmpty()) return results;
+        String lower = term.toLowerCase();
         for (Map<String, String> item : MOCK_CONTENT) {
-            if (results.size() >= MAX_RESULTS) {
-                break;
-            }
-            
-            String title = item.get("title").toLowerCase();
-            String description = item.get("description").toLowerCase();
-            
-            if (title.contains(lowerTerm) || description.contains(lowerTerm)) {
-                results.add(safeCopy(item));
+            if (results.size() >= MAX_RESULTS) break;
+            if (item.get("title").toLowerCase().contains(lower) || 
+                item.get("description").toLowerCase().contains(lower)) {
+                results.add(new HashMap<>(item));
             }
         }
-        
-        LOG.debug("Search for '{}' returned {} results", maskQuery(searchTerm), results.size());
         return results;
-    }
-
-    private Map<String, String> safeCopy(Map<String, String> original) {
-        Map<String, String> copy = new HashMap<>();
-        for (Map.Entry<String, String> entry : original.entrySet()) {
-            copy.put(entry.getKey(), entry.getValue());
-        }
-        return copy;
-    }
-
-    private String maskQuery(String query) {
-        if (query == null || query.length() <= 4) {
-            return "****";
-        }
-        return query.substring(0, 2) + "****" + query.substring(query.length() - 2);
     }
 
     private void sendError(SlingHttpServletResponse resp, int status, String message) throws IOException {
@@ -197,6 +138,10 @@ public class SearchServlet extends SlingSafeMethodsServlet {
         Map<String, Object> error = new HashMap<>();
         error.put("success", false);
         error.put("error", message);
-        resp.getWriter().write(GSON.toJson(error));
+        try {
+            resp.getWriter().write(new ObjectMapper().writeValueAsString(error));
+        } catch (Exception e) {
+            resp.getWriter().write("{\"success\":false}");
+        }
     }
 }

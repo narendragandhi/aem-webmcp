@@ -1,194 +1,135 @@
 package aemwebmcp.core.servlets;
 
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
+import javax.servlet.http.HttpSession;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+@MockitoSettings(strictness = Strictness.LENIENT)
 class FormSubmissionServletTest {
 
-    @Test
-    void testValidEmailValidation() {
-        Map<String, String> formData = new HashMap<>();
-        formData.put("email", "test@example.com");
-        
-        Map<String, String> errors = validateFormData(formData);
-        
-        assertTrue(errors.isEmpty(), "Valid email should not have errors");
+    private FormSubmissionServlet fixture;
+    private static final String CSRF_TOKEN = "valid-token";
+
+    @Mock
+    private SlingHttpServletRequest request;
+
+    @Mock
+    private SlingHttpServletResponse response;
+
+    @Mock
+    private HttpSession session;
+
+    private StringWriter responseWriter;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        fixture = new FormSubmissionServlet();
+        responseWriter = new StringWriter();
+        when(response.getWriter()).thenReturn(new PrintWriter(responseWriter));
+        when(request.getSession(anyBoolean())).thenReturn(session);
+        when(request.getSession()).thenReturn(session);
+        when(session.getAttribute("csrfToken")).thenReturn(CSRF_TOKEN);
     }
 
     @Test
-    void testInvalidEmailValidation() {
-        Map<String, String> formData = new HashMap<>();
-        formData.put("email", "invalid-email");
+    void testSuccessfulSubmission() throws Exception {
+        Map<String, String[]> params = new HashMap<>();
+        params.put("csrfToken", new String[]{CSRF_TOKEN});
+        params.put("fullName", new String[]{"John Doe"});
+        params.put("email", new String[]{"john@example.com"});
+        params.put("message", new String[]{"This is a valid message with enough characters"});
         
-        Map<String, String> errors = validateFormData(formData);
-        
-        assertTrue(errors.containsKey("email"), "Invalid email should have error");
+        when(request.getParameterMap()).thenReturn(params);
+        when(request.getParameter("csrfToken")).thenReturn(CSRF_TOKEN);
+        when(request.getContentLengthLong()).thenReturn(100L);
+
+        fixture.doPost(request, response);
+
+        String output = responseWriter.toString();
+        assertTrue(output.contains("\"success\":true"), "Output was: " + output);
+        assertTrue(output.contains("submissionId"));
     }
 
     @Test
-    void testEmptyEmailValidation() {
-        Map<String, String> formData = new HashMap<>();
-        formData.put("email", "");
+    void testValidationFailure() throws Exception {
+        Map<String, String[]> params = new HashMap<>();
+        params.put("csrfToken", new String[]{CSRF_TOKEN});
+        params.put("fullName", new String[]{"J"}); // Too short
+        params.put("email", new String[]{"invalid-email"});
+        params.put("message", new String[]{"Short"}); // Too short
         
-        Map<String, String> errors = validateFormData(formData);
-        
-        assertTrue(errors.containsKey("email"), "Empty email should have error");
+        when(request.getParameterMap()).thenReturn(params);
+        when(request.getParameter("csrfToken")).thenReturn(CSRF_TOKEN);
+        when(request.getContentLengthLong()).thenReturn(100L);
+
+        fixture.doPost(request, response);
+
+        verify(response).setStatus(400);
+        String output = responseWriter.toString();
+        assertTrue(output.contains("\"success\":false"));
+        assertTrue(output.contains("fullName"));
     }
 
     @Test
-    void testValidNameValidation() {
-        Map<String, String> formData = new HashMap<>();
-        formData.put("fullName", "John Doe");
-        
-        Map<String, String> errors = validateFormData(formData);
-        
-        assertTrue(errors.isEmpty(), "Valid name should not have errors");
+    void testCsrfFailure() throws Exception {
+        when(request.getParameter("csrfToken")).thenReturn("wrong-token");
+        when(request.getContentLengthLong()).thenReturn(100L);
+
+        fixture.doPost(request, response);
+
+        verify(response).setStatus(403);
+        assertTrue(responseWriter.toString().contains("Invalid request"));
     }
 
     @Test
-    void testShortNameValidation() {
-        Map<String, String> formData = new HashMap<>();
-        formData.put("fullName", "J");
-        
-        Map<String, String> errors = validateFormData(formData);
-        
-        assertTrue(errors.containsKey("fullName"), "Short name should have error");
+    void testRequestTooLarge() throws Exception {
+        when(request.getContentLengthLong()).thenReturn(2000000L); // > 1MB
+
+        fixture.doPost(request, response);
+
+        verify(response).setStatus(413);
+        assertTrue(responseWriter.toString().contains("Request too large"));
     }
 
     @Test
-    void testValidPasswordValidation() {
-        Map<String, String> formData = new HashMap<>();
-        formData.put("password", "password123");
+    void testRateLimiting() throws Exception {
+        String testIp = "127.0.0.1";
+        when(request.getRemoteAddr()).thenReturn(testIp);
+        when(request.getParameter("csrfToken")).thenReturn(CSRF_TOKEN);
+        when(request.getContentLengthLong()).thenReturn(100L);
         
-        Map<String, String> errors = validateFormData(formData);
-        
-        assertTrue(errors.isEmpty(), "Valid password should not have errors");
-    }
+        Map<String, String[]> params = new HashMap<>();
+        params.put("csrfToken", new String[]{CSRF_TOKEN});
+        params.put("fullName", new String[]{"John Doe"});
+        when(request.getParameterMap()).thenReturn(params);
 
-    @Test
-    void testShortPasswordValidation() {
-        Map<String, String> formData = new HashMap<>();
-        formData.put("password", "12345");
-        
-        Map<String, String> errors = validateFormData(formData);
-        
-        assertTrue(errors.containsKey("password"), "Short password should have error");
-    }
-
-    @Test
-    void testMessageValidation() {
-        Map<String, String> formData = new HashMap<>();
-        formData.put("message", "This is a valid message with enough characters");
-        
-        Map<String, String> errors = validateFormData(formData);
-        
-        assertTrue(errors.isEmpty(), "Valid message should not have errors");
-    }
-
-    @Test
-    void testShortMessageValidation() {
-        Map<String, String> formData = new HashMap<>();
-        formData.put("message", "Short");
-        
-        Map<String, String> errors = validateFormData(formData);
-        
-        assertTrue(errors.containsKey("message"), "Short message should have error");
-    }
-
-    @Test
-    void testSecureIdGeneration() {
-        String id1 = generateSecureId();
-        String id2 = generateSecureId();
-        
-        assertNotNull(id1, "ID should not be null");
-        assertTrue(id1.length() > 0, "ID should not be empty");
-        assertNotEquals(id1, id2, "IDs should be unique");
-    }
-
-    @Test
-    void testIdMasking() {
-        assertEquals("****", maskId(null));
-        assertEquals("****", maskId("abc"));
-        assertTrue(maskId("12345678").startsWith("1234"));
-        assertTrue(maskId("12345678").endsWith("5678"));
-    }
-
-    @Test
-    void testKeySanitization() {
-        assertEquals("email", sanitizeKey("email"));
-        assertEquals("email_field", sanitizeKey("email-field"));
-        assertEquals("email_field", sanitizeKey("email.field"));
-        assertEquals("unknown", sanitizeKey(null));
-    }
-
-    // Helper methods
-    private Map<String, String> validateFormData(Map<String, String> formData) {
-        Map<String, String> errors = new HashMap<>();
-        
-        if (formData.containsKey("fullName")) {
-            String name = formData.get("fullName");
-            if (name == null || name.trim().isEmpty()) {
-                errors.put("fullName", "Name is required");
-            } else if (name.length() < 2) {
-                errors.put("fullName", "Name must be at least 2 characters");
-            }
+        // RATE_LIMIT_REQUESTS = 10
+        for (int i = 0; i < 10; i++) {
+            responseWriter = new StringWriter();
+            when(response.getWriter()).thenReturn(new PrintWriter(responseWriter));
+            fixture.doPost(request, response);
+            // Since status might not be set for success (defaults to 200), we check output
+            assertFalse(responseWriter.toString().contains("Rate limit exceeded"), "Request " + i + " failed");
         }
 
-        if (formData.containsKey("email")) {
-            String email = formData.get("email");
-            if (email == null || email.trim().isEmpty()) {
-                errors.put("email", "Email is required");
-            } else if (!email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")) {
-                errors.put("email", "Invalid email format");
-            }
-        }
-
-        if (formData.containsKey("message")) {
-            String message = formData.get("message");
-            if (message == null || message.trim().isEmpty()) {
-                errors.put("message", "Message is required");
-            } else if (message.length() < 10) {
-                errors.put("message", "Message must be at least 10 characters");
-            }
-        }
-
-        if (formData.containsKey("password")) {
-            String password = formData.get("password");
-            if (password == null || password.isEmpty()) {
-                errors.put("password", "Password is required");
-            } else if (password.length() < 6) {
-                errors.put("password", "Password must be at least 6 characters");
-            }
-        }
+        responseWriter = new StringWriter();
+        when(response.getWriter()).thenReturn(new PrintWriter(responseWriter));
+        fixture.doPost(request, response);
         
-        return errors;
-    }
-
-    private String generateSecureId() {
-        try {
-            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
-            byte[] hash = md.digest((System.nanoTime() + "").getBytes());
-            return java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(hash).substring(0, 16);
-        } catch (Exception e) {
-            return "fallback-" + System.nanoTime();
-        }
-    }
-
-    private String maskId(String id) {
-        if (id == null || id.length() < 8) {
-            return "****";
-        }
-        return id.substring(0, 4) + "****" + id.substring(id.length() - 4);
-    }
-
-    private String sanitizeKey(String key) {
-        if (key == null) {
-            return "unknown";
-        }
-        return key.replaceAll("[^a-zA-Z0-9_]", "_");
+        verify(response).setStatus(429);
+        assertTrue(responseWriter.toString().contains("Rate limit exceeded"));
     }
 }

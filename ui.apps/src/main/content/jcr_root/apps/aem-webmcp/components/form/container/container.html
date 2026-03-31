@@ -1,0 +1,13 @@
+<!--/*
+    AEM WebMCP - Form Container
+    Custom implementation to ensure rendering even without Core Components dependencies
+*/-->
+<form data-sly-use.container="com.adobe.cq.wcm.core.components.models.form.Container"
+      method="${container.method}"
+      action="${container.action}"
+      id="${container.id}"
+      name="${container.name}"
+      class="cmp-form ${container.id}">
+    <div data-sly-repeat="${container.items}" 
+         data-sly-resource="${item.path @ resourceType=item.resourceType}"></div>
+</form>

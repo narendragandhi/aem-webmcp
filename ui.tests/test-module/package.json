@@ -8,7 +8,7 @@
     "cypress-fail-on-console-error": "^5.1.1",
     "cypress-multi-reporters": "^1.6.4",
     "cypress-terminal-report": "^6.1.2",
-    "cypress-image-snapshot": "^5.0.0",
+    "cypress-image-snapshot": "4.0.1",
     "eslint": "^8.57.0",
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-chai-friendly": "^1.0.1",

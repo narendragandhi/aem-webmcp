@@ -1,7 +1,6 @@
 package aemwebmcp.core.servlets;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.HttpConstants;
@@ -38,7 +37,7 @@ public class CommerceCartServlet extends SlingAllMethodsServlet {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOG = LoggerFactory.getLogger(CommerceCartServlet.class);
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final ObjectMapper MAPPER = new ObjectMapper();
     
     private static final int MAX_CART_AGE_MINUTES = 30;
     private static final int MAX_CARTS = 1000;
@@ -302,7 +301,12 @@ public class CommerceCartServlet extends SlingAllMethodsServlet {
             response.put("items", new ArrayList<>());
         }
         
-        return GSON.toJson(response);
+        try {
+            return MAPPER.writeValueAsString(response);
+        } catch (Exception e) {
+            LOG.error("Error serializing cart to JSON", e);
+            return "{\"success\":false,\"error\":\"Serialization error\"}";
+        }
     }
 
     private void sendError(SlingHttpServletResponse resp, int status, String message) throws IOException {
@@ -311,7 +315,11 @@ public class CommerceCartServlet extends SlingAllMethodsServlet {
         Map<String, Object> error = new HashMap<>();
         error.put("success", false);
         error.put("error", message);
-        resp.getWriter().write(GSON.toJson(error));
+        try {
+            resp.getWriter().write(MAPPER.writeValueAsString(error));
+        } catch (Exception e) {
+            resp.getWriter().write("{\"success\":false}");
+        }
     }
 
     private String sanitizeErrorMessage(String message) {
@@ -421,7 +429,7 @@ public class CommerceCartServlet extends SlingAllMethodsServlet {
             this.productId = productId;
             this.productName = productName;
             this.price = price;
-            this.quantity = quantity;
+            this.quantity = Math.max(1, Math.min(quantity, MAX_QUANTITY));
         }
 
         public String getProductId() { return productId; }

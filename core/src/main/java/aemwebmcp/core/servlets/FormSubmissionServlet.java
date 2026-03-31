@@ -1,7 +1,6 @@
 package aemwebmcp.core.servlets;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.HttpConstants;
@@ -15,15 +14,15 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.util.ArrayList;
-import java.util.Base64;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
+/**
+ * Servlet for handling form submissions in the WebMCP context.
+ */
 @Component(service = { Servlet.class })
 @SlingServletResourceTypes(
         resourceTypes = "aem-webmcp/components/form/container",
@@ -32,226 +31,117 @@ import java.util.regex.Pattern;
 public class FormSubmissionServlet extends SlingAllMethodsServlet {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger LOG = LoggerFactory.getLogger(FormSubmissionServlet.class);
-    private static final Gson GSON = new GsonBuilder().create();
 
     private static final int MAX_FIELD_LENGTH = 5000;
     private static final int MAX_REQUEST_SIZE = 1024 * 1024;
     private static final int RATE_LIMIT_REQUESTS = 10;
-    private static final int RATE_LIMIT_WINDOW_SECONDS = 60;
+    private static final int RATE_LIMIT_WINDOW_SECONDS = 3600;
 
-    private static final Pattern EMAIL_PATTERN = Pattern.compile(
-        "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
-    );
-    private static final Pattern SAFE_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9\\s\\-\\.\']{1,100}$");
-    private static final Pattern SAFE_ID_PATTERN = Pattern.compile("^[a-zA-Z0-9_-]{1,50}$");
-
-    private static final Map<String, List<Long>> REQUEST_TIMES = new ConcurrentHashMap<>();
-    private static final Map<String, Integer> SUBMISSION_COUNTS = new ConcurrentHashMap<>();
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
+    private static final Pattern SAFE_INPUT_PATTERN = Pattern.compile("^[a-zA-Z0-9\\s\\-\\.\\,\\!\\?\\'\\\"]*$");
+    private static final Map<String, Long> RATE_LIMIT_MAP = new ConcurrentHashMap<>();
 
     @Override
     protected void doPost(final SlingHttpServletRequest req,
-                          final SlingHttpServletResponse resp) throws ServletException, IOException {
+                           final SlingHttpServletResponse resp) throws ServletException, IOException {
         
-        if (!checkRequestSize(req, resp)) {
+        if (!validateRequest(req, resp)) {
             return;
         }
-        
-        if (!checkRateLimit(req, resp)) {
-            return;
-        }
-        
-        if (!validateCSRF(req, resp)) {
-            return;
-        }
-        
-        LOG.debug("Processing WebMCP form submission");
-        
-        Map<String, String> formData = new HashMap<>();
-        List<String> validationErrors = new ArrayList<>();
-        
-        req.getParameterMap().forEach((key, values) -> {
-            if (values != null && values.length > 0) {
-                String value = values[0];
-                if (value != null && value.length() > MAX_FIELD_LENGTH) {
-                    value = value.substring(0, MAX_FIELD_LENGTH);
-                }
-                formData.put(sanitizeKey(key), value);
-            }
-        });
 
+        Map<String, String> formData = extractFormData(req);
         Map<String, String> errors = validateFormData(formData);
 
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
-        
+
+        ObjectMapper mapper = new ObjectMapper();
+
         if (!errors.isEmpty()) {
             resp.setStatus(SlingHttpServletResponse.SC_BAD_REQUEST);
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("errors", errors);
-            resp.getWriter().write(GSON.toJson(response));
-            LOG.info("Form validation failed - {} error(s)", errors.size());
+            try {
+                resp.getWriter().write(mapper.writeValueAsString(response));
+            } catch (Exception e) {
+                resp.getWriter().write("{\"success\":false}");
+            }
         } else {
             try {
-                String submissionId = saveFormSubmission(req, formData);
+                String submissionId = UUID.randomUUID().toString();
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", true);
                 response.put("submissionId", submissionId);
                 response.put("message", "Form submitted successfully!");
-                resp.getWriter().write(GSON.toJson(response));
-                LOG.info("Form submitted successfully with ID: {}", maskId(submissionId));
+                resp.getWriter().write(mapper.writeValueAsString(response));
             } catch (Exception e) {
-                LOG.error("Error saving form submission: {}", e.getMessage(), e);
                 sendError(resp, SlingHttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to process submission");
             }
         }
     }
 
-    private boolean checkRequestSize(SlingHttpServletRequest req, SlingHttpServletResponse resp) throws IOException {
-        long contentLength = req.getContentLength();
-        if (contentLength > MAX_REQUEST_SIZE) {
-            LOG.warn("Request too large: {} bytes", contentLength);
-            sendError(resp, SlingHttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE, "Request too large");
+    private boolean validateRequest(SlingHttpServletRequest req, SlingHttpServletResponse resp) throws IOException {
+        String clientIp = req.getRemoteAddr();
+        if (clientIp == null) clientIp = "unknown";
+        long count = RATE_LIMIT_MAP.getOrDefault(clientIp, 0L);
+        if (count >= RATE_LIMIT_REQUESTS) {
+            sendError(resp, 429, "Rate limit exceeded. Please try again later.");
             return false;
         }
-        return true;
-    }
+        RATE_LIMIT_MAP.put(clientIp, count + 1);
 
-    private boolean checkRateLimit(SlingHttpServletRequest req, SlingHttpServletResponse resp) throws IOException {
-        String clientId = getClientIdentifier(req);
-        List<Long> times = REQUEST_TIMES.computeIfAbsent(clientId, k -> new ArrayList<>());
-        
-        long now = System.currentTimeMillis();
-        long windowStart = now - (RATE_LIMIT_WINDOW_SECONDS * 1000);
-        
-        synchronized (times) {
-            times.removeIf(t -> t < windowStart);
-            
-            if (times.size() >= RATE_LIMIT_REQUESTS) {
-                LOG.warn("Rate limit exceeded for client: {}", clientId);
-                sendError(resp, 429, "Rate limit exceeded");
-                return false;
-            }
-            
-            times.add(now);
+        if (req.getContentLengthLong() > MAX_REQUEST_SIZE) {
+            sendError(resp, 413, "Request too large");
+            return false;
         }
-        
-        return true;
-    }
 
-    private boolean validateCSRF(SlingHttpServletRequest req, SlingHttpServletResponse resp) throws IOException {
         String csrfToken = req.getParameter("csrfToken");
-        javax.servlet.http.HttpSession session = req.getSession(false);
-        String sessionToken = session != null ? (String) session.getAttribute("csrfToken") : null;
-        
-        if (sessionToken != null && !sessionToken.equals(csrfToken)) {
-            LOG.warn("CSRF validation failed");
-            sendError(resp, SlingHttpServletResponse.SC_FORBIDDEN, "Invalid request");
+        String sessionToken = (String) req.getSession().getAttribute("csrfToken");
+        if (csrfToken == null || !csrfToken.equals(sessionToken)) {
+            sendError(resp, 403, "Invalid request");
             return false;
         }
-        
+
         return true;
     }
 
-    private String getClientIdentifier(SlingHttpServletRequest req) {
-        String remoteAddr = req.getRemoteAddr();
-        String forwarded = req.getHeader("X-Forwarded-For");
-        return forwarded != null ? forwarded : remoteAddr;
+    private Map<String, String> extractFormData(SlingHttpServletRequest req) {
+        Map<String, String> data = new HashMap<>();
+        req.getParameterMap().forEach((k, v) -> {
+            if (v != null && v.length > 0 && v[0].length() <= MAX_FIELD_LENGTH) {
+                data.put(k, v[0]);
+            }
+        });
+        return data;
     }
 
-    private String sanitizeKey(String key) {
-        if (key == null) {
-            return "unknown";
-        }
-        return key.replaceAll("[^a-zA-Z0-9_]", "_");
-    }
-
-    private Map<String, String> validateFormData(Map<String, String> formData) {
+    private Map<String, String> validateFormData(Map<String, String> data) {
         Map<String, String> errors = new HashMap<>();
-
-        if (formData.containsKey("fullName")) {
-            String name = formData.get("fullName");
-            if (name == null || name.trim().isEmpty()) {
-                errors.put("fullName", "Name is required");
-            } else if (name.length() < 2) {
-                errors.put("fullName", "Name must be at least 2 characters");
-            } else if (!SAFE_NAME_PATTERN.matcher(name).matches()) {
-                errors.put("fullName", "Name contains invalid characters");
-            }
+        
+        String fullName = data.get("fullName");
+        if (fullName == null || fullName.length() < 2) {
+            errors.put("fullName", "Name is too short");
+        } else if (!SAFE_INPUT_PATTERN.matcher(fullName).matches()) {
+            errors.put("fullName", "Name contains invalid characters");
         }
 
-        if (formData.containsKey("email")) {
-            String email = formData.get("email");
-            if (email == null || email.trim().isEmpty()) {
-                errors.put("email", "Email is required");
-            } else if (!EMAIL_PATTERN.matcher(email).matches()) {
-                errors.put("email", "Invalid email format");
-            }
+        String email = data.get("email");
+        if (email == null || !EMAIL_PATTERN.matcher(email).matches()) {
+            errors.put("email", "Invalid email address");
         }
 
-        if (formData.containsKey("message")) {
-            String message = formData.get("message");
-            if (message == null || message.trim().isEmpty()) {
-                errors.put("message", "Message is required");
-            } else if (message.length() < 10) {
-                errors.put("message", "Message must be at least 10 characters");
-            }
+        String message = data.get("message");
+        if (message == null || message.length() < 10) {
+            errors.put("message", "Message is too short");
         }
 
-        if (formData.containsKey("username")) {
-            String username = formData.get("username");
-            if (username == null || username.trim().isEmpty()) {
-                errors.put("username", "Username is required");
-            } else if (!SAFE_ID_PATTERN.matcher(username).matches()) {
-                errors.put("username", "Username contains invalid characters");
-            }
-        }
-
-        if (formData.containsKey("password")) {
-            String password = formData.get("password");
-            if (password == null || password.isEmpty()) {
-                errors.put("password", "Password is required");
-            } else if (password.length() < 6) {
-                errors.put("password", "Password must be at least 6 characters");
-            }
+        String username = data.get("username");
+        if (username != null && !SAFE_INPUT_PATTERN.matcher(username).matches()) {
+            errors.put("username", "Username contains invalid characters");
         }
 
         return errors;
-    }
-
-    private String saveFormSubmission(SlingHttpServletRequest req, Map<String, String> formData) {
-        String submissionId = generateSecureId();
-        
-        try {
-            String formType = formData.getOrDefault("formSource", "unknown");
-            LOG.info("Processing {} form submission: {}", formType, maskId(submissionId));
-            
-            int count = SUBMISSION_COUNTS.merge(formType, 1, Integer::sum);
-            LOG.debug("Total submissions for {}: {}", formType, count);
-            
-        } catch (Exception e) {
-            LOG.error("Error saving form submission: {}", e.getMessage(), e);
-        }
-        
-        return submissionId;
-    }
-
-    private String generateSecureId() {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] hash = md.digest((System.nanoTime() + "").getBytes());
-            return Base64.getUrlEncoder().withoutPadding().encodeToString(hash).substring(0, 16);
-        } catch (Exception e) {
-            return "fallback-" + System.nanoTime();
-        }
-    }
-
-    private String maskId(String id) {
-        if (id == null || id.length() < 8) {
-            return "****";
-        }
-        return id.substring(0, 4) + "****" + id.substring(id.length() - 4);
     }
 
     private void sendError(SlingHttpServletResponse resp, int status, String message) throws IOException {
@@ -260,6 +150,10 @@ public class FormSubmissionServlet extends SlingAllMethodsServlet {
         Map<String, Object> error = new HashMap<>();
         error.put("success", false);
         error.put("error", message);
-        resp.getWriter().write(GSON.toJson(error));
+        try {
+            resp.getWriter().write(new ObjectMapper().writeValueAsString(error));
+        } catch (Exception e) {
+            resp.getWriter().write("{\"success\":false}");
+        }
     }
 }

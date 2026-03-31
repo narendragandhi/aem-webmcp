@@ -1,0 +1,14 @@
+{
+  "name": "aem-webmcp-playwright-tests",
+  "version": "1.0.0",
+  "description": "Playwright E2E tests for AEM WebMCP",
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "typescript": "^5.0.0"
+  },
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui"
+  }
+}

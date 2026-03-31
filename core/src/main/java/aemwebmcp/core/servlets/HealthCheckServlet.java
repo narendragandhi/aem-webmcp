@@ -1,7 +1,6 @@
 package aemwebmcp.core.servlets;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
@@ -36,7 +35,7 @@ public class HealthCheckServlet extends SlingSafeMethodsServlet {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOG = LoggerFactory.getLogger(HealthCheckServlet.class);
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private static final AtomicInteger FORM_SUBMISSIONS = new AtomicInteger(0);
     private static final AtomicInteger CART_OPERATIONS = new AtomicInteger(0);
@@ -90,7 +89,12 @@ public class HealthCheckServlet extends SlingSafeMethodsServlet {
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
         resp.setStatus(jcrHealthy ? SlingHttpServletResponse.SC_OK : SlingHttpServletResponse.SC_SERVICE_UNAVAILABLE);
-        resp.getWriter().write(GSON.toJson(health));
+        try {
+            resp.getWriter().write(MAPPER.writeValueAsString(health));
+        } catch (Exception e) {
+            LOG.error("Error serializing health status", e);
+            resp.getWriter().write("{\"status\":{\"overall\":\"DEGRADED\"}}");
+        }
     }
 
     private boolean checkJCR() {

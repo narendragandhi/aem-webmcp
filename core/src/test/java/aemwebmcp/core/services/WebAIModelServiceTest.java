@@ -10,12 +10,12 @@ class WebAIModelServiceTest {
     void testDefaultConfiguration() {
         WebAIModelService service = new WebAIModelService();
         
-        assertEquals("Xenova/TinyLlama-1.1B-Chat-v1.0", service.getModelId());
+        assertEquals("gemini-nano", service.getModelId());
         assertEquals("llm", service.getModelType());
         assertEquals(512, service.getMaxTokens());
         assertEquals(0.7f, service.getTemperature());
         assertTrue(service.isGpuEnabled());
-        assertFalse(service.isAutoLoadEnabled());
+        assertTrue(service.isAutoLoadEnabled());
     }
 
     @Test
@@ -24,12 +24,13 @@ class WebAIModelServiceTest {
         Map<String, Object> config = service.getConfig();
         
         assertNotNull(config);
-        assertEquals("Xenova/TinyLlama-1.1B-Chat-v1.0", config.get("modelId"));
+        assertEquals("gemini-nano", config.get("modelId"));
         assertEquals("llm", config.get("modelType"));
         assertEquals(512, config.get("maxTokens"));
         assertEquals(0.7f, config.get("temperature"));
         assertTrue((Boolean) config.get("enableGpu"));
-        assertFalse((Boolean) config.get("autoLoad"));
+        assertTrue((Boolean) config.get("autoLoad"));
+        assertTrue((Boolean) config.get("preferWindowAI"));
     }
 
     @Test
@@ -37,6 +38,15 @@ class WebAIModelServiceTest {
         WebAIModelService service = new WebAIModelService();
         
         assertTrue(service.supportsStreaming());
-        assertEquals("transformers.js", service.getRuntime());
+        assertEquals("window.ai", service.getRuntime());
+    }
+
+    @Test
+    void testRuntimeLogic() {
+        WebAIModelService service = new WebAIModelService();
+        assertEquals("window.ai", service.getRuntime());
+        
+        // No easy way to set private fields without reflection or adding setters,
+        // but we've covered the main branch.
     }
 }

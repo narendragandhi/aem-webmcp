@@ -3,6 +3,7 @@
           xmlns:sling="http://sling.apache.org/jcr/sling/1.0"
           jcr:primaryType="cq:ClientLibraryFolder"
           jcr:title="AEM WebMCP Client Library"
+          allowProxy="{Boolean}true"
           categories="[aemwebmcp.webmcp]"
           dependencies="[core.wcm.components]">
     <jcr:content jcr:primaryType="nt:unstructured"/>

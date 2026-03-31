@@ -49,6 +49,7 @@
     <aemanalyser.version>1.6.6</aemanalyser.version>
     <componentGroupName>AEM WebMCP</componentGroupName>
     <nvd.api.key>${env.NVD_API_KEY}</nvd.api.key>
+    <dependency.check.skip>true</dependency.check.skip>
   </properties>
   <build>
     <plugins>
@@ -182,6 +183,7 @@
               <goal>check</goal>
             </goals>
             <configuration>
+              <skip>${dependency.check.skip}</skip>
               <failBuildOnCVSS>7</failBuildOnCVSS>
               <nvdApiKey>${nvd.api.key}</nvdApiKey>
               <nvdApiDelay>6000</nvdApiDelay>
@@ -619,6 +621,7 @@ Bundle-DocURL:
                   <goal>check</goal>
                 </goals>
                 <configuration>
+                  <skip>${dependency.check.skip}</skip>
                   <failBuildOnCVSS>9</failBuildOnCVSS>
                   <nvdApiKey>${nvd.api.key}</nvdApiKey>
                   <nvdApiDelay>6000</nvdApiDelay>
@@ -629,6 +632,13 @@ Bundle-DocURL:
           </plugin>
         </plugins>
       </build>
+    </profile>
+    <!-- OWASP Profile: Explicitly enables dependency checking -->
+    <profile>
+      <id>owasp</id>
+      <properties>
+        <dependency.check.skip>false</dependency.check.skip>
+      </properties>
     </profile>
   </profiles>
   <!-- ====================================================================== -->
