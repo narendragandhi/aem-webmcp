@@ -1,14 +1,41 @@
 {
   "name": "aem-webmcp-playwright-tests",
   "version": "1.0.0",
-  "description": "Playwright E2E tests for AEM WebMCP",
+  "description": "Comprehensive Playwright E2E tests for AEM WebMCP",
   "devDependencies": {
     "@playwright/test": "^1.49.0",
+    "@axe-core/playwright": "^4.8.0",
     "typescript": "^5.0.0"
   },
   "scripts": {
     "test": "playwright test",
     "test:headed": "playwright test --headed",
-    "test:ui": "playwright test --ui"
-  }
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:chromium": "playwright test --project=chromium",
+    "test:firefox": "playwright test --project=firefox",
+    "test:webkit": "playwright test --project=webkit",
+    "test:core": "playwright test webmcp-core",
+    "test:forms": "playwright test webmcp-forms",
+    "test:commerce": "playwright test webmcp-commerce",
+    "test:navigation": "playwright test webmcp-navigation",
+    "test:layout": "playwright test webmcp-layout",
+    "test:security": "playwright test webmcp-security",
+    "test:accessibility": "playwright test webmcp-accessibility",
+    "test:performance": "playwright test webmcp-performance",
+    "test:agents": "playwright test webmcp-agents",
+    "report": "playwright show-report",
+    "codegen": "playwright codegen",
+    "install-browsers": "playwright install"
+  },
+  "keywords": [
+    "aem",
+    "webmcp",
+    "playwright",
+    "e2e",
+    "testing",
+    "ai-agents"
+  ],
+  "author": "",
+  "license": "Apache-2.0"
 }

@@ -1,0 +1,170 @@
+version: '3.8'
+
+# AEM WebMCP Local Development Environment
+# This setup provides a complete local AEM environment for testing WebMCP features
+
+services:
+  # AEM Author Instance
+  aem-author:
+    image: ${AEM_IMAGE:-adobe/aem-cs-sdk:latest}
+    container_name: aem-webmcp-author
+    ports:
+      - "4502:4502"
+      - "8080:8080"  # Debug port
+    environment:
+      - CQ_RUNMODE=author,local,dev
+      - CQ_JVM_OPTS=-Xms2048m -Xmx4096m -XX:MaxPermSize=512m -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8080
+      - AEM_ADMIN_PASSWORD=${AEM_ADMIN_PASSWORD:-admin}
+    volumes:
+      - aem-author-data:/opt/aem/crx-quickstart/repository
+      - ./all/target:/packages:ro
+      - ./docker/author-config:/opt/aem/crx-quickstart/install
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4502/libs/granite/core/content/login.html"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 180s
+    networks:
+      - aem-network
+    profiles:
+      - full
+
+  # AEM Publish Instance (Optional)
+  aem-publish:
+    image: ${AEM_IMAGE:-adobe/aem-cs-sdk:latest}
+    container_name: aem-webmcp-publish
+    ports:
+      - "4503:4503"
+    environment:
+      - CQ_RUNMODE=publish,local
+      - CQ_JVM_OPTS=-Xms1024m -Xmx2048m
+      - AEM_ADMIN_PASSWORD=${AEM_ADMIN_PASSWORD:-admin}
+    volumes:
+      - aem-publish-data:/opt/aem/crx-quickstart/repository
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4503/content/aem-webmcp/us/en.html"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 180s
+    networks:
+      - aem-network
+    profiles:
+      - full
+      - publish
+
+  # Dispatcher (Optional - for production-like testing)
+  dispatcher:
+    image: ${DISPATCHER_IMAGE:-adobe/aem-ethos/dispatcher:2.0}
+    container_name: aem-webmcp-dispatcher
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DISP_ID=dispatcher
+      - DISP_RUN_MODE=dev
+      - AEM_HOST=aem-publish
+      - AEM_PORT=4503
+    volumes:
+      - ./dispatcher/src:/etc/httpd/conf.dispatcher.d:ro
+    depends_on:
+      aem-publish:
+        condition: service_healthy
+    networks:
+      - aem-network
+    profiles:
+      - full
+      - dispatcher
+
+  # Mock AEM for lightweight testing (when full AEM not needed)
+  mock-aem:
+    build:
+      context: ./docker/mock-aem
+      dockerfile: Dockerfile
+    container_name: aem-webmcp-mock
+    ports:
+      - "4502:4502"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./test-site:/app/content:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4502/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - aem-network
+    profiles:
+      - mock
+      - test
+
+  # Playwright test runner
+  playwright:
+    build:
+      context: ./playwright-tests
+      dockerfile: Dockerfile.playwright
+    container_name: aem-webmcp-playwright
+    environment:
+      - AEM_AUTHOR_URL=http://aem-author:4502
+      - AEM_PUBLISH_URL=http://aem-publish:4503
+      - CI=${CI:-false}
+    volumes:
+      - ./playwright-tests:/app
+      - ./playwright-tests/test-results:/app/test-results
+      - ./playwright-tests/playwright-report:/app/playwright-report
+    depends_on:
+      - mock-aem
+    networks:
+      - aem-network
+    profiles:
+      - test
+
+  # Performance monitoring (Optional)
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: aem-webmcp-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - aem-network
+    profiles:
+      - monitoring
+
+  # Grafana dashboards (Optional)
+  grafana:
+    image: grafana/grafana:10.1.0
+    container_name: aem-webmcp-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - aem-network
+    profiles:
+      - monitoring
+
+volumes:
+  aem-author-data:
+    name: aem-webmcp-author-data
+  aem-publish-data:
+    name: aem-webmcp-publish-data
+  prometheus-data:
+    name: aem-webmcp-prometheus-data
+  grafana-data:
+    name: aem-webmcp-grafana-data
+
+networks:
+  aem-network:
+    name: aem-webmcp-network
+    driver: bridge
