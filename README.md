@@ -2,6 +2,7 @@
 
 > Google WebMCP (Web Model Context Protocol) integration for AEM Core Components
 
+[![CI](https://github.com/narendragandhi/aem-webmcp/actions/workflows/ci.yml/badge.svg)](https://github.com/narendragandhi/aem-webmcp/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![AEM Version](https://img.shields.io/badge/AEM-6.5%2B+-yellow.svg)]()
 [![Core Components](https://img.shields.io/badge/Core%20Components-2.0%2B-green.svg)]()
@@ -29,6 +30,14 @@ WebMCP (Web Model Context Protocol) is a browser API being developed by Google t
 - **AI Tools API** for discovering capabilities
 - **Screenshot support** for vision-enabled agents
 - **Production-ready** with OWASP security scanning
+
+## Demo
+
+![AEM WebMCP debug panel showing components detected on a live AEM page](./test-site/webmcp-test-results.png)
+
+> The WebMCP debug panel (bottom-right) shows all components detected and registered as AI-accessible tools in real time. Zero configuration required — the clientlib auto-loads and scans the page on every render.
+
+---
 
 ## Quick Start
 
@@ -58,6 +67,7 @@ window.WEBMCP_CONSENT = true;
 - [Getting Started](docs/GETTING-STARTED.md)
 - [API Reference](docs/API-REFERENCE.md)
 - [Sample AI Agent](docs/sample-agent.js)
+- [Contributing](CONTRIBUTING.md)
 
 ## Supported Components
 

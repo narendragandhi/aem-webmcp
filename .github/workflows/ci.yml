@@ -3,6 +3,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [main, develop]
+    tags: ['v*']
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -185,10 +186,11 @@ jobs:
           path: packages
 
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
+          name: AEM WebMCP ${{ github.ref_name }}
           files: packages/*
-          draft: true
+          draft: ${{ !startsWith(github.ref, 'refs/tags/v') }}
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
