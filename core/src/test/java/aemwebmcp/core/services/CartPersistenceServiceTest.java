@@ -18,8 +18,10 @@ import javax.jcr.Property;
 import javax.jcr.Session;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -53,7 +55,7 @@ class CartPersistenceServiceTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        when(resolverFactory.getAdministrativeResourceResolver(null)).thenReturn(resolver);
+        when(resolverFactory.getServiceResourceResolver(any(Map.class))).thenReturn(resolver);
         when(resolver.adaptTo(Session.class)).thenReturn(session);
         when(session.getRootNode()).thenReturn(rootNode);
         when(session.nodeExists("/var/aem-webmcp/carts")).thenReturn(true);
