@@ -104,3 +104,10 @@ reports/
 
 # Others
 dispatcher/src/conf.d/variables/default.vars
+
+### OS ###
+.DS_Store
+
+### Playwright ###
+playwright-tests/playwright-report/
+playwright-tests/test-results/

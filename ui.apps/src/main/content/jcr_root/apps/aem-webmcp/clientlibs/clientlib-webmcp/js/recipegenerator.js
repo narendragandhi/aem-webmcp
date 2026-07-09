@@ -289,14 +289,13 @@
                 }
             ];
 
-            // Try native WebMCP first (navigator.modelContext)
-            if (window.navigator?.modelContext) {
-                this.registerWithNativeModelContext(tools);
-            }
-            
-            // Also register with our fallback automator
-            if (window.AEMWebMCPAutomator) {
+            // Prefer the automator: it registers with navigator.modelContext
+            // using the standard API and applies consent handling. Only fall
+            // back to direct native registration when it is absent.
+            if (window.AEMWebMCPAutomator?.registerTool) {
                 this.registerWithAutomator(tools);
+            } else if (window.navigator?.modelContext) {
+                this.registerWithNativeModelContext(tools);
             }
 
             // Expose globally for direct access
@@ -314,19 +313,22 @@
          */
         registerWithNativeModelContext(tools) {
             try {
-                const registeredTools = tools.map(tool => ({
+                const mc = window.navigator.modelContext;
+                const specTools = tools.map(tool => ({
                     name: tool.name,
                     description: tool.description,
                     inputSchema: tool.inputSchema,
-                    handle: tool.handler
+                    execute: async (input) => tool.handler(input)
                 }));
 
-                if (window.navigator.modelContext.register) {
-                    window.navigator.modelContext.register(registeredTools);
-                    console.log('[MCP-B] Registered tools with native navigator.modelContext');
+                if (typeof mc.registerTool === 'function') {
+                    specTools.forEach(tool => mc.registerTool(tool));
+                } else if (typeof mc.register === 'function') {
+                    // Pre-standard experimental builds
+                    mc.register(specTools.map(tool => Object.assign({ handle: tool.execute }, tool)));
                 }
             } catch (e) {
-                console.warn('[MCP-B] Native registration failed:', e);
+                console.warn('[WebMCP] Native registration failed:', e);
             }
         }
 
@@ -338,7 +340,7 @@
                 window.AEMWebMCPAutomator.registerTool({
                     name: tool.name,
                     description: tool.description,
-                    parameters: tool.inputSchema
+                    inputSchema: tool.inputSchema
                 }, tool.handler);
             });
         }

@@ -316,34 +316,35 @@
                 }
             ];
 
-            // Register with native navigator.modelContext (WebMCP spec)
-            if (window.navigator?.modelContext) {
-                try {
-                    const registeredTools = tools.map(tool => ({
-                        name: tool.name,
-                        description: tool.description,
-                        inputSchema: tool.inputSchema,
-                        handle: tool.handler
-                    }));
-                    
-                    if (window.navigator.modelContext.register) {
-                        window.navigator.modelContext.register(registeredTools);
-                        console.log('[MCP-B] Image Tagger tools registered');
-                    }
-                } catch (e) {
-                    console.warn('[MCP-B] Native registration failed:', e);
-                }
-            }
-
-            // Also register with fallback
-            if (window.AEMWebMCPAutomator) {
+            // Prefer the automator: it registers with navigator.modelContext
+            // using the standard API and applies consent handling.
+            if (window.AEMWebMCPAutomator?.registerTool) {
                 tools.forEach(tool => {
                     window.AEMWebMCPAutomator.registerTool({
                         name: tool.name,
                         description: tool.description,
-                        parameters: tool.inputSchema
+                        inputSchema: tool.inputSchema
                     }, tool.handler);
                 });
+            } else if (window.navigator?.modelContext) {
+                try {
+                    const mc = window.navigator.modelContext;
+                    const specTools = tools.map(tool => ({
+                        name: tool.name,
+                        description: tool.description,
+                        inputSchema: tool.inputSchema,
+                        execute: async (input) => tool.handler(input)
+                    }));
+
+                    if (typeof mc.registerTool === 'function') {
+                        specTools.forEach(tool => mc.registerTool(tool));
+                    } else if (typeof mc.register === 'function') {
+                        // Pre-standard experimental builds
+                        mc.register(specTools.map(tool => Object.assign({ handle: tool.execute }, tool)));
+                    }
+                } catch (e) {
+                    console.warn('[WebMCP] Native registration failed:', e);
+                }
             }
 
             // Global exposure

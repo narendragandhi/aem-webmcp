@@ -1,12 +1,12 @@
 # AEM WebMCP - AI Agent Ready
 
-> **Google WebMCP (Web Model Context Protocol) integration for AEM Core Components**
+> **WebMCP (Web Model Context Protocol) integration for AEM Core Components**
 
 This project provides automatic WebMCP integration for AEM sites built with Adobe Experience Manager Core Components. It enables AI agents to interact with your site in a structured, reliable way.
 
 ## What is WebMCP?
 
-WebMCP (Web Model Context Protocol) is a browser API being developed by Google that allows websites to expose structured tools to AI agents. Instead of AI agents clicking around blindly, they can:
+WebMCP (Web Model Context Protocol) is a browser API developed jointly by Microsoft and Google in the W3C Web Machine Learning Community Group. Websites register structured tools on `navigator.modelContext` (via `provideContext()` / `registerTool()`), which browser-hosted AI agents can then discover and invoke. Instead of AI agents clicking around blindly, they can:
 - ✅ Understand site structure and components
 - ✅ Fill forms with proper field validation
 - ✅ Navigate precisely without guessing
@@ -265,7 +265,7 @@ AEMWebMCP.addToCart({ productId: '123', quantity: 1 });
 // Navigate
 AEMWebMCP.navigate('/content/mysite/products.html');
 
-// Get screenshot (requires consent)
+// Get screenshot (requires consent; html2canvas must be bundled in a clientlib)
 AEMWebMCP.getPageScreenshot().then(data => console.log(data));
 
 // Get all available AI tools (server-side definition)
@@ -338,23 +338,12 @@ Yes. Features include:
 - Consent requirement option
 
 ### Q: What browsers support WebMCP?
-Currently Chrome with experimental flags. The JavaScript API works in all browsers - AI agent features require WebMCP support.
+Microsoft Edge 147+ ships native support; Chrome 149 runs an open origin trial (Gemini in Chrome consumes the tools). The `window.AEMWebMCP` JavaScript API works in all browsers - native agent features require a WebMCP-capable browser.
 
 ### Q: How do I disable WebMCP for specific components?
 ```html
 <div data-webmcp-disabled="true">...</div>
 ```
-
----
-
-## Migration Guide
-
-### From Version 1.0 to 2.0
-
-1. Update dependencies
-2. Review new OSGi config options
-3. Test rate limiting settings
-4. Update consent handling if used
 
 ---
 

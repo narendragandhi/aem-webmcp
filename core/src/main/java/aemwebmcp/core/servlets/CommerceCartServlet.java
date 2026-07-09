@@ -28,6 +28,13 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+/**
+ * Demo-only cart implementation: carts are held in servlet memory keyed by
+ * HTTP session, so they do not survive instance restarts and are not shared
+ * across horizontally scaled publish instances (AEMaaCS). For production use,
+ * back this with {@link aemwebmcp.core.services.CartPersistenceService} or a
+ * commerce backend.
+ */
 @Component(service = { Servlet.class })
 @SlingServletResourceTypes(
         resourceTypes = "aem-webmcp/components/cart",
@@ -129,21 +136,22 @@ public class CommerceCartServlet extends SlingAllMethodsServlet {
         }
         
         String sessionId = getSecureSessionId(req);
-        
+        String csrfToken = ensureCsrfToken(req);
+
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
-        
+
         if (sessionId == null) {
-            resp.getWriter().write(cartToJson(new Cart(), false));
+            resp.getWriter().write(cartToJson(new Cart(), false, csrfToken));
             return;
         }
-        
+
         Cart cart = SESSION_CARTS.get(sessionId);
         if (cart != null) {
             cart.setLastAccessTime(Instant.now());
-            resp.getWriter().write(cartToJson(cart, false));
+            resp.getWriter().write(cartToJson(cart, false, csrfToken));
         } else {
-            resp.getWriter().write(cartToJson(new Cart(), false));
+            resp.getWriter().write(cartToJson(new Cart(), false, csrfToken));
         }
     }
 
@@ -187,14 +195,32 @@ public class CommerceCartServlet extends SlingAllMethodsServlet {
         String csrfToken = req.getParameter("csrfToken");
         javax.servlet.http.HttpSession session = req.getSession(false);
         String sessionToken = session != null ? (String) session.getAttribute("csrfToken") : null;
-        
-        if (sessionToken != null && !sessionToken.equals(csrfToken)) {
+
+        // Fail closed: a session without a token (client never called GET to
+        // obtain one) must not be allowed to mutate state.
+        if (sessionToken == null || !sessionToken.equals(csrfToken)) {
             LOG.warn("CSRF validation failed for request");
             sendError(resp, SlingHttpServletResponse.SC_FORBIDDEN, "Invalid CSRF token");
             return false;
         }
-        
+
         return true;
+    }
+
+    private String ensureCsrfToken(SlingHttpServletRequest req) {
+        javax.servlet.http.HttpSession session = req.getSession(true);
+        String token = (String) session.getAttribute("csrfToken");
+        if (token == null) {
+            byte[] bytes = new byte[32];
+            new java.security.SecureRandom().nextBytes(bytes);
+            StringBuilder sb = new StringBuilder();
+            for (byte b : bytes) {
+                sb.append(String.format("%02x", b));
+            }
+            token = sb.toString();
+            session.setAttribute("csrfToken", token);
+        }
+        return token;
     }
 
     private String getSecureSessionId(SlingHttpServletRequest req) {
@@ -207,9 +233,9 @@ public class CommerceCartServlet extends SlingAllMethodsServlet {
     }
 
     private String getClientIdentifier(SlingHttpServletRequest req) {
-        String remoteAddr = req.getRemoteAddr();
-        String forwarded = req.getHeader("X-Forwarded-For");
-        return forwarded != null ? forwarded : remoteAddr;
+        // X-Forwarded-For is client-controlled and must not be trusted for
+        // rate limiting; a spoofed header would bypass the limit entirely.
+        return req.getRemoteAddr();
     }
 
     private void handleAddToCart(SlingHttpServletRequest req, Cart cart) {
@@ -290,10 +316,17 @@ public class CommerceCartServlet extends SlingAllMethodsServlet {
     }
 
     private String cartToJson(Cart cart, boolean includeDetails) {
+        return cartToJson(cart, includeDetails, null);
+    }
+
+    private String cartToJson(Cart cart, boolean includeDetails, String csrfToken) {
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("itemCount", cart.getItemCount());
         response.put("subtotal", cart.getSubtotal());
+        if (csrfToken != null) {
+            response.put("csrfToken", csrfToken);
+        }
         
         if (includeDetails) {
             response.put("items", cart.getItems());
@@ -347,6 +380,17 @@ public class CommerceCartServlet extends SlingAllMethodsServlet {
                 if (removed > 0) {
                     LOG.info("Cleaned up {} expired carts", removed);
                 }
+
+                // Evict rate-limit entries with no requests in the current
+                // window, otherwise the map grows without bound.
+                long windowStart = System.currentTimeMillis() - (RATE_LIMIT_WINDOW_SECONDS * 1000);
+                REQUEST_TIMES.entrySet().removeIf(entry -> {
+                    List<Long> times = entry.getValue();
+                    synchronized (times) {
+                        times.removeIf(t -> t < windowStart);
+                        return times.isEmpty();
+                    }
+                });
                 
                 while (SESSION_CARTS.size() > MAX_CARTS) {
                     String oldestKey = SESSION_CARTS.entrySet().stream()

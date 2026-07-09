@@ -5,15 +5,16 @@
  * Detects component type and adds appropriate structured data and actions.
  * 
  * Supports 30+ Core Components with full interaction capabilities.
- * Version: 1.1.0 - Enhanced with more interactions and debugging
+ * Version: 1.2.0 - Spec-compliant registration via navigator.modelContext
+ *                  (provideContext/registerTool per the W3C WebMCP draft)
  */
 
 (function (document, window) {
     'use strict';
 
     const AEMWebMCPAutomator = {
-        
-        version: '1.1.0',
+
+        version: '1.2.0',
         debug: window.WEBMCP_DEBUG || false,
         enabled: window.WEBMCP_ENABLED !== false,
         consentGiven: window.WEBMCP_CONSENT === true,
@@ -392,8 +393,7 @@
          */
         exposeWebMCPAPI: function() {
             const self = this;
-            const withConsent = this.canExposeAPI();
-            
+
             // Create comprehensive action handlers
             const actions = {
                 // Page actions
@@ -586,23 +586,10 @@
                 }
             };
             
-            // Register with navigator.modelContext if available (requires consent)
-            if (withConsent && window.navigator.modelContext?.declareAction) {
-                const mc = window.navigator.modelContext;
-                
-                Object.entries(actions).forEach(([id, action]) => {
-                    try {
-                        mc.declareAction({
-                            id: id,
-                            name: action.name,
-                            description: action.description,
-                            parameters: action.parameters || {}
-                        });
-                    } catch (e) {
-                        self.debug && console.warn('[WebMCP] Could not declare action:', id, e);
-                    }
-                });
-            }
+            // Register with navigator.modelContext per the W3C WebMCP draft.
+            // Tools are always registered; consent is enforced at execution time
+            // (via requestUserInteraction when the browser provides it).
+            this.registerNativeTools(actions);
             
             // Expose global API with consent check
             window.AEMWebMCP = {
@@ -610,7 +597,6 @@
                 consented: !!window.AEM_WEBMCP_CONSENT,
                 
                 _checkConsent: function() {
-                    console.log(`[WebMCP] Checking consent. Internal: ${this.consented}, Global: ${window.AEM_WEBMCP_CONSENT}`);
                     if (this.consented || window.AEM_WEBMCP_CONSENT === true) {
                         this.consented = true;
                         return true;
@@ -700,6 +686,132 @@
             window.AEMWebMCP.getPageScreenshot = () => window.AEMWebMCP._checkConsent() ? self.getPageScreenshot() : Promise.resolve({ error: 'Consent required' });
         },
         
+        /**
+         * Tools that only read page state; registered with readOnlyHint so
+         * agents can call them without a confirmation round-trip.
+         */
+        READ_ONLY_TOOLS: ['getPageInfo', 'getComponents', 'findComponent', 'findComponentsByCategory',
+            'getFormFields', 'getSearchResults', 'getElementInfo', 'waitForElement',
+            'getPageScreenshot', 'getAccessibilityTree'],
+
+        /**
+         * Convert the internal parameter map to a JSON Schema object as
+         * required by the WebMCP spec (ModelContextTool.inputSchema).
+         */
+        toInputSchema: function(parameters) {
+            const properties = {};
+            Object.entries(parameters || {}).forEach(([key, def]) => {
+                properties[key] = { type: def.type || 'string', description: def.description || '' };
+            });
+            return { type: 'object', properties: properties };
+        },
+
+        /**
+         * Build a spec-compliant ModelContextTool from an internal action.
+         */
+        toModelContextTool: function(id, action) {
+            const self = this;
+            const readOnly = this.READ_ONLY_TOOLS.indexOf(id) !== -1;
+            return {
+                name: id,
+                title: action.name,
+                description: action.description,
+                inputSchema: this.toInputSchema(action.parameters),
+                annotations: { readOnlyHint: readOnly },
+                execute: async function(input) {
+                    if (!readOnly) {
+                        const allowed = await self.ensureAgentConsent();
+                        if (!allowed) {
+                            return { content: [{ type: 'text', text: JSON.stringify({ success: false, error: 'User consent required' }) }] };
+                        }
+                    }
+                    const result = await action.execute(input);
+                    return { content: [{ type: 'text', text: JSON.stringify(result) }] };
+                }
+            };
+        },
+
+        /**
+         * Consent check for agent-initiated, state-changing tool calls.
+         * Prefers the browser-native requestUserInteraction() mechanism from
+         * the spec; falls back to page-level consent flags.
+         */
+        ensureAgentConsent: async function() {
+            if (this.consentGiven || window.WEBMCP_AUTO_CONSENT === true || window.AEM_WEBMCP_CONSENT === true) {
+                this.consentGiven = true;
+                return true;
+            }
+            const mc = window.navigator.modelContext;
+            if (mc && typeof mc.requestUserInteraction === 'function') {
+                try {
+                    const granted = await mc.requestUserInteraction();
+                    this.consentGiven = granted !== false;
+                    return this.consentGiven;
+                } catch (e) {
+                    return false;
+                }
+            }
+            return false;
+        },
+
+        /**
+         * Register tools with navigator.modelContext using the standard API:
+         * provideContext({tools}) for the page's base tool set, or
+         * registerTool() per tool. Falls back to pre-standard experimental
+         * methods (register/declareAction) for older browser builds.
+         */
+        registerNativeTools: function(actions) {
+            const mc = window.navigator.modelContext;
+            if (!mc) return;
+
+            const tools = Object.entries(actions).map(([id, action]) => this.toModelContextTool(id, action));
+
+            try {
+                if (typeof mc.provideContext === 'function') {
+                    mc.provideContext({ tools: tools });
+                    this.debug && console.log('[WebMCP] Registered', tools.length, 'tools via provideContext()');
+                } else if (typeof mc.registerTool === 'function') {
+                    tools.forEach(tool => mc.registerTool(tool));
+                    this.debug && console.log('[WebMCP] Registered', tools.length, 'tools via registerTool()');
+                } else if (typeof mc.register === 'function') {
+                    mc.register(tools);
+                } else if (typeof mc.declareAction === 'function') {
+                    tools.forEach(tool => mc.declareAction({ id: tool.name, name: tool.title, description: tool.description, parameters: tool.inputSchema.properties }));
+                }
+            } catch (e) {
+                this.debug && console.warn('[WebMCP] Native tool registration failed:', e);
+            }
+        },
+
+        /**
+         * Register an additional tool at runtime (used by component agents
+         * such as the Image Tagger and Recipe Generator).
+         */
+        registerTool: function(definition, handler) {
+            const action = {
+                name: definition.title || definition.name,
+                description: definition.description,
+                parameters: definition.parameters,
+                execute: handler
+            };
+            const tool = this.toModelContextTool(definition.name, action);
+            if (definition.inputSchema) tool.inputSchema = definition.inputSchema;
+
+            const mc = window.navigator.modelContext;
+            if (mc) {
+                try {
+                    if (typeof mc.registerTool === 'function') {
+                        mc.registerTool(tool);
+                    } else if (typeof mc.provideContext !== 'function' && typeof mc.register === 'function') {
+                        mc.register([tool]);
+                    }
+                } catch (e) {
+                    this.debug && console.warn('[WebMCP] Could not register tool:', definition.name, e);
+                }
+            }
+            return tool;
+        },
+
         /**
          * Enhance all Core Components on page
          */
@@ -794,8 +906,9 @@
                 });
             });
 
-            // Target form tags and IDs specifically
-            document.querySelectorAll('form:not([data-webmcp-action]), [id*="form"]:not([data-webmcp-action])').forEach(el => {
+            // Target actual form elements only; matching on id substrings
+            // ([id*="form"]) mislabels unrelated elements like #platform-info
+            document.querySelectorAll('form:not([data-webmcp-action])').forEach(el => {
                 el.setAttribute('data-webmcp-action', 'form');
                 el.setAttribute('data-webmcp-category', 'form');
             });
@@ -807,7 +920,7 @@
         getAllComponents: function(category) {
             const components = [];
             const allElements = document.querySelectorAll('[data-webmcp-action]');
-            console.log(`[WebMCP] Found ${allElements.length} elements with data-webmcp-action attribute`);
+            this.debug && console.log(`[WebMCP] Found ${allElements.length} elements with data-webmcp-action attribute`);
             
             allElements.forEach(el => {
                 if (category && el.dataset.webmcpCategory !== category) return;
@@ -993,12 +1106,16 @@
             return fields;
         },
         
+        _selectorCounter: 0,
+
         getSelector: function(el) {
-            if (el.id) return '#' + el.id;
-            let selector = el.tagName.toLowerCase();
-            if (el.className && typeof el.className === 'string') selector += '.' + el.className.split(' ')[0];
-            if (el.dataset.webmcpAction) selector += '[data-webmcp-action="' + el.dataset.webmcpAction + '"]';
-            return selector;
+            if (el.id) return '#' + CSS.escape(el.id);
+            // Stamp a stable unique id so agents always target the exact
+            // element; tag/class selectors can match multiple components.
+            if (!el.dataset.webmcpId) {
+                el.dataset.webmcpId = 'wm-' + (++this._selectorCounter);
+            }
+            return '[data-webmcp-id="' + el.dataset.webmcpId + '"]';
         },
         
         // ==================== ADVANCED HELPERS ====================
@@ -1086,17 +1203,13 @@
         
         getPageScreenshot: function() {
             return new Promise((resolve) => {
+                // html2canvas must be bundled by the site (e.g. in a clientlib);
+                // loading it from a CDN at runtime breaks CSP and is a supply-chain risk.
                 if (window.html2canvas) {
                     this._takeScreenshot(resolve);
                     return;
                 }
-                
-                // Load html2canvas dynamically
-                const script = document.createElement('script');
-                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-                script.onload = () => this._takeScreenshot(resolve);
-                script.onerror = () => resolve({ success: false, error: 'Failed to load html2canvas library' });
-                document.head.appendChild(script);
+                resolve({ success: false, error: 'html2canvas not available - bundle it in a clientlib to enable screenshots' });
             });
         },
 
