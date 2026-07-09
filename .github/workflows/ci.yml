@@ -124,8 +124,18 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
 
+      # The NVD API throttles unauthenticated clients so hard that the scan
+      # times out after hours; only run when an API key is configured.
+      # Get a free key at https://nvd.nist.gov/developers/request-an-api-key
       - name: Run OWASP Dependency Check
-        run: mvn org.owasp:dependency-check-maven:check -DskipTests
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: |
+          if [ -z "$NVD_API_KEY" ]; then
+            echo "::notice::NVD_API_KEY secret not set - skipping OWASP dependency check"
+            exit 0
+          fi
+          mvn org.owasp:dependency-check-maven:check -DskipTests -DnvdApiKey="$NVD_API_KEY"
 
   coverage:
     needs: test
