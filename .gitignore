@@ -111,3 +111,6 @@ dispatcher/src/conf.d/variables/default.vars
 ### Playwright ###
 playwright-tests/playwright-report/
 playwright-tests/test-results/
+
+### playwright-cli sessions ###
+.playwright-cli/
