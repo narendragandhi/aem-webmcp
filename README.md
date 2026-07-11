@@ -37,6 +37,15 @@ WebMCP (Web Model Context Protocol) is a browser API developed jointly by Micros
 
 > The WebMCP debug panel (bottom-right) shows all components detected and registered as AI-accessible tools in real time. Zero configuration required — the clientlib auto-loads and scans the page on every render.
 
+### Verify the agent contract yourself
+
+`test-site/mock-agent.js` is a spec-exact mock of `navigator.modelContext`
+(the API surface of Edge 147 / Chrome 149). Serve `test-site/`, inject the
+mock before page load (e.g. Playwright `addInitScript`), and the page
+registers 25 tools that the "agent" can discover and invoke — including the
+`requestUserInteraction()` consent flow for state-changing tools. See
+`docs/CODE-REVIEW-2026-07.md` for the recorded verification run.
+
 ---
 
 ## Quick Start

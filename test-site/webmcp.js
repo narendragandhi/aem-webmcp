@@ -5,15 +5,16 @@
  * Detects component type and adds appropriate structured data and actions.
  * 
  * Supports 30+ Core Components with full interaction capabilities.
- * Version: 1.1.0 - Enhanced with more interactions and debugging
+ * Version: 1.2.0 - Spec-compliant registration via navigator.modelContext
+ *                  (provideContext/registerTool per the W3C WebMCP draft)
  */
 
 (function (document, window) {
     'use strict';
 
     const AEMWebMCPAutomator = {
-        
-        version: '1.1.0',
+
+        version: '1.2.0',
         debug: window.WEBMCP_DEBUG || false,
         enabled: window.WEBMCP_ENABLED !== false,
         consentGiven: window.WEBMCP_CONSENT === true,
@@ -40,6 +41,13 @@
             'core/wcm/components/commerce/product': { category: 'commerce', action: 'product', description: 'Product display', interactions: ['add-to-cart', 'add-to-wishlist'] },
             'core/wcm/components/product': { category: 'commerce', action: 'product', description: 'Product display', interactions: ['add-to-cart'] },
             'core/wcm/components/commerce/featuredproducts': { category: 'commerce', action: 'featured-products', description: 'Featured products', interactions: ['view-all'] },
+            
+            'core/wcm/components/commerce/productlist': { category: 'commerce', action: 'product-list', description: 'Product list', interactions: ['filter', 'sort', 'paginate'],
+                getData: function(el) { return { products: el.querySelectorAll('.product-item, [data-product]').length }; }
+            },
+            'core/wcm/components/commerce/wishlist': { category: 'commerce', action: 'wishlist', description: 'Wishlist', interactions: ['add', 'remove', 'view'] },
+            'core/wcm/components/commerce/checkout': { category: 'commerce', action: 'checkout', description: 'Checkout', interactions: ['proceed', 'back', 'apply-coupon'] },
+            'core/wcm/components/commerce/orders': { category: 'commerce', action: 'order-history', description: 'Order history', interactions: ['view', 'reorder'] },
 
             // ==================== NAVIGATION COMPONENTS ====================
             'core/wcm/components/navigation/v1/navigation': { category: 'navigation', action: 'navigation', description: 'Site navigation', interactions: ['navigate', 'expand', 'collapse'],
@@ -149,6 +157,32 @@
             'core/wcm/components/form/text/v2/text': { category: 'form', action: 'form-field', fieldType: 'text' },
             'core/wcm/components/form/text': { category: 'form', action: 'form-field', fieldType: 'text' },
             
+            'core/wcm/components/form/textarea/v1/textarea': { category: 'form', action: 'form-field', fieldType: 'textarea',
+                getData: function(el) { const t = el.querySelector('textarea'); return { name: t?.name, required: t?.required }; }
+            },
+            'core/wcm/components/form/textarea': { category: 'form', action: 'form-field', fieldType: 'textarea' },
+            
+            'core/wcm/components/form/date/v1/date': { category: 'form', action: 'form-field', fieldType: 'date',
+                getData: function(el) { const i = el.querySelector('input'); return { name: i?.name, required: i?.required }; }
+            },
+            'core/wcm/components/form/date': { category: 'form', action: 'form-field', fieldType: 'date' },
+            
+            'core/wcm/components/form/dropdown/v1/dropdown': { category: 'form', action: 'form-dropdown', fieldType: 'select',
+                getData: function(el) { const s = el.querySelector('select'); return { name: s?.name, options: Array.from(s?.querySelectorAll('option') || []).map(o => o.value) }; }
+            },
+            'core/wcm/components/form/dropdown': { category: 'form', action: 'form-dropdown', fieldType: 'select' },
+            
+            'core/wcm/components/form/checkbox/v1/checkbox': { category: 'form', action: 'form-checkbox', fieldType: 'checkbox' },
+            'core/wcm/components/form/checkbox': { category: 'form', action: 'form-checkbox', fieldType: 'checkbox' },
+            
+            'core/wcm/components/form/radio/v1/radio': { category: 'form', action: 'form-radio', fieldType: 'radio' },
+            'core/wcm/components/form/radio': { category: 'form', action: 'form-radio', fieldType: 'radio' },
+            
+            'core/wcm/components/form/fileupload/v1/fileupload': { category: 'form', action: 'form-file-upload', fieldType: 'file',
+                interactions: ['upload', 'clear'] 
+            },
+            'core/wcm/components/form/fileupload': { category: 'form', action: 'form-file-upload', fieldType: 'file' },
+            
             'core/wcm/components/form/button/v1/button': { category: 'form', action: 'form-button', fieldType: 'button' },
             'core/wcm/components/form/button/v2/button': { category: 'form', action: 'form-button', fieldType: 'button' },
             'core/wcm/components/form/button': { category: 'form', action: 'form-button', fieldType: 'button' },
@@ -165,10 +199,57 @@
             'core/wcm/components/pdfviewer/v1/pdfviewer': { category: 'media', action: 'pdf-viewer', description: 'PDF viewer', interactions: ['download', 'print', 'zoom'] },
             'core/wcm/components/pdfviewer': { category: 'media', action: 'pdf-viewer', description: 'PDF viewer' },
 
+            // ==================== AEM WebMCP COMPONENTS ====================
+            'aem-webmcp/components/form/container': { category: 'form', action: 'form', description: 'Contact Form', interactions: ['submit', 'reset'] },
+            'aem-webmcp/components/search': { category: 'search', action: 'search', description: 'Site Search' },
+            'aem-webmcp/components/cart': { category: 'commerce', action: 'shopping-cart', description: 'Shopping Cart' },
+            'aem-webmcp/components/navigation': { category: 'navigation', action: 'navigation', description: 'Site Navigation' },
+            
             // ==================== EXPERIENCE FRAGMENTS ====================
             'core/wcm/components/experiencefragment/v1/experiencefragment': { category: 'experience', action: 'experience-fragment', description: 'Experience fragment' },
             'core/wcm/components/experiencefragment/v2/experiencefragment': { category: 'experience', action: 'experience-fragment', description: 'Experience fragment' },
-            'core/wcm/components/experiencefragment': { category: 'experience', action: 'experience-fragment', description: 'Experience fragment' }
+            'core/wcm/components/experiencefragment': { category: 'experience', action: 'experience-fragment', description: 'Experience fragment' },
+
+            // ==================== SOCIAL & COMMUNITY COMPONENTS ====================
+            'core/wcm/components/comments': { category: 'social', action: 'comments', description: 'Comments section', interactions: ['post', 'reply', 'like', 'delete'] },
+            'core/wcm/components/comments/v1/comments': { category: 'social', action: 'comments', description: 'Comments', interactions: ['post', 'reply'] },
+            
+            'core/wcm/components/sharing': { category: 'social', action: 'social-share', description: 'Social sharing', interactions: ['share'],
+                getData: function(el) { return { platforms: Array.from(el.querySelectorAll('a')).map(a => ({ label: a.getAttribute('aria-label') || a.href, href: a.href })) }; }
+            },
+            'core/wcm/components/sharing/v1/sharing': { category: 'social', action: 'social-share', description: 'Share content' },
+            
+            'core/wcm/components/voting': { category: 'social', action: 'voting', description: 'Voting/rating', interactions: ['vote-up', 'vote-down', 'rate'],
+                getData: function(el) { return { upVotes: el.querySelectorAll('[aria-label*="up"], .vote-up').length, downVotes: el.querySelectorAll('[aria-label*="down"], .vote-down').length }; }
+            },
+            'core/wcm/components/voting/v1/voting': { category: 'social', action: 'voting', description: 'Vote on content' },
+            
+            // ==================== ADDITIONAL COMMERCE COMPONENTS ====================
+            'core/wcm/components/commerce/price': { category: 'commerce', action: 'price', description: 'Price display', interactions: ['add-to-cart'] },
+            'core/wcm/components/price': { category: 'commerce', action: 'price', description: 'Product price' },
+            
+            'core/wcm/components/commerce/swatch': { category: 'commerce', action: 'swatch', description: 'Color swatch selector', interactions: ['select'] },
+            'core/wcm/components/swatch': { category: 'commerce', action: 'swatch', description: 'Variant selector' },
+            
+            // ==================== ADDITIONAL LAYOUT COMPONENTS ====================
+            'core/wcm/components/list': { category: 'content', action: 'content-list', description: 'Content list',
+                getData: function(el) { return { items: el.querySelectorAll('li, .list-item').length }; }
+            },
+            'core/wcm/components/list/v1/list': { category: 'content', action: 'content-list', description: 'List of content' },
+            
+            'core/wcm/components/carousel/v2/carousel': { category: 'layout', action: 'carousel', description: 'Carousel/slider', interactions: ['next', 'prev', 'go-to-slide', 'play', 'pause'],
+                getData: function(el) { return { slides: el.querySelectorAll('.carousel__item, .cmp-carousel__item').length }; }
+            },
+            
+            // ==================== QUICK SEARCH ====================
+            'core/wcm/components/quicksearch': { category: 'commerce', action: 'quick-search', description: 'Quick search/autocomplete', interactions: ['search', 'select-result'],
+                getData: function(el) { return { suggestions: el.querySelectorAll('.suggestion, [role="option"]').length }; }
+            },
+            
+            // ==================== LANGUAGE STRUCTURE ====================
+            'core/wcm/components/languagenavigation/v2/languagenavigation': { category: 'navigation', action: 'language-navigation', description: 'Language selector', interactions: ['select-language'],
+                getData: function(el) { return { languages: Array.from(el.querySelectorAll('a')).map(a => ({ label: a.textContent.trim(), href: a.href, active: a.classList.contains('active') })) }; }
+            }
         },
         
         /**
@@ -182,10 +263,9 @@
             
             this.debug && console.log('[WebMCP] Initializing AEM WebMCP Automator v' + this.version);
             
-            if (this.isWebMCPSupported()) {
-                this.exposeWebMCPAPI();
-                this.enhanceAllComponents();
-            }
+            // Always expose the API for JS-based agents and testing
+            this.exposeWebMCPAPI();
+            this.enhanceAllComponents();
             
             if (this.debug || window.WEBMCP_SHOW_PANEL) {
                 this.createDebugPanel();
@@ -313,8 +393,7 @@
          */
         exposeWebMCPAPI: function() {
             const self = this;
-            const withConsent = this.canExposeAPI();
-            
+
             // Create comprehensive action handlers
             const actions = {
                 // Page actions
@@ -498,45 +577,241 @@
                     name: 'Get Accessibility Tree',
                     description: 'Get accessibility tree for screen reader/AI',
                     execute: () => self.getAccessibilityTree()
+                },
+                speakText: {
+                    name: 'Speak Text',
+                    description: 'Read text aloud using speech synthesis',
+                    parameters: { text: { type: 'string', description: 'Text to speak' } },
+                    execute: (params) => { self.speakText(params?.text); return { success: true }; }
                 }
             };
             
-            // Register with navigator.modelContext if available (requires consent)
-            if (withConsent && window.navigator.modelContext?.declareAction) {
-                const mc = window.navigator.modelContext;
-                
-                Object.entries(actions).forEach(([id, action]) => {
-                    try {
-                        mc.declareAction({
-                            id: id,
-                            name: action.name,
-                            description: action.description,
-                            parameters: action.parameters || {}
-                        });
-                    } catch (e) {
-                        self.debug && console.warn('[WebMCP] Could not declare action:', id, e);
-                    }
-                });
-            }
+            // Register with navigator.modelContext per the W3C WebMCP draft.
+            // Tools are always registered; consent is enforced at execution time
+            // (via requestUserInteraction when the browser provides it).
+            this.registerNativeTools(actions);
             
-            // Expose global API (works in all browsers)
+            // Expose global API with consent check
             window.AEMWebMCP = {
                 version: this.version,
+                consented: !!window.AEM_WEBMCP_CONSENT,
+                
+                _checkConsent: function() {
+                    if (this.consented || window.AEM_WEBMCP_CONSENT === true) {
+                        this.consented = true;
+                        return true;
+                    }
+                    
+                    this._showConsentUI();
+                    return false;
+                },
+
+                _showConsentUI: function() {
+                    if (document.getElementById('webmcp-consent-wrapper')) return;
+
+                    const host = document.createElement('div');
+                    host.id = 'webmcp-consent-wrapper';
+                    document.body.appendChild(host);
+                    
+                    const shadow = host.attachShadow({mode: 'open'});
+                    
+                    // Inject Styles into Shadow DOM
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        :host { font-family: system-ui, -apple-system, sans-serif; }
+                        #bar {
+                            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(150%);
+                            width: 90%; max-width: 600px; background: rgba(255, 255, 255, 0.8);
+                            backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3);
+                            border-radius: 16px; padding: 16px 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+                            display: flex; align-items: center; justify-content: space-between; transition: transform 0.5s ease;
+                        }
+                        #bar.visible { transform: translateX(-50%) translateY(0); }
+                        .message { font-size: 14px; color: #1f2937; }
+                        .actions { display: flex; gap: 12px; }
+                        button { padding: 8px 16px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; }
+                        .btn-allow { background: #6366f1; color: white; }
+                        .btn-deny { background: transparent; color: #6b7280; }
+                    `;
+                    
+                    const bar = document.createElement('div');
+                    bar.id = 'bar';
+                    bar.innerHTML = `
+                        <div class="message"><b>AI Assistant</b> wants to help you with this page.</div>
+                        <div class="actions">
+                            <button class="btn-deny">Not now</button>
+                            <button class="btn-allow">Allow Access</button>
+                        </div>
+                    `;
+                    
+                    shadow.appendChild(style);
+                    shadow.appendChild(bar);
+                    
+                    setTimeout(() => bar.classList.add('visible'), 100);
+
+                    bar.querySelector('.btn-allow').onclick = () => {
+                        this.consented = true;
+                        bar.classList.remove('visible');
+                        setTimeout(() => host.remove(), 500);
+                    };
+
+                    bar.querySelector('.btn-deny').onclick = () => {
+                        bar.classList.remove('visible');
+                        setTimeout(() => host.remove(), 500);
+                    };
+                },
+
+                // Wrap all actions with consent check
                 ...Object.fromEntries(
-                    Object.entries(actions).map(([id, action]) => [id, action.execute])
+                    Object.entries(actions).map(([id, action]) => [
+                        id, 
+                        (...args) => {
+                            if (window.AEMWebMCP._checkConsent()) {
+                                return action.execute(...args);
+                            }
+                            return { success: false, error: 'User consent required' };
+                        }
+                    ])
                 )
             };
             
-            // Also expose for backward compatibility
-            window.AEMWebMCP.interact = (s, a, o) => self.interactComponent(s, a, o);
-            window.AEMWebMCP.fillForm = (s, v) => self.fillFormField(s, v);
-            window.AEMWebMCP.submitForm = (s) => self.submitForm(s);
-            window.AEMWebMCP.navigate = (u) => window.location.href = u;
-            window.AEMWebMCP.search = (q) => self.performSearch(q);
-            window.AEMWebMCP.addToCart = (s, q) => self.addToCart(s, q);
-            window.AEMWebMCP.getPageInfo = () => self.getPageInfo();
+            // Also expose for backward compatibility (all protected by consent)
+            window.AEMWebMCP.interact = (s, a, o) => window.AEMWebMCP._checkConsent() ? self.interactComponent(s, a, o) : { error: 'Consent required' };
+            window.AEMWebMCP.fillForm = (s, v) => window.AEMWebMCP._checkConsent() ? self.fillFormField(s, v) : { error: 'Consent required' };
+            window.AEMWebMCP.submitForm = (s) => window.AEMWebMCP._checkConsent() ? self.submitForm(s) : { error: 'Consent required' };
+            window.AEMWebMCP.navigate = (u) => window.AEMWebMCP._checkConsent() ? (window.location.href = u) : { error: 'Consent required' };
+            window.AEMWebMCP.search = (q) => window.AEMWebMCP._checkConsent() ? self.performSearch(q) : { error: 'Consent required' };
+            window.AEMWebMCP.addToCart = (s, q) => window.AEMWebMCP._checkConsent() ? self.addToCart(s, q) : { error: 'Consent required' };
+            window.AEMWebMCP.getPageInfo = () => window.AEMWebMCP._checkConsent() ? self.getPageInfo() : { error: 'Consent required' };
+            window.AEMWebMCP.getPageScreenshot = () => window.AEMWebMCP._checkConsent() ? self.getPageScreenshot() : Promise.resolve({ error: 'Consent required' });
         },
         
+        /**
+         * Tools that only read page state; registered with readOnlyHint so
+         * agents can call them without a confirmation round-trip.
+         */
+        READ_ONLY_TOOLS: ['getPageInfo', 'getComponents', 'findComponent', 'findComponentsByCategory',
+            'getFormFields', 'getSearchResults', 'getElementInfo', 'waitForElement',
+            'getPageScreenshot', 'getAccessibilityTree'],
+
+        /**
+         * Convert the internal parameter map to a JSON Schema object as
+         * required by the WebMCP spec (ModelContextTool.inputSchema).
+         */
+        toInputSchema: function(parameters) {
+            const properties = {};
+            Object.entries(parameters || {}).forEach(([key, def]) => {
+                properties[key] = { type: def.type || 'string', description: def.description || '' };
+            });
+            return { type: 'object', properties: properties };
+        },
+
+        /**
+         * Build a spec-compliant ModelContextTool from an internal action.
+         */
+        toModelContextTool: function(id, action) {
+            const self = this;
+            const readOnly = this.READ_ONLY_TOOLS.indexOf(id) !== -1;
+            return {
+                name: id,
+                title: action.name,
+                description: action.description,
+                inputSchema: this.toInputSchema(action.parameters),
+                annotations: { readOnlyHint: readOnly },
+                execute: async function(input) {
+                    if (!readOnly) {
+                        const allowed = await self.ensureAgentConsent();
+                        if (!allowed) {
+                            return { content: [{ type: 'text', text: JSON.stringify({ success: false, error: 'User consent required' }) }] };
+                        }
+                    }
+                    const result = await action.execute(input);
+                    return { content: [{ type: 'text', text: JSON.stringify(result) }] };
+                }
+            };
+        },
+
+        /**
+         * Consent check for agent-initiated, state-changing tool calls.
+         * Prefers the browser-native requestUserInteraction() mechanism from
+         * the spec; falls back to page-level consent flags.
+         */
+        ensureAgentConsent: async function() {
+            if (this.consentGiven || window.WEBMCP_AUTO_CONSENT === true || window.AEM_WEBMCP_CONSENT === true) {
+                this.consentGiven = true;
+                return true;
+            }
+            const mc = window.navigator.modelContext;
+            if (mc && typeof mc.requestUserInteraction === 'function') {
+                try {
+                    const granted = await mc.requestUserInteraction();
+                    this.consentGiven = granted !== false;
+                    return this.consentGiven;
+                } catch (e) {
+                    return false;
+                }
+            }
+            return false;
+        },
+
+        /**
+         * Register tools with navigator.modelContext using the standard API:
+         * provideContext({tools}) for the page's base tool set, or
+         * registerTool() per tool. Falls back to pre-standard experimental
+         * methods (register/declareAction) for older browser builds.
+         */
+        registerNativeTools: function(actions) {
+            const mc = window.navigator.modelContext;
+            if (!mc) return;
+
+            const tools = Object.entries(actions).map(([id, action]) => this.toModelContextTool(id, action));
+
+            try {
+                if (typeof mc.provideContext === 'function') {
+                    mc.provideContext({ tools: tools });
+                    this.debug && console.log('[WebMCP] Registered', tools.length, 'tools via provideContext()');
+                } else if (typeof mc.registerTool === 'function') {
+                    tools.forEach(tool => mc.registerTool(tool));
+                    this.debug && console.log('[WebMCP] Registered', tools.length, 'tools via registerTool()');
+                } else if (typeof mc.register === 'function') {
+                    mc.register(tools);
+                } else if (typeof mc.declareAction === 'function') {
+                    tools.forEach(tool => mc.declareAction({ id: tool.name, name: tool.title, description: tool.description, parameters: tool.inputSchema.properties }));
+                }
+            } catch (e) {
+                this.debug && console.warn('[WebMCP] Native tool registration failed:', e);
+            }
+        },
+
+        /**
+         * Register an additional tool at runtime (used by component agents
+         * such as the Image Tagger and Recipe Generator).
+         */
+        registerTool: function(definition, handler) {
+            const action = {
+                name: definition.title || definition.name,
+                description: definition.description,
+                parameters: definition.parameters,
+                execute: handler
+            };
+            const tool = this.toModelContextTool(definition.name, action);
+            if (definition.inputSchema) tool.inputSchema = definition.inputSchema;
+
+            const mc = window.navigator.modelContext;
+            if (mc) {
+                try {
+                    if (typeof mc.registerTool === 'function') {
+                        mc.registerTool(tool);
+                    } else if (typeof mc.provideContext !== 'function' && typeof mc.register === 'function') {
+                        mc.register([tool]);
+                    }
+                } catch (e) {
+                    this.debug && console.warn('[WebMCP] Could not register tool:', definition.name, e);
+                }
+            }
+            return tool;
+        },
+
         /**
          * Enhance all Core Components on page
          */
@@ -588,7 +863,11 @@
          * Normalize resource type
          */
         normalizeResourceType: function(type) {
-            return type.replace(/\/v\d+/g, '').replace(/\/core\/wcm\/components\//, '/core/wcm/components/');
+            if (!type) return '';
+            // Remove versioning (v1, v2, etc.)
+            let normalized = type.replace(/\/v\d+/g, '');
+            // Handle proxy components mapping to core components or base paths
+            return normalized;
         },
         
         /**
@@ -608,12 +887,30 @@
          * Enhance by common patterns
          */
         enhanceByPatterns: function() {
-            const patterns = { 'search': 'search', 'cart': 'shopping-cart', 'form': 'form', 'navigation': 'navigation', 'breadcrumb': 'breadcrumb', 'accordion': 'accordion', 'tabs': 'tabs', 'carousel': 'carousel' };
+            const patterns = { 
+                'search': 'search', 
+                'cart': 'shopping-cart', 
+                'form': 'form',
+                'cmp-form': 'form',
+                'cmp-form-container': 'form',
+                'navigation': 'navigation', 
+                'breadcrumb': 'breadcrumb', 
+                'accordion': 'accordion', 
+                'tabs': 'tabs', 
+                'carousel': 'carousel' 
+            };
             Object.entries(patterns).forEach(([pattern, action]) => {
                 document.querySelectorAll(`.${pattern}:not([data-webmcp-action])`).forEach(el => {
                     el.setAttribute('data-webmcp-action', action);
-                    el.setAttribute('data-webmcp-category', 'auto-detected');
+                    el.setAttribute('data-webmcp-category', action === 'shopping-cart' ? 'commerce' : (action === 'form' ? 'form' : pattern));
                 });
+            });
+
+            // Target actual form elements only; matching on id substrings
+            // ([id*="form"]) mislabels unrelated elements like #platform-info
+            document.querySelectorAll('form:not([data-webmcp-action])').forEach(el => {
+                el.setAttribute('data-webmcp-action', 'form');
+                el.setAttribute('data-webmcp-category', 'form');
             });
         },
         
@@ -622,7 +919,10 @@
          */
         getAllComponents: function(category) {
             const components = [];
-            document.querySelectorAll('[data-webmcp-action]').forEach(el => {
+            const allElements = document.querySelectorAll('[data-webmcp-action]');
+            this.debug && console.log(`[WebMCP] Found ${allElements.length} elements with data-webmcp-action attribute`);
+            
+            allElements.forEach(el => {
                 if (category && el.dataset.webmcpCategory !== category) return;
                 const data = { action: el.dataset.webmcpAction, category: el.dataset.webmcpCategory, description: el.dataset.webmcpDescription, selector: this.getSelector(el), interactions: (el.dataset.webmcpInteractions || '').split(',') };
                 try { if (el.dataset.webmcpData) data.data = JSON.parse(el.dataset.webmcpData); } catch (e) {}
@@ -721,12 +1021,26 @@
          * Fill form field
          */
         fillFormField: function(selector, value) {
-            const input = document.querySelector(selector);
-            if (!input) return { success: false, error: 'Input not found' };
-            input.value = value;
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-            input.dispatchEvent(new Event('change', { bubbles: true }));
-            return { success: true };
+            return new Promise((resolve) => {
+                const input = document.querySelector(selector);
+                if (!input) {
+                    resolve({ success: false, error: 'Input not found: ' + selector });
+                    return;
+                }
+                
+                // Design: Add AI Aura
+                input.classList.add('webmcp-ai-active');
+                
+                input.value = value;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+                
+                // Design: Visual pause so human can see what's happening
+                setTimeout(() => {
+                    input.classList.remove('webmcp-ai-active');
+                    resolve({ success: true });
+                }, 400);
+            });
         },
         
         /**
@@ -792,12 +1106,16 @@
             return fields;
         },
         
+        _selectorCounter: 0,
+
         getSelector: function(el) {
-            if (el.id) return '#' + el.id;
-            let selector = el.tagName.toLowerCase();
-            if (el.className && typeof el.className === 'string') selector += '.' + el.className.split(' ')[0];
-            if (el.dataset.webmcpAction) selector += '[data-webmcp-action="' + el.dataset.webmcpAction + '"]';
-            return selector;
+            if (el.id) return '#' + CSS.escape(el.id);
+            // Stamp a stable unique id so agents always target the exact
+            // element; tag/class selectors can match multiple components.
+            if (!el.dataset.webmcpId) {
+                el.dataset.webmcpId = 'wm-' + (++this._selectorCounter);
+            }
+            return '[data-webmcp-id="' + el.dataset.webmcpId + '"]';
         },
         
         // ==================== ADVANCED HELPERS ====================
@@ -834,6 +1152,15 @@
                 return { success: true, quantity: quantity };
             }
             return { success: false, error: 'Quantity input not found' };
+        },
+
+        /**
+         * Speak text using Web Speech API
+         */
+        speakText: function(text) {
+            if (!text) return;
+            const utterance = new SpeechSynthesisUtterance(text);
+            window.speechSynthesis.speak(utterance);
         },
         
         getElementInfo: function(selector) {
@@ -875,13 +1202,30 @@
         },
         
         getPageScreenshot: function() {
-            // This would require html2canvas or similar library
-            // For now, return info about what would be needed
-            return { 
-                success: false, 
-                error: 'Screenshot requires additional library (html2canvas)',
-                suggestion: 'Use window.scrollTo(0,0) then capture with external tool'
-            };
+            return new Promise((resolve) => {
+                // html2canvas must be bundled by the site (e.g. in a clientlib);
+                // loading it from a CDN at runtime breaks CSP and is a supply-chain risk.
+                if (window.html2canvas) {
+                    this._takeScreenshot(resolve);
+                    return;
+                }
+                resolve({ success: false, error: 'html2canvas not available - bundle it in a clientlib to enable screenshots' });
+            });
+        },
+
+        _takeScreenshot: function(resolve) {
+            window.html2canvas(document.body, {
+                ignoreElements: (element) => element.id === 'webmcp-debug-panel',
+                logging: false,
+                useCORS: true
+            }).then(canvas => {
+                resolve({ 
+                    success: true, 
+                    data: canvas.toDataURL('image/jpeg', 0.6) // Compress to save bandwidth/tokens
+                });
+            }).catch(e => {
+                resolve({ success: false, error: 'Screenshot failed: ' + e.message });
+            });
         },
         
         getAccessibilityTree: function() {

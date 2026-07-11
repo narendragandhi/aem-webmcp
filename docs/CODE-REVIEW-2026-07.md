@@ -68,3 +68,19 @@ status; fixes were applied in the accompanying change set.
 
 - `mvn -pl core test` — 71 tests, 0 failures.
 - `node --check` on all edited clientlib JS — clean.
+- **Mock-agent browser verification (2026-07-11)**: loaded `test-site/index.html`
+  in Chromium with `test-site/mock-agent.js` installed as an init script (a
+  spec-exact mock of `navigator.modelContext`). Results:
+  - 25 tools registered via `provideContext({tools})` with valid names,
+    descriptions, JSON Schema `inputSchema`, `execute` callbacks, and
+    `readOnlyHint` annotations.
+  - Read-only tools (`getPageInfo`, `getFormFields`, `getComponents`)
+    executed without triggering user interaction and returned MCP-shaped
+    `{content:[{type:"text",...}]}` envelopes.
+  - State-changing `fillForm` triggered `requestUserInteraction()` exactly
+    once, and the DOM input value was actually set; consent latched (second
+    write did not re-prompt).
+  - Evidence: `test-site/agent-verification.png`.
+  - Still open: validation against a real hosted agent (Edge 147 Copilot or
+    Gemini in Chrome 149 with an origin-trial token) — the mock proves the
+    API contract, not vendor-agent behavior.
