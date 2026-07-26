@@ -120,7 +120,7 @@ window.WEBMCP_ENABLED = false;
 ```
 
 ### Consent-Based API Exposure
-By default, WebMCP exposes actions via `navigator.modelContext`. To enable:
+By default, WebMCP exposes actions via `document.modelContext` (with `navigator.modelContext` fallback). To enable:
 ```javascript
 // Opt-in to expose WebMCP actions to AI agents
 window.WEBMCP_CONSENT = true;

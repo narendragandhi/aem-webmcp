@@ -316,34 +316,46 @@
                 }
             ];
 
-            // Register with native navigator.modelContext (WebMCP spec)
-            if (window.navigator?.modelContext) {
+            this._unregistrers = [];
+
+            // Prefer the automator: it registers with document.modelContext
+            // using the spec API and applies consent handling.
+            if (window.AEMWebMCPAutomator?.registerTool) {
+                tools.forEach(tool => {
+                    const result = window.AEMWebMCPAutomator.registerTool({
+                        name: tool.name,
+                        description: tool.description,
+                        inputSchema: tool.inputSchema
+                    }, tool.handler);
+                    if (result && result.unregister) {
+                        this._unregistrers.push(result.unregister);
+                    }
+                });
+            } else if (window.navigator?.modelContext) {
                 try {
-                    const registeredTools = tools.map(tool => ({
+                    const mc = window.navigator.modelContext;
+                    const specTools = tools.map(tool => ({
                         name: tool.name,
                         description: tool.description,
                         inputSchema: tool.inputSchema,
-                        handle: tool.handler
+                        execute: async (input) => tool.handler(input)
                     }));
-                    
-                    if (window.navigator.modelContext.register) {
-                        window.navigator.modelContext.register(registeredTools);
-                        console.log('[MCP-B] Image Tagger tools registered');
+
+                    if (typeof mc.registerTool === 'function') {
+                        specTools.forEach(tool => {
+                            const controller = new AbortController();
+                            mc.registerTool(tool, { signal: controller.signal }).catch(e => {
+                                console.warn('[WebMCP] registerTool failed:', tool.name, e);
+                            });
+                            this._unregistrers.push(() => controller.abort());
+                        });
+                    } else if (typeof mc.register === 'function') {
+                        // Pre-standard experimental builds
+                        mc.register(specTools);
                     }
                 } catch (e) {
-                    console.warn('[MCP-B] Native registration failed:', e);
+                    console.warn('[WebMCP] Native registration failed:', e);
                 }
-            }
-
-            // Also register with fallback
-            if (window.AEMWebMCPAutomator) {
-                tools.forEach(tool => {
-                    window.AEMWebMCPAutomator.registerTool({
-                        name: tool.name,
-                        description: tool.description,
-                        parameters: tool.inputSchema
-                    }, tool.handler);
-                });
             }
 
             // Global exposure

@@ -123,10 +123,11 @@ searchByTag({ tag: "vehicle" })
 
 ```javascript
 // Check if native WebMCP is available
-if (navigator.modelContext) {
+if (document.modelContext || navigator.modelContext) {
+    const mc = document.modelContext || navigator.modelContext;
     // Tools are automatically registered
-    navigator.modelContext.getContext().then(ctx => {
-        console.log('Available tools:', ctx.tools);
+    mc.getTools().then(tools => {
+        console.log('Available tools:', tools);
     });
 }
 ```

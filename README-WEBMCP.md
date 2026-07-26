@@ -6,7 +6,7 @@ This project provides automatic WebMCP integration for AEM sites built with Adob
 
 ## What is WebMCP?
 
-WebMCP (Web Model Context Protocol) is a browser API developed jointly by Microsoft and Google in the W3C Web Machine Learning Community Group. Websites register structured tools on `navigator.modelContext` (via `provideContext()` / `registerTool()`), which browser-hosted AI agents can then discover and invoke. Instead of AI agents clicking around blindly, they can:
+WebMCP (Web Model Context Protocol) is a browser API developed jointly by Microsoft and Google in the W3C Web Machine Learning Community Group. Websites register structured tools on `document.modelContext` (via `registerTool()`), which browser-hosted AI agents can then discover and invoke. Instead of AI agents clicking around blindly, they can:
 - ✅ Understand site structure and components
 - ✅ Fill forms with proper field validation
 - ✅ Navigate precisely without guessing

@@ -10,13 +10,16 @@ status; fixes were applied in the accompanying change set.
 - WebMCP is a **W3C Community Group Draft Report** edited jointly by
   Microsoft and Google (not Google-only, and not yet on the Standards
   Track). Spec: <https://webmachinelearning.github.io/webmcp/>
-- The API entry point is **`navigator.modelContext`** with:
-  - `provideContext({ tools })` — register the page's base tool set
-  - `registerTool(tool)` / `unregisterTool()` — dynamic per-tool management
+- The API entry point is **`document.modelContext`** (with `navigator.modelContext` fallback in current origin trials) with:
+  - `registerTool(tool, options)` / `unregisterTool()` — per-tool registration
+    with optional `AbortSignal` and `exposedTo` (spec §4.2.2)
+  - `getTools()` — discover registered tools (spec §4.2.3)
   - `requestUserInteraction()` — browser-mediated user confirmation
+  - `ontoolchange` event — notify agents of tool changes (spec §4.4)
   - Tool descriptor: `name`, `description`, `inputSchema` (JSON Schema),
     **`execute` callback**, optional `title` and
     `annotations` (`readOnlyHint`, `untrustedContentHint`)
+  - `provideContext()` was removed from the spec on 5 March 2026
 - Browser support: **Edge 147** ships native support; **Chrome 149** runs
   an open origin trial (Gemini in Chrome consumes the tools).
 
@@ -26,7 +29,7 @@ status; fixes were applied in the accompanying change set.
 
 | # | Finding | Status |
 |---|---------|--------|
-| 1 | Tool registration used non-spec APIs — `modelContext.declareAction()` in `webmcp.js` and `modelContext.register()` in the component agents. No spec-compliant browser/agent could discover any tool. | **Fixed** — registration now goes through `provideContext({tools})` with `registerTool()`/legacy fallbacks; tools carry JSON Schema `inputSchema`, `annotations.readOnlyHint`, and wired `execute` callbacks. |
+| 1 | Tool registration used non-spec APIs — `modelContext.declareAction()` in `webmcp.js` and `modelContext.register()` in the component agents. No spec-compliant browser/agent could discover any tool. | **Fixed** — registration now goes through `registerTool()` with legacy fallbacks for older builds; tools carry JSON Schema `inputSchema`, `annotations.readOnlyHint` / `untrustedContentHint`, and wired `execute` callbacks. |
 | 2 | CSRF fail-open in `CommerceCartServlet`: requests with no session token passed validation. | **Fixed** — validation fails closed; `GET` now issues a `SecureRandom` token (returned in the cart JSON) that `POST` must echo. `FormSubmissionServlet` already failed closed and shares the same session attribute. |
 | 3 | `getPageScreenshot()` injected html2canvas from cdnjs at runtime (CSP violation, supply-chain risk). | **Fixed** — CDN load removed; the tool only runs if the site bundles html2canvas. |
 | 4 | `imagetagger.js`/`voicecommand.js` called `AEMWebMCPAutomator.registerTool()`, which did not exist → `TypeError` at init. | **Fixed** — `registerTool()` implemented on the automator; agents route through it (avoids double registration). |

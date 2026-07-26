@@ -96,10 +96,10 @@
 ┌──────────────────────────────────────────────────────────────────────┐
 │ 4. WebMCP API Registration                                           │
 │                                                                       │
-│    if (navigator.modelContext) {                                     │
-│      navigator.modelContext.expose({                                  │
+│    if (document.modelContext) {                                     │
+│      document.modelContext.registerTool({                            │
 │        name: "aem-components",                                       │
-│        tools: [...]                                                   │
+│        ...tools                                                      │
 │      });                                                             │
 │    }                                                                 │
 └──────────────────────────────────────────────────────────────────────┘

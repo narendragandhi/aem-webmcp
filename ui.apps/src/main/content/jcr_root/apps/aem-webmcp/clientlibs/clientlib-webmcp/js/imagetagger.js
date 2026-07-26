@@ -316,15 +316,20 @@
                 }
             ];
 
-            // Prefer the automator: it registers with navigator.modelContext
-            // using the standard API and applies consent handling.
+            this._unregistrers = [];
+
+            // Prefer the automator: it registers with document.modelContext
+            // using the spec API and applies consent handling.
             if (window.AEMWebMCPAutomator?.registerTool) {
                 tools.forEach(tool => {
-                    window.AEMWebMCPAutomator.registerTool({
+                    const result = window.AEMWebMCPAutomator.registerTool({
                         name: tool.name,
                         description: tool.description,
                         inputSchema: tool.inputSchema
                     }, tool.handler);
+                    if (result && result.unregister) {
+                        this._unregistrers.push(result.unregister);
+                    }
                 });
             } else if (window.navigator?.modelContext) {
                 try {
@@ -337,10 +342,16 @@
                     }));
 
                     if (typeof mc.registerTool === 'function') {
-                        specTools.forEach(tool => mc.registerTool(tool));
+                        specTools.forEach(tool => {
+                            const controller = new AbortController();
+                            mc.registerTool(tool, { signal: controller.signal }).catch(e => {
+                                console.warn('[WebMCP] registerTool failed:', tool.name, e);
+                            });
+                            this._unregistrers.push(() => controller.abort());
+                        });
                     } else if (typeof mc.register === 'function') {
                         // Pre-standard experimental builds
-                        mc.register(specTools.map(tool => Object.assign({ handle: tool.execute }, tool)));
+                        mc.register(specTools);
                     }
                 } catch (e) {
                     console.warn('[WebMCP] Native registration failed:', e);

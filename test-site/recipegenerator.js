@@ -264,8 +264,9 @@
         }
 
         /**
-         * Register tools using MCP-B spec-compliant approach
-         * Supports both native navigator.modelContext and fallback
+         * Register tools using W3C WebMCP CG-DRAFT (21 July 2026) API.
+         * Uses registerTool() per tool with AbortSignal support.
+         * Falls back to direct navigator.modelContext.registerTool().
          */
         registerMCPTools() {
             const tools = [
@@ -289,14 +290,14 @@
                 }
             ];
 
-            // Try native WebMCP first (navigator.modelContext)
-            if (window.navigator?.modelContext) {
-                this.registerWithNativeModelContext(tools);
-            }
-            
-            // Also register with our fallback automator
-            if (window.AEMWebMCPAutomator) {
+            this._unregistrers = [];
+
+            // Prefer the automator: it registers with document.modelContext
+            // using the spec API and applies consent handling.
+            if (window.AEMWebMCPAutomator?.registerTool) {
                 this.registerWithAutomator(tools);
+            } else if (window.navigator?.modelContext) {
+                this.registerWithNativeModelContext(tools);
             }
 
             // Expose globally for direct access
@@ -310,36 +311,48 @@
         }
 
         /**
-         * Register with native navigator.modelContext (WebMCP spec)
+         * Register with native document.modelContext (WebMCP spec §4.2)
          */
         registerWithNativeModelContext(tools) {
             try {
-                const registeredTools = tools.map(tool => ({
+                const mc = window.navigator.modelContext;
+                const specTools = tools.map(tool => ({
                     name: tool.name,
                     description: tool.description,
                     inputSchema: tool.inputSchema,
-                    handle: tool.handler
+                    execute: async (input) => tool.handler(input)
                 }));
 
-                if (window.navigator.modelContext.register) {
-                    window.navigator.modelContext.register(registeredTools);
-                    console.log('[MCP-B] Registered tools with native navigator.modelContext');
+                if (typeof mc.registerTool === 'function') {
+                    specTools.forEach(tool => {
+                        const controller = new AbortController();
+                        mc.registerTool(tool, { signal: controller.signal }).catch(e => {
+                            console.warn('[WebMCP] registerTool failed:', tool.name, e);
+                        });
+                        this._unregistrers.push(() => controller.abort());
+                    });
+                } else if (typeof mc.register === 'function') {
+                    // Pre-standard experimental builds
+                    mc.register(specTools);
                 }
             } catch (e) {
-                console.warn('[MCP-B] Native registration failed:', e);
+                console.warn('[WebMCP] Native registration failed:', e);
             }
         }
 
         /**
-         * Register with fallback automator
+         * Register via the automator (returns unregister handles)
          */
         registerWithAutomator(tools) {
             tools.forEach(tool => {
-                window.AEMWebMCPAutomator.registerTool({
+                const result = window.AEMWebMCPAutomator.registerTool({
                     name: tool.name,
                     description: tool.description,
-                    parameters: tool.inputSchema
+                    inputSchema: tool.inputSchema
                 }, tool.handler);
+                if (result && result.unregister) {
+                    this._unregistrers.push(result.unregister);
+                }
             });
         }
 

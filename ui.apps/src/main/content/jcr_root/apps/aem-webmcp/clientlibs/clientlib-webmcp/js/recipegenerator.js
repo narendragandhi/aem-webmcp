@@ -264,8 +264,9 @@
         }
 
         /**
-         * Register tools using MCP-B spec-compliant approach
-         * Supports both native navigator.modelContext and fallback
+         * Register tools using W3C WebMCP CG-DRAFT (21 July 2026) API.
+         * Uses registerTool() per tool with AbortSignal support.
+         * Falls back to direct navigator.modelContext.registerTool().
          */
         registerMCPTools() {
             const tools = [
@@ -289,9 +290,10 @@
                 }
             ];
 
-            // Prefer the automator: it registers with navigator.modelContext
-            // using the standard API and applies consent handling. Only fall
-            // back to direct native registration when it is absent.
+            this._unregistrers = [];
+
+            // Prefer the automator: it registers with document.modelContext
+            // using the spec API and applies consent handling.
             if (window.AEMWebMCPAutomator?.registerTool) {
                 this.registerWithAutomator(tools);
             } else if (window.navigator?.modelContext) {
@@ -309,7 +311,7 @@
         }
 
         /**
-         * Register with native navigator.modelContext (WebMCP spec)
+         * Register with native document.modelContext (WebMCP spec §4.2)
          */
         registerWithNativeModelContext(tools) {
             try {
@@ -322,10 +324,16 @@
                 }));
 
                 if (typeof mc.registerTool === 'function') {
-                    specTools.forEach(tool => mc.registerTool(tool));
+                    specTools.forEach(tool => {
+                        const controller = new AbortController();
+                        mc.registerTool(tool, { signal: controller.signal }).catch(e => {
+                            console.warn('[WebMCP] registerTool failed:', tool.name, e);
+                        });
+                        this._unregistrers.push(() => controller.abort());
+                    });
                 } else if (typeof mc.register === 'function') {
                     // Pre-standard experimental builds
-                    mc.register(specTools.map(tool => Object.assign({ handle: tool.execute }, tool)));
+                    mc.register(specTools);
                 }
             } catch (e) {
                 console.warn('[WebMCP] Native registration failed:', e);
@@ -333,15 +341,18 @@
         }
 
         /**
-         * Register with fallback automator
+         * Register via the automator (returns unregister handles)
          */
         registerWithAutomator(tools) {
             tools.forEach(tool => {
-                window.AEMWebMCPAutomator.registerTool({
+                const result = window.AEMWebMCPAutomator.registerTool({
                     name: tool.name,
                     description: tool.description,
                     inputSchema: tool.inputSchema
                 }, tool.handler);
+                if (result && result.unregister) {
+                    this._unregistrers.push(result.unregister);
+                }
             });
         }
 

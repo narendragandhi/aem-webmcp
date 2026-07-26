@@ -13,7 +13,7 @@ AEM WebMCP automatically enhances Adobe Experience Manager sites with WebMCP cap
 
 ## What is WebMCP?
 
-WebMCP (Web Model Context Protocol) is a browser API developed jointly by Microsoft and Google in the W3C Web Machine Learning Community Group. Websites register structured tools on `navigator.modelContext`, which browser-hosted AI agents (Edge 147+, Chrome 149 origin trial) can discover and invoke. Instead of AI agents clicking around blindly, they can:
+WebMCP (Web Model Context Protocol) is a browser API developed jointly by Microsoft and Google in the W3C Web Machine Learning Community Group. Websites register structured tools on `document.modelContext` (with `navigator.modelContext` fallback in current origin trials), which browser-hosted AI agents (Edge 147+, Chrome 149 origin trial) can discover and invoke. Instead of AI agents clicking around blindly, they can:
 
 - Understand site structure and components
 - Fill forms with proper field validation
