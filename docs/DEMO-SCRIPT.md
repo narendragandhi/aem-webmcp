@@ -28,7 +28,7 @@ console.table(components.map(c => ({
 })));
 ```
 
-**Say:** "Our JavaScript automatically detects 70+ AEM Core Components. Every button, form, cart - it's all discoverable."
+**Say:** "The JavaScript automatically detects AEM Core Components. Every button, form, cart - it's all discoverable."
 
 **[SHOW: Console table with component list]**
 
@@ -105,7 +105,7 @@ console.log('Cart:', cart);
 document.querySelector('[data-webmcp-category]')
 ```
 
-**Say:** "We add these data attributes to every component. That's the WebMCP API - structured, typed, discoverable. No screen scraping, no guessing."
+**Say:** "These data attributes are added to every component. That's the WebMCP API - structured, typed, discoverable. No screen scraping, no guessing."
 
 **[SHOW: HTML with data-webmcp-* attributes]**
 
@@ -141,7 +141,7 @@ document.querySelector('[data-webmcp-category]')
 > "It's a lightweight clientlib - <10KB. Loads in parallel, no blocking."
 
 ### "Is it secure?"
-> "Enterprise-grade: CSRF, rate limiting, input sanitization. We take security seriously."
+> "Enterprise-grade: CSRF, rate limiting, input sanitization. Security is a priority."
 
 ### "What AEM versions?"
 > "AEM as a Cloud Service and 6.5+. Core Components 2.0+."

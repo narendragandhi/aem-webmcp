@@ -75,8 +75,10 @@ window.WEBMCP_CONSENT = true;
 
 - [Getting Started](docs/GETTING-STARTED.md)
 - [API Reference](docs/API-REFERENCE.md)
+- [CMS WebMCP Landscape](docs/CMS-WEBCMCP-LANDSCAPE.md)
 - [Sample AI Agent](docs/sample-agent.js)
 - [Contributing](CONTRIBUTING.md)
+- [Changelog](CHANGELOG.md)
 
 ## Supported Components
 
@@ -96,9 +98,13 @@ window.WEBMCP_CONSENT = true;
 - AEM Core Components 2.0+
 - Maven 3.6+
 
+## Community Project
+
+> **Disclaimer:** AEM WebMCP is a community project. It is not endorsed by, affiliated with, or maintained by Adobe. All comparisons and feature claims should be verified against current releases.
+
 ## License
 
-Copyright 2024. Licensed under Apache License 2.0.
+Copyright 2024 Sonam Gandhi and contributors. Licensed under Apache License 2.0.
 
 ## Resources
 

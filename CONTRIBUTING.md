@@ -26,7 +26,7 @@ By participating in this project, you agree to abide by our [Code of Conduct](CO
    ```
 3. Add the upstream remote:
    ```bash
-   git remote add upstream https://github.com/anthropics/aem-webmcp.git
+   git remote add upstream https://github.com/narendragandhi/aem-webmcp.git
    ```
 
 ## Development Setup

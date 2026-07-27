@@ -28,7 +28,7 @@
 
 ### AEM WebMCP = WebMCP for Adobe Experience Manager
 
-We automatically detect and expose ALL your AEM components to AI agents:
+AEM WebMCP automatically detects and exposes AEM components to AI agents:
 
 - ✅ **Forms** - AI can fill any form field
 - ✅ **Search** - AI can search your content
@@ -131,12 +131,12 @@ We automatically detect and expose ALL your AEM components to AI agents:
 
 ## Slide 10: The Ask
 
-### We're building the future of AI-agent CMS interaction
+### Building the future of AI-agent CMS interaction
 
-**Demo:** github.com/aem-webmcp
+**Repo:** github.com/narendragandhi/aem-webmcp
 **License:** Apache 2.0
 
-### What we need:
+### What's needed:
 1. ⭐ Stars on GitHub
 2. 🧪 Beta testers
 3. 🤝 Partners for CIF integration
@@ -146,7 +146,7 @@ We automatically detect and expose ALL your AEM components to AI agents:
 
 ## Slide 11: Closing
 
-> "The agentic web is coming. AEM WebMCP makes sure Adobe customers are ready."
+> "The agentic web is coming. AEM WebMCP helps AEM sites get ready."
 
 **Thank you!**
 
@@ -170,10 +170,10 @@ We automatically detect and expose ALL your AEM components to AI agents:
 A: WebMCP is generic - works with ANY component, not just forms. It's about component discovery, not just submission.
 
 ### Q: How is this different from Adobe Experience Cloud AI?
-A: We're complementary. Their AI is for analytics/marketing; ours is for inbound AI agents interacting with your site.
+A: They're complementary. Adobe's AI focuses on analytics/marketing; this project focuses on inbound AI agents interacting with the site.
 
 ### Q: What's the competitive advantage?
-A: First mover for AEM + WebMCP. Easy to replicate for other CMSs, but we own the AEM relationship.
+A: Early implementation for AEM + WebMCP. The integration pattern (auto-detection of Core Components) is the main differentiator.
 
 ### Q: Is WebMCP stable?
-A: Chrome flag only now, but this is exactly why we built this - early = competitive advantage.
+A: Chrome flag only now, but this is exactly why building early matters — early adoption is a competitive advantage.

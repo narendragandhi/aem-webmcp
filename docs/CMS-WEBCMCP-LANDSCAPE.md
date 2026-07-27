@@ -2,7 +2,7 @@
 
 > Last updated: July 2026
 >
-> **Disclaimer:** This is a community project. It is not endorsed by, affiliated with, or maintained by Adobe. All comparisons below are based on publicly available code, documentation, and specifications as of the dates noted.
+> **Disclaimer:** This is a community project. It is not endorsed by, affiliated with, or maintained by Adobe. All comparisons below are based on publicly available code, documentation, and specifications as of the dates noted. Feature claims for other platforms should be verified against their current releases.
 
 ## Background: Two Protocol Families
 
@@ -12,15 +12,15 @@ There are two distinct protocols that both use the abbreviation "MCP" in the CMS
 
 **MCP** (Anthropic's Model Context Protocol) is a server-side protocol for connecting AI clients (Claude Desktop, Cursor, VS Code) to external data sources via stdio or HTTP. Tools execute on the server, not in the browser. This is shipping now with broad adoption.
 
-This document focuses on **WebMCP** implementations — browser-native, client-side tool registration. Server-side MCP implementations (Sanity, Directus, Contentful, etc.) are included for context but operate on a fundamentally different architecture.
+This document focuses on **WebMCP** implementations — browser-native, client-side tool registration. Server-side MCP implementations (Sanity, Directus, Contentful, etc.) are included at the end for context but operate on a fundamentally different architecture.
 
 ## WebMCP Implementations by Platform
 
-### AEM WebMCP (this project)
+### AEM WebMCP
 
-- **Repo:** github.com/narendragandhi/aem-webmcp
-- **Status:** Production-ready (v2.1.0)
-- **Approach:** Clientlib auto-loaded via AEM page component's `customfooterlibs.html`. Detects 50+ AEM Core Components via `data-webmcp-*` attributes and registers tools automatically.
+- **Repo:** [github.com/narendragandhi/aem-webmcp](https://github.com/narendragandhi/aem-webmcp) (Apache 2.0)
+- **Status:** v2.1.0
+- **Approach:** Clientlib auto-loaded via AEM page component's `customfooterlibs.html`. Detects AEM Core Components via `data-webmcp-*` attributes and registers tools automatically.
 - **Spec alignment:** Tracks W3C CG-DRAFT (July 21, 2026). Uses `document.modelContext.registerTool()` with `AbortSignal` support. `provideContext()` was removed from spec in March 2026; this project adapted accordingly.
 - **Tool count:** 25+ (page discovery, navigation, forms, search, commerce, layout, accessibility, vision)
 - **Key technical details:**
@@ -37,7 +37,7 @@ This document focuses on **WebMCP** implementations — browser-native, client-s
 
 ### WordPress: WebMCP Bridge
 
-- **Repo:** wordpress.org/plugins/webmcp-bridge/
+- **Repo:** [wordpress.org/plugins/webmcp-bridge](https://wordpress.org/plugins/webmcp-bridge/) (GPL-2.0)
 - **Status:** v1.6, 300+ active installs (as of July 2026)
 - **Approach:** PHP plugin that registers tools via REST API endpoints and optional native `navigator.modelContext` registration. Admin settings page to enable/disable feature groups.
 - **Tool count:** ~15 core + WooCommerce tools
@@ -46,17 +46,17 @@ This document focuses on **WebMCP** implementations — browser-native, client-s
   - REST API manifest at `/wp-json/webmcp-bridge/v1/manifest`
   - JavaScript frontend bridge with WebMCP browser API support and fallback
   - Optional Mescio for Agents integration adds `get_markdown_content` and `get_llms_txt`
-  - WooCommerce integration is the strongest commerce toolset in any WebMCP implementation
+  - WooCommerce integration is the most complete commerce toolset among browser-native WebMCP implementations
+  - Non-browser fallback: REST API + `window.webmcpBridgeTools` JS global
 - **What it does not implement:**
-  - No consent flow (all tools execute without user confirmation)
-  - No accessibility tree
-  - No screenshot/vision
+  - No consent flow — all tools execute without user confirmation
+  - No accessibility tree or screenshot/vision
   - No debug panel or health observability
   - No declarative HTML tool registration
 
 ### TYPO3: brosua/webmcp
 
-- **Repo:** packagist.org/packages/brosua/webmcp
+- **Repo:** [packagist.org/packages/brosua/webmcp](https://packagist.org/packages/brosua/webmcp) (License: TBD — composer package, not yet publicly released)
 - **Status:** Experimental proof of concept, TYPO3 v14.3+
 - **Approach:** Composer package + Site Set. Middleware injects `webmcp.js` as ES module. ViewHelper adds `toolname`/`tooldescription` attributes to EXT:form `<form>` elements for declarative tool registration.
 - **Tool count:** 4 (`page-get-summary`, `page-find-text`, `page-get-content`, `page-list-actions`)
@@ -67,14 +67,12 @@ This document focuses on **WebMCP** implementations — browser-native, client-s
   - All tools are read-only (DOM only)
 - **What it does not implement:**
   - No mutation/write tools
-  - No consent flow
-  - No commerce
-  - No accessibility tree or vision
-  - Requires Chrome 149+ — no polyfill or fallback
+  - No consent flow, commerce, accessibility tree, or vision
+  - Requires Chrome 149+ — no polyfill or fallback documented
 
 ### Elementor (WordPress)
 
-- **Repo:** github.com/elementor/elementor (PR #35479, merged April 2026)
+- **Repo:** [github.com/elementor/elementor](https://github.com/elementor/elementor) (GPL-3.0, PR [#35479](https://github.com/elementor/elementor/pull/35479) merged April 2026)
 - **Approach:** Adapter pattern — `WebMCPAdapter` bridges Elementor's internal MCP tool/resource registry to `navigator.modelContext`. Dual-adapter architecture supports both Angie SDK (Elementor's AI plugin) and native WebMCP.
 - **Key technical details:**
   - Tools registered via `addTool()` in the editor are automatically exposed to WebMCP agents
@@ -88,71 +86,69 @@ This document focuses on **WebMCP** implementations — browser-native, client-s
 
 ### Webflow
 
-- **Approach:** Code Embed with dynamic CMS data binding (May 2026 update). A single Code Embed inside a CMS Collection page can register tools whose output reflects the current CMS item.
+- **Status:** Supported via Code Embed (no dedicated plugin or package)
+- **Approach:** Code Embed with dynamic CMS data binding (May 2026 update). A single Code Embed inside a CMS Collection page can register tools whose output reflects the current CMS item via props.
 - **Key technical details:**
   - May 19, 2026 Code Embed update added props and dynamic data support
   - `navigator.modelContext.registerTool()` called directly from Code Embed
   - CMS-bound: tool output can reflect live collection data via props
 - **Limitations:**
-  - Manual setup per page/collection
-  - No component auto-detection
-  - No consent flow, debug panel, or accessibility tools
+  - Manual setup per page/collection — no global tool registration
+  - No component auto-detection, consent flow, debug panel, or accessibility tools
   - Chrome-only progressive enhancement (no cross-browser fallback documented)
 
 ## Comparison Matrix
 
-| Capability | AEM WebMCP | WordPress | TYPO3 | Elementor | Webflow |
-|------------|-----------|-----------|-------|-----------|---------|
-| Browser-native (no server) | Yes | Yes | Yes | Yes | Yes |
-| Write/mutate tools | Yes | Yes | No | Yes | Yes |
-| Consent flow (`requestUserInteraction`) | Yes | No | No | No | No |
-| Declarative HTML tool registration | `data-webmcp-*` attrs | No | `toolname` attr on `<form>` | No | No |
-| Content discovery API | `getComponents()` | REST manifest | `page-list-actions` | URI search | No |
-| Commerce tools | `addToCart`, `updateCartQuantity` | WooCommerce suite | No | No | No |
-| Accessibility tree | `getAccessibilityTree` | No | No | No | No |
-| Screenshot/vision | `getPageScreenshot` | No | No | No | No |
-| Debug/observability | Debug panel + `_health` | No | No | No | No |
-| Component auto-detection | 50+ AEM Core Components | No | No | No | No |
-| `AbortSignal` cleanup | Yes | No | No | No | No |
-| `untrustedContentHint` annotation | Yes | No | No | No | No |
-| `getTools()` for agent discovery | Yes | No | No | No | No |
-| Non-browser fallback | `window.AEMWebMCP` global | REST API + JS bridge | None | None | None |
-| Unit tests | 107 (Jest) | Not public | Not public | Internal | N/A |
+The table below compares features that matter for **adoption decisions** — what you'd evaluate when choosing an implementation or deciding whether to build on top of one.
 
-## Server-Side MCP Implementations (reference only)
+| Feature | AEM WebMCP | WordPress | TYPO3 | Elementor | Webflow |
+|---------|-----------|-----------|-------|-----------|---------|
+| **License** | Apache 2.0 | GPL-2.0 | TBD | GPL-3.0 | Proprietary (SaaS) |
+| **Setup effort** | Zero (clientlib auto-loads) | Plugin activation + settings | Composer + Site Set config | PR merged into core | Code Embed per page |
+| **Tool count** | 25+ | ~15 | 4 | Editor tools | Per-page |
+| **Write/mutate tools** | Yes | Yes | No | Yes | Yes |
+| **Commerce** | `addToCart`, `updateCartQuantity` | WooCommerce (6 tools) | No | No | No |
+| **Consent flow** | Yes (`requestUserInteraction`) | No | No | No | No |
+| **Accessibility tree** | Yes | No | No | No | No |
+| **Screenshot/vision** | Yes | No | No | No | No |
+| **Debug/observability** | Panel + `_health` stats | No | No | No | No |
+| **Declarative HTML** | `data-webmcp-*` attrs | No | `toolname` attr on `<form>` | No | No |
+| **Content discovery** | `getComponents()` | REST manifest + JS bridge | `page-list-actions` | URI search | No |
+| **Non-browser fallback** | `window.AEMWebMCP` global | REST API (works everywhere) | None | None | None |
+| **Test coverage** | 107 unit tests | Not public | Not public | Internal | N/A |
 
-These use Anthropic's MCP protocol, not browser-native WebMCP. Included for context on what exists in the broader CMS + AI tooling space.
+## Server-Side MCP (for reference)
 
-| Platform | Status | Tool count | Notes |
-|----------|--------|-----------|-------|
-| Sanity | Official, managed | 40+ | GROQ queries, document CRUD, release management, OAuth RBAC. Deepest tool coverage. |
-| Directus | Official (local + native) | Varies | SQL-native data model. Comprehensive video documentation. |
-| Storyblok | Official (March 2026) | Varies | Component-based content blocks with strong typing. |
-| Contentstack | Agent OS (not yet official) | Broad | Enterprise multi-stack management. Explicitly labeled "not yet recommended." |
-| Strapi | In development | TBD | Native MCP as HTTP route (no sidecar). Self-hosted. |
-| Contentful | Community (mature) | Full CRUD | 271 commits, 24 releases. Smart pagination (3 items/request) for LLM context windows. |
-| dotCMS | Official npm package | 4 core | Content type management, workflow actions, content search. |
+These use Anthropic's MCP protocol, not browser-native WebMCP. They require a running server and connect to AI clients like Claude Desktop or Cursor. They are architecturally different from browser-native WebMCP but represent the broader CMS + AI tooling landscape.
+
+**Sanity** (official, managed, OAuth) — 40+ tools covering document CRUD, GROQ queries, release management, AI image generation. Deepest tool coverage of any CMS MCP implementation.
+
+**Directus** (official, local + native) — SQL-native data model with relational structures. Comprehensive video documentation.
+
+**Contentful** (community, mature) — Full CRUD with 271 commits and 24 releases. Smart pagination (3 items/request) designed for LLM context windows.
+
+Others (Storyblok, Contentstack, Strapi, dotCMS) have varying levels of MCP support — some official, some in development, some community-maintained. See [llmcms.org](https://www.llmcms.org/guides/best-cms-mcp-server-support-ai-agents-2026) for a broader comparison.
 
 ## Technical Tradeoffs
 
 **Why browser-native over server-side MCP?**
-- No server infrastructure required — tools execute in the user's browser session
+- No server infrastructure — tools execute in the user's browser session
 - Inherits user auth state, cookies, and session automatically
 - `requestUserInteraction()` enables browser-mediated consent (no custom auth flow)
-- Works with same-origin security model — no CORS, no API keys in client code
+- Same-origin security model — no CORS, no API keys in client code
 - Limitation: requires a browser tab to be open (no headless/background agent support)
 
-**Why this project over WordPress/TYPO3/Webflow WebMCP?**
-- Consent flow is a hard requirement for GDPR/CCPA compliance on mutation tools — only this project implements it
+**Why AEM WebMCP over other browser-native implementations?**
+- Consent flow is relevant for GDPR/CCPA compliance on mutation tools — of the implementations reviewed, only AEM WebMCP implements it
 - `getAccessibilityTree` provides semantic page understanding that DOM scraping cannot
 - AEM Core Component auto-detection eliminates per-component configuration
-- `AbortSignal` support enables clean teardown when tools are unregistered
-- Debug panel is useful during development — other implementations have no equivalent
+- Debug panel is useful during development — no equivalent in other implementations
 
-**Why this might not be the right choice:**
-- AEM-specific — if you're not on AEM, WordPress or TYPO3 plugins are more appropriate
-- No server-side MCP endpoint — if you need Claude Desktop/Cursor/VS Code integration, look at Sanity or Contentful's MCP servers
-- Chrome-only for native features — falls back to `window.AEMWebMCP` global in other browsers, which agents must explicitly support
+**When another implementation is a better fit:**
+- Not on AEM? WordPress or TYPO3 plugins are more appropriate
+- Need Claude Desktop / Cursor / VS Code integration? Sanity or Contentful's server-side MCP servers
+- Need cross-browser compatibility without fallback? WordPress REST API fallback works everywhere
+- Editor tooling? Elementor's adapter pattern is purpose-built for that
 
 ## Spec Timeline
 
