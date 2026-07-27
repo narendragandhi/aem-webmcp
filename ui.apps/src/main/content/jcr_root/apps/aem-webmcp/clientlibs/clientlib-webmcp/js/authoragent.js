@@ -41,46 +41,61 @@
             
             const results = [];
             
-            // 1. Check for missing Image Alt text (AI suggested)
-            const images = await window.AEMWebMCP.getComponents('media');
-            for (const imgComp of images) {
-                const img = document.querySelector(imgComp.selector)?.querySelector('img');
-                if (img && !img.alt) {
-                    // Use ImageTagger to suggest alt text
-                    if (window.AEMWebMCP.ImageTagger) {
-                        const tags = await window.AEMWebMCP.ImageTagger.tag(img.src);
-                        const suggestion = tags.tags?.slice(0, 3).map(t => t.name).join(', ');
-                        results.push({
-                            type: 'Image Optimization',
-                            message: `Missing Alt text. Suggested based on AI: "A photo of ${suggestion}"`,
-                            selector: imgComp.selector
-                        });
+            try {
+                // 1. Check for missing Image Alt text (AI suggested)
+                const images = await window.AEMWebMCP.getComponents('media');
+                if (Array.isArray(images)) {
+                    for (const imgComp of images) {
+                        if (!imgComp.selector) continue;
+                        try {
+                            const img = document.querySelector(imgComp.selector)?.querySelector('img');
+                            if (img && !img.alt) {
+                                if (window.AEMWebMCP.ImageTagger) {
+                                    const tags = await window.AEMWebMCP.ImageTagger.tag(img.src);
+                                    const suggestion = tags.tags?.slice(0, 3).map(t => t.name).join(', ');
+                                    results.push({
+                                        type: 'Image Optimization',
+                                        message: 'Missing Alt text. Suggested based on AI: "A photo of ' + (suggestion || 'unknown') + '"',
+                                        selector: imgComp.selector
+                                    });
+                                } else {
+                                    results.push({
+                                        type: 'Image Optimization',
+                                        message: 'Missing Alt text on image.',
+                                        selector: imgComp.selector
+                                    });
+                                }
+                            }
+                        } catch (e) { /* skip */ }
                     }
                 }
-            }
 
-            // 2. SEO Check: Missing Meta Description or Page Title issues
-            const pageInfo = await window.AEMWebMCP.getPageInfo();
-            if (pageInfo.title.length < 10) {
-                results.push({
-                    type: 'SEO',
-                    message: 'Page title is very short. Consider a more descriptive title for better SEO.',
-                    selector: 'head title'
-                });
-            }
-
-            // 3. Accessibility: Link descriptive text
-            const links = document.querySelectorAll('a');
-            links.forEach(link => {
-                const text = link.textContent.trim().toLowerCase();
-                if (['click here', 'read more', 'learn more'].includes(text)) {
+                // 2. SEO Check: Missing Meta Description or Page Title issues
+                const pageInfo = await window.AEMWebMCP.getPageInfo();
+                if (pageInfo && pageInfo.title && pageInfo.title.length < 10) {
                     results.push({
-                        type: 'Accessibility',
-                        message: `Non-descriptive link text "${text}". Use more specific text for screen readers.`,
-                        selector: window.AEMWebMCPAutomator.getSelector(link)
+                        type: 'SEO',
+                        message: 'Page title is very short. Consider a more descriptive title for better SEO.',
+                        selector: 'head title'
                     });
                 }
-            });
+
+                // 3. Accessibility: Link descriptive text
+                const links = document.querySelectorAll('a');
+                links.forEach(function(link) {
+                    var text = link.textContent.trim().toLowerCase();
+                    if (['click here', 'read more', 'learn more'].includes(text)) {
+                        var selector = link.id ? '#' + link.id : (link.className ? '.' + link.className.split(' ')[0] : 'a');
+                        results.push({
+                            type: 'Accessibility',
+                            message: 'Non-descriptive link text "' + text + '". Use more specific text for screen readers.',
+                            selector: selector
+                        });
+                    }
+                });
+            } catch (e) {
+                console.warn('[AuthorAgent] scan failed:', e.message);
+            }
 
             this.displayResults(results);
         },

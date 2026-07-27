@@ -14,25 +14,34 @@
          */
         async indexPage() {
             if (!window.AEMWebMCP) return;
-            
-            // Get all text components
-            const components = await window.AEMWebMCP.getComponents('content');
-            let fullText = '';
-            
-            for (const comp of components) {
-                 const info = await window.AEMWebMCP.getElementInfo({ selector: comp.selector });
-                 if (info.success && info.text) {
-                     fullText += info.text + '\n\n';
-                 }
+
+            try {
+                const components = await window.AEMWebMCP.getComponents('content');
+                if (!Array.isArray(components) || components.length === 0) return;
+
+                let fullText = '';
+
+                for (const comp of components) {
+                    if (!comp.selector) continue;
+                    try {
+                        const info = await window.AEMWebMCP.getElementInfo({ selector: comp.selector });
+                        if (info && info.success && info.text) {
+                            fullText += info.text + '\n\n';
+                        }
+                    } catch (e) { /* skip individual component */ }
+                }
+
+                const pageInfo = await window.AEMWebMCP.getPageInfo();
+                if (pageInfo && pageInfo.title) {
+                    fullText = 'Page Title: ' + pageInfo.title + '\nURL: ' + (pageInfo.url || '') + '\n\n' + fullText;
+                }
+
+                this.pageContent = fullText;
+                this.chunks = this.createChunks(fullText);
+                console.log('[ContentAgent] Indexed page content length:', this.pageContent.length);
+            } catch (e) {
+                console.warn('[ContentAgent] indexPage failed:', e.message);
             }
-            
-            // Also get page title and description
-            const pageInfo = await window.AEMWebMCP.getPageInfo();
-            fullText = `Page Title: ${pageInfo.title}\nURL: ${pageInfo.url}\n\n` + fullText;
-            
-            this.pageContent = fullText;
-            this.chunks = this.createChunks(fullText);
-            console.log('[ContentAgent] Indexed page content length:', this.pageContent.length);
         },
 
         /**
@@ -47,7 +56,8 @@
          * 3. Retrieval & Generation: Find relevant chunks and use LLM to answer
          */
         async ask(question) {
-            if (!this.pageContent) this.indexPage();
+            if (!this.pageContent) await this.indexPage();
+            if (!this.pageContent) return "I need to index the page first. Please try again.";
             
             const keywords = question.toLowerCase().replace(/[?.,]/g, '').split(' ')
                 .filter(w => w.length > 3 && !['what', 'where', 'when', 'does', 'this', 'have'].includes(w));
@@ -91,13 +101,7 @@
         }
     };
 
+    // Lazy-index: only when explicitly asked, not on load (consent may not be granted yet)
     window.AEMContentAgent = ContentAgent;
-    
-    // Auto-index on load
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => ContentAgent.indexPage());
-    } else {
-        ContentAgent.indexPage();
-    }
 
 })(document, window);

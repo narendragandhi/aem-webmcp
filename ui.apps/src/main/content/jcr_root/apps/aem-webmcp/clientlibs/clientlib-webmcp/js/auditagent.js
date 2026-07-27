@@ -16,34 +16,47 @@
             
             this.issues = [];
             
-            // Check images
-            const images = await window.AEMWebMCP.getComponents('media');
-            for (const imgComp of images) {
-                const info = await window.AEMWebMCP.getElementInfo({ selector: imgComp.selector });
-                if (info.success) {
-                    const img = document.querySelector(imgComp.selector)?.querySelector('img');
-                    if (img && !img.alt) {
-                        this.reportIssue('Image missing alt text', imgComp.selector);
-                    } else if (img && img.alt.length < 5) {
-                         this.reportIssue('Image alt text is too short', imgComp.selector);
+            try {
+                const images = await window.AEMWebMCP.getComponents('media');
+                if (Array.isArray(images)) {
+                    for (const imgComp of images) {
+                        if (!imgComp.selector) continue;
+                        try {
+                            const info = await window.AEMWebMCP.getElementInfo({ selector: imgComp.selector });
+                            if (info && info.success) {
+                                const img = document.querySelector(imgComp.selector)?.querySelector('img');
+                                if (img && !img.alt) {
+                                    this.reportIssue('Image missing alt text', imgComp.selector);
+                                } else if (img && img.alt.length < 5) {
+                                    this.reportIssue('Image alt text is too short', imgComp.selector);
+                                }
+                            }
+                        } catch (e) { /* skip */ }
                     }
                 }
-            }
 
-            // Check headings hierarchy
-            const headings = await window.AEMWebMCP.getComponents('content'); // Often includes titles
-            let lastLevel = 0;
-            
-            for (const hComp of headings) {
-                 const el = document.querySelector(hComp.selector);
-                 const tag = el.tagName;
-                 if (/H[1-6]/.test(tag)) {
-                     const level = parseInt(tag.substring(1));
-                     if (level > lastLevel + 1 && lastLevel !== 0) {
-                         this.reportIssue(`Skipped heading level from H${lastLevel} to H${level}`, hComp.selector);
-                     }
-                     lastLevel = level;
-                 }
+                const headings = await window.AEMWebMCP.getComponents('content');
+                let lastLevel = 0;
+                
+                if (Array.isArray(headings)) {
+                    for (const hComp of headings) {
+                        if (!hComp.selector) continue;
+                        try {
+                            const el = document.querySelector(hComp.selector);
+                            if (!el) continue;
+                            const tag = el.tagName;
+                            if (/H[1-6]/.test(tag)) {
+                                const level = parseInt(tag.substring(1));
+                                if (level > lastLevel + 1 && lastLevel !== 0) {
+                                    this.reportIssue('Skipped heading level from H' + lastLevel + ' to H' + level, hComp.selector);
+                                }
+                                lastLevel = level;
+                            }
+                        } catch (e) { /* skip */ }
+                    }
+                }
+            } catch (e) {
+                console.warn('[AuditAgent] scanPage failed:', e.message);
             }
             
             this.summarize();

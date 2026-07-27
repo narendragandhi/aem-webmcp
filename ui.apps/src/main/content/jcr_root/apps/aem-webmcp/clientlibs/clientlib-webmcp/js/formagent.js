@@ -18,20 +18,23 @@
         async discoverForm() {
             if (!window.AEMWebMCP) return null;
             
-            const components = await window.AEMWebMCP.getComponents();
-            
-            // 1. Prioritize by ID if we know we're looking for a specific one
-            let formComp = components.find(c => c.selector && c.selector.includes('#contact-form'));
-            
-            // 2. Fallback to any component with action 'form'
-            if (!formComp) {
-                formComp = components.find(c => c.action === 'form');
-            }
-            
-            if (formComp) {
-                this.activeForm = formComp;
-                console.log('[FormAgent] Discovered form:', this.activeForm.selector);
-                return this.activeForm;
+            try {
+                const components = await window.AEMWebMCP.getComponents();
+                if (!Array.isArray(components)) return null;
+                
+                let formComp = components.find(c => c.selector && c.selector.includes('#contact-form'));
+                
+                if (!formComp) {
+                    formComp = components.find(c => c.action === 'form');
+                }
+                
+                if (formComp) {
+                    this.activeForm = formComp;
+                    console.log('[FormAgent] Discovered form:', this.activeForm.selector);
+                    return this.activeForm;
+                }
+            } catch (e) {
+                console.warn('[FormAgent] discoverForm failed:', e.message);
             }
             return null;
         },
@@ -42,12 +45,16 @@
         async analyzeFields() {
             if (!this.activeForm) return [];
             
-            const result = await window.AEMWebMCP.getFormFields({ selector: this.activeForm.selector });
-            if (result.success) {
-                this.allFields = result.fields;
-                this.requiredFields = result.fields.filter(f => f.required);
-                console.log('[FormAgent] Discovered fields:', this.allFields.length);
-                return this.allFields;
+            try {
+                const result = await window.AEMWebMCP.getFormFields({ selector: this.activeForm.selector });
+                if (result && result.success && Array.isArray(result.fields)) {
+                    this.allFields = result.fields;
+                    this.requiredFields = result.fields.filter(f => f.required);
+                    console.log('[FormAgent] Discovered fields:', this.allFields.length);
+                    return this.allFields;
+                }
+            } catch (e) {
+                console.warn('[FormAgent] analyzeFields failed:', e.message);
             }
             return [];
         },
@@ -85,10 +92,10 @@
             }
 
             console.log('[FormAgent] Using pattern-matching fallback for input');
-            this.fallbackProcessInput(text);
+            await this.fallbackProcessInput(text);
         },
 
-        fallbackProcessInput(text) {
+        async fallbackProcessInput(text) {
             // Original pattern matcher logic...
             const patterns = {
                 email: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/,

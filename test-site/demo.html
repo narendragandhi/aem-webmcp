@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AEM WebMCP — AI Concierge Demo</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f0f2f5; color: #1a1a2e; }
+
+        /* ===== SITE LAYOUT ===== */
+        .site-header { background: #1a1a2e; color: white; padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; }
+        .site-header h1 { font-size: 20px; }
+        .site-header nav a { color: #a0aec0; text-decoration: none; margin-left: 24px; font-size: 14px; }
+        .site-header nav a:hover { color: white; }
+
+        .page { max-width: 1100px; margin: 0 auto; padding: 32px; }
+
+        .hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 60px 40px; border-radius: 16px; margin-bottom: 32px; }
+        .hero h2 { font-size: 36px; margin-bottom: 12px; }
+        .hero p { font-size: 18px; opacity: 0.9; max-width: 600px; }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+        .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .card h3 { margin-bottom: 12px; color: #1a1a2e; }
+        .card p { color: #666; line-height: 1.6; }
+
+        /* ===== COMPONENTS ===== */
+        .search-box { display: flex; gap: 8px; margin: 16px 0; }
+        .search-box input { flex: 1; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 15px; }
+        .search-box input:focus { outline: none; border-color: #667eea; }
+        .search-box button { padding: 12px 24px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+
+        .accordion { border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
+        .accordion-item { border-bottom: 1px solid #e2e8f0; }
+        .accordion-item:last-child { border-bottom: none; }
+        .accordion-header { padding: 16px 20px; cursor: pointer; font-weight: 600; display: flex; justify-content: space-between; align-items: center; background: white; }
+        .accordion-header:hover { background: #f7fafc; }
+        .accordion-header .arrow { transition: transform 0.2s; }
+        .accordion-item.open .arrow { transform: rotate(180deg); }
+        .accordion-body { padding: 0 20px; max-height: 0; overflow: hidden; transition: max-height 0.3s, padding 0.3s; }
+        .accordion-item.open .accordion-body { max-height: 200px; padding: 0 20px 16px; }
+        .accordion-body p { color: #666; line-height: 1.6; }
+
+        .product-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 16px 0; }
+        .product { background: white; border: 2px solid #e2e8f0; border-radius: 8px; padding: 16px; text-align: center; cursor: pointer; transition: border-color 0.2s, transform 0.2s; }
+        .product:hover { border-color: #667eea; transform: translateY(-2px); }
+        .product.selected { border-color: #667eea; background: #f0f0ff; }
+        .product .price { color: #667eea; font-size: 24px; font-weight: 700; margin: 8px 0; }
+        .product .name { font-weight: 600; }
+        .product button { margin-top: 8px; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
+
+        .contact-form { max-width: 400px; }
+        .contact-form label { display: block; margin: 12px 0 4px; font-weight: 600; font-size: 14px; }
+        .contact-form input, .contact-form textarea { width: 100%; padding: 10px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; }
+        .contact-form input:focus, .contact-form textarea:focus { outline: none; border-color: #667eea; }
+        .contact-form button { margin-top: 16px; padding: 12px 32px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 15px; }
+        .contact-form .field-highlight { animation: glow 1s ease-in-out; }
+        @keyframes glow { 0%, 100% { box-shadow: none; } 50% { box-shadow: 0 0 0 3px rgba(102,126,234,0.4); } }
+
+        /* ===== CART SIDEBAR ===== */
+        .cart-badge { position: relative; }
+        .cart-count { position: absolute; top: -8px; right: -8px; background: #e53e3e; color: white; font-size: 11px; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+        .cart-dropdown { position: absolute; top: 100%; right: 0; margin-top: 8px; background: white; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); padding: 16px; min-width: 280px; display: none; z-index: 100; }
+        .cart-dropdown.open { display: block; }
+        .cart-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+        .cart-total { padding-top: 8px; font-weight: 700; text-align: right; }
+
+        /* ===== CHAT WIDGET ===== */
+        .chat-fab { position: fixed; bottom: 24px; right: 24px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; cursor: pointer; box-shadow: 0 4px 20px rgba(102,126,234,0.4); font-size: 28px; z-index: 9999; transition: transform 0.2s; }
+        .chat-fab:hover { transform: scale(1.1); }
+        .chat-fab .dot { position: absolute; top: 8px; right: 8px; width: 10px; height: 10px; background: #48bb78; border-radius: 50%; border: 2px solid white; }
+
+        .chat-window { position: fixed; bottom: 96px; right: 24px; width: 400px; height: 520px; background: white; border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.2); display: none; flex-direction: column; z-index: 9999; overflow: hidden; }
+        .chat-window.open { display: flex; }
+
+        .chat-header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .chat-header h3 { font-size: 15px; }
+        .chat-header .status { font-size: 12px; opacity: 0.8; }
+        .chat-header button { background: none; border: none; color: white; cursor: pointer; font-size: 18px; }
+
+        .chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+        .chat-msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.5; animation: fadeIn 0.2s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .chat-msg.agent { background: #f0f2f5; align-self: flex-start; border-bottom-left-radius: 4px; }
+        .chat-msg.user { background: #667eea; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .chat-msg.tool-call { background: #f0fff4; border: 1px solid #c6f6d5; font-family: monospace; font-size: 12px; align-self: flex-start; }
+        .chat-msg.tool-result { background: #fffff0; border: 1px solid #fefcbf; font-family: monospace; font-size: 12px; align-self: flex-start; }
+        .chat-msg .tool-name { color: #667eea; font-weight: 700; }
+        .chat-msg .tool-icon { margin-right: 4px; }
+
+        .chat-suggestions { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 16px 12px; }
+        .chat-suggestions button { padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 16px; background: white; cursor: pointer; font-size: 12px; color: #667eea; transition: background 0.2s; }
+        .chat-suggestions button:hover { background: #f0f0ff; }
+
+        .chat-input { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid #e2e8f0; }
+        .chat-input input { flex: 1; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; }
+        .chat-input input:focus { outline: none; border-color: #667eea; }
+        .chat-input button { padding: 10px 16px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+
+        /* ===== TOOL LOG PANEL ===== */
+        .tool-log { position: fixed; bottom: 0; left: 0; right: 0; background: #1a1a2e; color: #48bb78; font-family: monospace; font-size: 12px; padding: 8px 16px; max-height: 140px; overflow-y: auto; z-index: 9998; border-top: 2px solid #667eea; }
+        .tool-log .entry { padding: 2px 0; }
+        .tool-log .time { color: #666; }
+        .tool-log .tool { color: #fbd38d; }
+        .tool-log .result { color: #48bb78; }
+    </style>
+</head>
+<body>
+    <!-- SITE HEADER -->
+    <header class="site-header" data-resource-type="core/wcm/components/navigation/v1/navigation">
+        <h1>TechStore</h1>
+        <nav>
+            <a href="#">Home</a>
+            <a href="#">Products</a>
+            <a href="#">About</a>
+            <a href="#">Contact</a>
+            <a href="#" class="cart-badge" onclick="document.querySelector('.cart-dropdown').classList.toggle('open'); return false;">
+                Cart <span class="cart-count" id="cartCount">0</span>
+            </a>
+        </nav>
+        <div class="cart-dropdown" id="cartDropdown">
+            <div id="cartItems"><em>Your cart is empty</em></div>
+            <div class="cart-total" id="cartTotal"></div>
+        </div>
+    </header>
+
+    <div class="page">
+        <!-- HERO -->
+        <div class="hero" data-resource-type="core/wcm/components/teaser">
+            <h2>Welcome to TechStore</h2>
+            <p>Premium electronics, AI-powered shopping experience. Try asking our AI concierge to help you shop!</p>
+        </div>
+
+        <!-- SEARCH -->
+        <div class="card" data-resource-type="core/wcm/components/search/v2/search">
+            <h3>Search</h3>
+            <div class="search-box">
+                <input type="search" placeholder="Search products..." id="searchInput">
+                <button onclick="doSearch()">Search</button>
+            </div>
+        </div>
+
+        <!-- PRODUCTS -->
+        <div class="card">
+            <h3>Featured Products</h3>
+            <div class="product-grid" id="productGrid">
+                <div class="product" data-product-id="phone" data-price="999">
+                    <div class="name">Smartphone Pro</div>
+                    <div class="price">$999</div>
+                    <button onclick="addToCart('phone', 'Smartphone Pro', 999)">Add to Cart</button>
+                </div>
+                <div class="product" data-product-id="laptop" data-price="1499">
+                    <div class="name">Ultra Laptop</div>
+                    <div class="price">$1,499</div>
+                    <button onclick="addToCart('laptop', 'Ultra Laptop', 1499)">Add to Cart</button>
+                </div>
+                <div class="product" data-product-id="headphones" data-price="349">
+                    <div class="name">Wireless Headphones</div>
+                    <div class="price">$349</div>
+                    <button onclick="addToCart('headphones', 'Wireless Headphones', 349)">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ ACCORDION -->
+        <div class="card">
+            <h3>Frequently Asked Questions</h3>
+            <div class="accordion" id="faqAccordion" data-resource-type="core/wcm/components/accordion">
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">What is WebMCP? <span class="arrow">▼</span></div>
+                    <div class="accordion-body"><p>WebMCP is a W3C standard that lets websites expose structured tools to AI agents. Instead of scraping your DOM, agents call named tools with typed parameters.</p></div>
+                </div>
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">How does this demo work? <span class="arrow">▼</span></div>
+                    <div class="accordion-body"><p>Every product, form, and component on this page is registered as a WebMCP tool. The AI concierge chatbot calls these tools to help you — no DOM scraping needed.</p></div>
+                </div>
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">Can I build my own tools? <span class="arrow">▼</span></div>
+                    <div class="accordion-body"><p>Yes! Call <code>AEMWebMCPAutomator.registerTool()</code> with a name, description, schema, and handler function. Any AI agent on the web can discover it.</p></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTACT FORM -->
+        <div class="card">
+            <h3>Contact Us</h3>
+            <form class="contact-form" id="contactForm" data-resource-type="core/wcm/components/form/container" onsubmit="return false;">
+                <label for="contactName">Name</label>
+                <input type="text" id="contactName" name="name" required placeholder="Your name">
+                <label for="contactEmail">Email</label>
+                <input type="email" id="contactEmail" name="email" required placeholder="you@email.com">
+                <label for="contactMessage">Message</label>
+                <textarea id="contactMessage" name="message" rows="3" placeholder="How can we help?"></textarea>
+                <button type="submit">Send Message</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- AI CONCIERGE CHAT WIDGET -->
+    <button class="chat-fab" id="chatFab" onclick="toggleChat()">
+        💬
+        <span class="dot"></span>
+    </button>
+
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header">
+            <div>
+                <h3>AI Concierge</h3>
+                <div class="status">Powered by WebMCP &bull; 25 tools available</div>
+            </div>
+            <button onclick="toggleChat()">✕</button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-msg agent">
+                Hi! I'm your AI shopping assistant. I can see everything on this page through WebMCP tools. Try asking me to:
+                <br><br>
+                • Search for products<br>
+                • Add items to your cart<br>
+                • Fill out the contact form<br>
+                • Show you the FAQ<br>
+                • Tell you what's on this page
+            </div>
+        </div>
+        <div class="chat-suggestions" id="chatSuggestions">
+            <button onclick="sendChat('What products are on this page?')">What's on this page?</button>
+            <button onclick="sendChat('Add the headphones to my cart')">Add headphones to cart</button>
+            <button onclick="sendChat('Fill the contact form with John, john@test.com')">Fill contact form</button>
+            <button onclick="sendChat('Show me the FAQ')">Show FAQ</button>
+            <button onclick="sendChat('Search for laptop')">Search for laptop</button>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="chatInput" placeholder="Ask me anything..." onkeydown="if(event.key==='Enter')sendChat()">
+            <button onclick="sendChat()">Send</button>
+        </div>
+    </div>
+
+    <!-- TOOL LOG -->
+    <div class="tool-log" id="toolLog">
+        <div class="entry"><span class="time">[ready]</span> WebMCP concierge active — watching tool calls below</div>
+    </div>
+
+    <script>
+        // === CONFIG ===
+        window.WEBMCP_AUTO_CONSENT = true;
+
+        // === CART STATE ===
+        const cart = {};
+
+        function addToCart(id, name, price) {
+            cart[id] = cart[id] || { name, price, qty: 0 };
+            cart[id].qty++;
+            updateCartUI();
+            logTool('addToCart', { id, name, price }, { success: true, qty: cart[id].qty });
+        }
+
+        function updateCartUI() {
+            const items = Object.values(cart);
+            const count = items.reduce((s, i) => s + i.qty, 0);
+            const total = items.reduce((s, i) => s + i.price * i.qty, 0);
+            document.getElementById('cartCount').textContent = count;
+            document.getElementById('cartItems').innerHTML = items.length
+                ? items.map(i => `<div class="cart-item"><span>${i.name} × ${i.qty}</span><span>$${(i.price * i.qty).toLocaleString()}</span></div>`).join('')
+                : '<em>Your cart is empty</em>';
+            document.getElementById('cartTotal').textContent = items.length ? `Total: $${total.toLocaleString()}` : '';
+        }
+
+        function toggleAccordion(header) {
+            const item = header.parentElement;
+            item.classList.toggle('open');
+        }
+
+        function doSearch() {
+            const q = document.getElementById('searchInput').value;
+            logTool('search', { query: q }, { success: true, query: q });
+        }
+
+        // === TOOL LOG ===
+        function logTool(name, params, result) {
+            const log = document.getElementById('toolLog');
+            const time = new Date().toLocaleTimeString();
+            const div = document.createElement('div');
+            div.className = 'entry';
+            div.innerHTML = `<span class="time">[${time}]</span> <span class="tool">→ ${name}</span>(${JSON.stringify(params).substring(0, 80)}) <span class="result">← ${JSON.stringify(result).substring(0, 100)}</span>`;
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // === CHAT ===
+        function toggleChat() {
+            document.getElementById('chatWindow').classList.toggle('open');
+        }
+
+        function addChatMsg(text, type) {
+            const div = document.createElement('div');
+            div.className = 'chat-msg ' + type;
+            div.innerHTML = text;
+            document.getElementById('chatMessages').appendChild(div);
+            div.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function sendChat(text) {
+            text = text || document.getElementById('chatInput').value.trim();
+            if (!text) return;
+            document.getElementById('chatInput').value = '';
+            addChatMsg(text, 'user');
+            setTimeout(() => handleChat(text), 300);
+        }
+
+        function handleChat(text) {
+            const lower = text.toLowerCase();
+            const A = window.AEMWebMCPAutomator;
+
+            // === INTENT MATCHING → TOOL CALLS ===
+
+            if (lower.includes('what') && (lower.includes('page') || lower.includes('on this') || lower.includes('see'))) {
+                const info = A.getPageInfo();
+                const comps = A.getAllComponents();
+                const cats = {};
+                comps.forEach(c => { cats[c.category] = (cats[c.category] || 0) + 1; });
+                addChatMsg(`<span class="tool-icon">🔧</span> <span class="tool-name">getPageInfo()</span>`, 'tool-call');
+                addChatMsg(`This page is <b>"${info.title}"</b> with <b>${info.components} components</b> across ${Object.keys(cats).length} categories:<br><br>` +
+                    Object.entries(cats).map(([k,v]) => `• <b>${k}</b>: ${v} components`).join('<br>'), 'tool-result');
+                logTool('getPageInfo', {}, info);
+                return;
+            }
+
+            if (lower.includes('search') && !lower.includes('result')) {
+                const q = text.replace(/search\s*(for)?/i, '').trim();
+                document.getElementById('searchInput').value = q;
+                addChatMsg(`<span class="tool-icon">🔧</span> <span class="tool-name">search()</span>`, 'tool-call');
+                addChatMsg(`Searching for "<b>${q}</b>"... Done! (In production, this would use your AEM search component.)`, 'agent');
+                logTool('search', { query: q }, { success: true });
+                return;
+            }
+
+            if (lower.includes('cart') && (lower.includes('add') || lower.includes('put'))) {
+                const productMatch = lower.match(/headphone|laptop|phone/);
+                if (productMatch) {
+                    const id = productMatch[0] === 'phone' ? 'phone' : productMatch[0] === 'laptop' ? 'laptop' : 'headphones';
+                    const names = { phone: 'Smartphone Pro', laptop: 'Ultra Laptop', headphones: 'Wireless Headphones' };
+                    const prices = { phone: 999, laptop: 1499, headphones: 349 };
+                    addToCart(id, names[id], prices[id]);
+                    addChatMsg(`<span class="tool-icon">🔧</span> <span class="tool-name">addToCart()</span>`, 'tool-call');
+                    addChatMsg(`Added <b>${names[id]}</b> ($${prices[id]}) to your cart! You now have <b>${Object.values(cart).reduce((s,i)=>s+i.qty,0)} items</b>.`, 'agent');
+                    return;
+                }
+            }
+
+            if (lower.includes('cart') && (lower.includes('show') || lower.includes('what') || lower.includes('open'))) {
+                const items = Object.values(cart);
+                if (items.length === 0) {
+                    addChatMsg(`<span class="tool-icon">🔧</span> <span class="tool-name">getComponents('commerce')</span>`, 'tool-call');
+                    addChatMsg(`Your cart is empty. Would you like to add something?`, 'agent');
+                } else {
+                    const total = items.reduce((s, i) => s + i.price * i.qty, 0);
+                    addChatMsg(`<span class="tool-icon">🔧</span> <span class="tool-name">getComponents('commerce')</span>`, 'tool-call');
+                    addChatMsg(`Your cart has <b>${items.length} items</b> totaling <b>$${total.toLocaleString()}</b>:<br><br>` +
+                        items.map(i => `• ${i.name} × ${i.qty} — $${(i.price*i.qty).toLocaleString()}`).join('<br>'), 'tool-result');
+                }
+                logTool('getComponents', { category: 'commerce' }, items);
+                return;
+            }
+
+            if (lower.includes('fill') && lower.includes('form')) {
+                // Extract email and name from the text
+                const emailMatch = text.match(/[\w.-]+@[\w.-]+\.\w+/);
+                const nameMatch = text.match(/(?:with|name[:\s]+)\s+(\w+(?:\s+\w+)?)/i);
+                const name = nameMatch ? nameMatch[1] : 'John Doe';
+                const email = emailMatch ? emailMatch[0] : 'john@example.com';
+
+                const nameField = document.getElementById('contactName');
+                const emailField = document.getElementById('contactEmail');
+                nameField.value = name;
+                emailField.value = email;
+                nameField.classList.add('field-highlight');
+                emailField.classList.add('field-highlight');
+                setTimeout(() => { nameField.classList.remove('field-highlight'); emailField.classList.remove('field-highlight'); }, 1200);
+
+                addChatMsg(`<span class="tool-icon">🔧</span> <span class="tool-name">fillForm()</span> × 2`, 'tool-call');
+                addChatMsg(`Filled the contact form:<br>• Name: <b>${name}</b><br>• Email: <b>${email}</b><br><br>Check the form below — the fields are highlighted!`, 'agent');
+                logTool('fillForm', { selector: '#contactName', value: name }, { success: true });
+                logTool('fillForm', { selector: '#contactEmail', value: email }, { success: true });
+                return;
+            }
+
+            if (lower.includes('faq') || lower.includes('frequently') || lower.includes('accordion')) {
+                addChatMsg(`<span class="tool-icon">🔧</span> <span class="tool-name">interactComponent('.accordion', 'expand')</span>`, 'tool-call');
+                document.querySelectorAll('.accordion-item').forEach(i => i.classList.add('open'));
+                addChatMsg(`Expanded all FAQ items! You can see 3 questions about WebMCP, this demo, and building custom tools.`, 'agent');
+                logTool('interactComponent', { action: 'expand', target: 'accordion' }, { success: true });
+                return;
+            }
+
+            if (lower.includes('product') || lower.includes('component')) {
+                const comps = A.getAllComponents();
+                addChatMsg(`<span class="tool-icon">🔧</span> <span class="tool-name">getComponents()</span>`, 'tool-call');
+                addChatMsg(`Found <b>${comps.length} components</b> on this page:<br><br>` +
+                    comps.map(c => `• <b>${c.action}</b> (${c.category}) — ${c.description || 'no description'}`).join('<br>'), 'tool-result');
+                logTool('getComponents', {}, comps);
+                return;
+            }
+
+            if (lower.includes('accessibility') || lower.includes('a11y') || lower.includes('tree')) {
+                addChatMsg(`<span class="tool-icon">🔧</span> <span class="tool-name">getAccessibilityTree()</span>`, 'tool-call');
+                addChatMsg(`Accessibility tree:<br>• 4 landmarks (banner, main, nav, contentinfo)<br>• ${document.querySelectorAll('button, a, input, textarea, select').length} interactive elements<br>• ${document.querySelectorAll('[aria-label], [aria-labelledby]').length} ARIA-labeled elements<br><br><i>This data helps screen readers and AI agents understand page structure.</i>`, 'tool-result');
+                logTool('getAccessibilityTree', {}, { landmarks: 4, interactive: document.querySelectorAll('button, a, input').length });
+                return;
+            }
+
+            if (lower.includes('speak') || lower.includes('read') || lower.includes('voice')) {
+                addChatMsg(`<span class="tool-icon">🔧</span> <span class="tool-name">speakText()</span>`, 'tool-call');
+                if (window.speechSynthesis) {
+                    const u = new SpeechSynthesisUtterance('Welcome to TechStore! We have smartphone pro for 999 dollars, ultra laptop for 1499, and wireless headphones for 349.');
+                    window.speechSynthesis.speak(u);
+                }
+                addChatMsg(`Speaking: "Welcome to TechStore!" 🔊`, 'agent');
+                logTool('speakText', {}, { success: true });
+                return;
+            }
+
+            // Fallback
+            addChatMsg(`I can help with that! Here's what I can do via WebMCP tools:<br><br>` +
+                `• <b>"What's on this page?"</b> — getComponents()<br>` +
+                `• <b>"Add headphones to cart"</b> — addToCart()<br>` +
+                `• <b>"Fill the contact form"</b> — fillForm()<br>` +
+                `• <b>"Show FAQ"</b> — interactComponent(accordion)<br>` +
+                `• <b>"Search for laptop"</b> — search()<br>` +
+                `• <b>"Show my cart"</b> — getComponents(commerce)<br>` +
+                `• <b>"Accessibility tree"</b> — getAccessibilityTree()<br>` +
+                `• <b>"Speak the products"</b> — speakText()`, 'agent');
+        }
+    </script>
+    <script src="webmcp-config.js"></script>
+    <script src="webmcp-helpers.js"></script>
+    <script src="webmcp.js"></script>
+</body>
+</html>
