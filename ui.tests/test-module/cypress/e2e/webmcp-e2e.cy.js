@@ -97,7 +97,7 @@ describe('AEM WebMCP - E2E Functional Tests', () => {
             })
             
             // Should trigger validation (AEM handles this)
-            cy.wait(500)
+            cy.get('input[name="email"]').should('have.value', 'invalid-email')
         })
     })
 
@@ -178,7 +178,7 @@ describe('AEM WebMCP - E2E Functional Tests', () => {
             cy.get('body').should('be.visible')
             
             // Look for product elements (teasers, cards, etc.)
-            cy.wait(1000)
+            cy.get('body').should('be.visible')
         })
 
         it('should have add to cart functionality', () => {
@@ -225,14 +225,14 @@ describe('AEM WebMCP - E2E Functional Tests', () => {
             cy.visit('/content/aem-webmcp/us/en/faq.html')
             
             // Wait for accordion to load
-            cy.wait(1000)
+            cy.get('body').should('be.visible')
             
             // Look for accordion
             cy.get('[data-cmp-is="accordion"], .accordion, .cmp-accordion').then(($accordion) => {
                 if ($accordion.length > 0) {
                     // Click first item
                     cy.get('[data-cmp-expanded], .accordion-trigger').first().click()
-                    cy.wait(500)
+                    cy.get('[data-cmp-expanded], .accordion-trigger').first().should('exist')
                 }
             })
         })
@@ -241,14 +241,14 @@ describe('AEM WebMCP - E2E Functional Tests', () => {
             cy.visit('/content/aem-webmcp/us/en/faq.html')
             
             // Wait for tabs to load
-            cy.wait(1000)
+            cy.get('body').should('be.visible')
             
             // Look for tabs
             cy.get('[role="tablist"], .tabs, .cmp-tabs').then(($tabs) => {
                 if ($tabs.length > 0) {
                     // Click second tab
                     cy.get('[role="tab"]').eq(1).click()
-                    cy.wait(500)
+                    cy.get('[role="tab"]').eq(1).should('exist')
                 }
             })
         })

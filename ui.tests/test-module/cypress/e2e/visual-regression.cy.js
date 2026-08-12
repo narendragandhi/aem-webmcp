@@ -35,8 +35,7 @@ describe('AEM WebMCP - Visual Regression Tests', () => {
             cy.get('body').should('be.visible')
             cy.get(page.waitFor, { timeout: 10000 }).should('be.visible')
             
-            // Wait for any animations to complete
-            cy.wait(1000)
+            cy.get(page.waitFor).should('be.visible')
             
             // Take full page screenshot
             cy.screenshot(`webmcp-${page.name}-full`, {
@@ -49,10 +48,7 @@ describe('AEM WebMCP - Visual Regression Tests', () => {
             cy.visit(page.path, { timeout: 30000 })
             
             // Wait for WebMCP to initialize
-            cy.window().then((win) => {
-                return win.Cypress?.dom?.readyState === 'complete'
-            })
-            cy.wait(2000)
+            cy.get('main').should('be.visible')
             
             // Take screenshot of main content area
             cy.get('main').screenshot(`webmcp-${page.name}-main`, {
@@ -70,7 +66,7 @@ describe('AEM WebMCP - Visual Regression Tests', () => {
             win.WEBMCP_SHOW_PANEL = true
         })
         
-        cy.wait(1000)
+        cy.get('body').should('be.visible')
         
         cy.screenshot('webmcp-debug-panel', {
             capture: 'viewport',
@@ -83,7 +79,7 @@ describe('AEM WebMCP - Visual Regression Tests', () => {
         
         // Wait for form to load
         cy.get('form').should('be.visible')
-        cy.wait(1000)
+        cy.get('form').should('be.visible')
         
         // Take screenshot of form
         cy.get('form').screenshot('webmcp-contact-form', {
@@ -101,7 +97,7 @@ describe('AEM WebMCP - Visual Regression Tests', () => {
             cy.wrap($el).click()
         })
         
-        cy.wait(500)
+        cy.get('[data-cmp-expanded]').first().should('exist')
         
         cy.screenshot('webmcp-accordion-expanded', {
             capture: 'viewport',
@@ -115,7 +111,7 @@ describe('AEM WebMCP - Visual Regression Tests', () => {
         // Click second tab
         cy.get('[role="tab"]').eq(1).click()
         
-        cy.wait(500)
+        cy.get('[role="tab"]').eq(1).should('have.attr', 'aria-selected', 'true')
         
         cy.screenshot('webmcp-tabs-second', {
             capture: 'viewport',

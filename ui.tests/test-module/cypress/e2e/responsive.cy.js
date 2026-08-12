@@ -98,25 +98,25 @@ describe('AEM WebMCP - Responsive Tests', () => {
         it('should handle touch events on accordion', () => {
             cy.visit('/content/aem-webmcp/us/en/faq.html', { timeout: 30000 })
             
-            cy.wait(1000)
+            cy.get('body').should('be.visible')
             
             // Tap first accordion item
             cy.get('[data-cmp-expanded], .accordion-header, .cmp-accordion__header').first()
                 .click({ force: true })
             
-            cy.wait(500)
+            cy.get('[data-cmp-expanded], .accordion-header, .cmp-accordion__header').first().should('exist')
         })
 
         it('should handle touch events on tabs', () => {
             cy.visit('/content/aem-webmcp/us/en/faq.html', { timeout: 30000 })
             
-            cy.wait(1000)
+            cy.get('body').should('be.visible')
             
             // Tap second tab
             cy.get('[role="tab"]').eq(1)
                 .click({ force: true })
             
-            cy.wait(500)
+            cy.get('[role="tab"]').eq(1).should('exist')
         })
 
         it('should handle touch scroll on mobile', () => {
@@ -191,7 +191,7 @@ describe('AEM WebMCP - Responsive Tests', () => {
             it(`baseline: ${viewport.name} home page`, () => {
                 cy.viewport(viewport.width, viewport.height)
                 cy.visit('/content/aem-webmcp/us/en.html', { timeout: 30000 })
-                cy.wait(500)
+                cy.get('body').should('be.visible')
                 cy.screenshot(`baseline-home-${viewport.name.toLowerCase().replace(' ', '-')}`, {
                     overwrite: false
                 })
@@ -200,7 +200,7 @@ describe('AEM WebMCP - Responsive Tests', () => {
             it(`baseline: ${viewport.name} contact page`, () => {
                 cy.viewport(viewport.width, viewport.height)
                 cy.visit('/content/aem-webmcp/us/en/contact.html', { timeout: 30000 })
-                cy.wait(500)
+                cy.get('body').should('be.visible')
                 cy.screenshot(`baseline-contact-${viewport.name.toLowerCase().replace(' ', '-')}`, {
                     overwrite: false
                 })
