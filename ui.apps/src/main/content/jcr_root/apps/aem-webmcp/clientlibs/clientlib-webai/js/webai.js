@@ -332,7 +332,7 @@
                 );
                 
                 const response = output[0]?.generated_text?.replace(prompt, '')?.trim() || 
-                    "I'm sorry, I couldn't generate a response.";
+                    'I\'m sorry, I couldn\'t generate a response.';
                 
                 // Check for function calls
                 const functionResponse = this.parseFunctionCall(response);
@@ -393,7 +393,7 @@ ${userMessage}
                 if (fn) {
                     try {
                         const params = JSON.parse(match[2]);
-                        const result = fn.execute(params);
+                        fn.execute(params);
                         return {
                             message: `Executing ${fnName}...`,
                             execute: () => console.log('[WebAI] Executed:', fnName, params)
