@@ -188,76 +188,76 @@
             console.log('[VoiceCommand] Executing:', action, param);
 
             switch (action) {
-                case 'navigate':
-                    if (param) {
-                        // Simple navigation - would link to pages
-                        console.log('[VoiceCommand] Navigate to:', param);
-                        this.speak('Navigating to ' + param);
-                    }
-                    break;
+            case 'navigate':
+                if (param) {
+                    // Simple navigation - would link to pages
+                    console.log('[VoiceCommand] Navigate to:', param);
+                    this.speak('Navigating to ' + param);
+                }
+                break;
 
-                case 'click':
-                    // Would find and click element
-                    console.log('[VoiceCommand] Click:', param);
-                    this.speak('Clicking ' + param);
-                    break;
+            case 'click':
+                // Would find and click element
+                console.log('[VoiceCommand] Click:', param);
+                this.speak('Clicking ' + param);
+                break;
 
-                case 'search':
-                    // Trigger search
-                    console.log('[VoiceCommand] Search:', param);
-                    this.speak('Searching for ' + param);
-                    window.dispatchEvent(new CustomEvent('webmcp-voice-search', { detail: { query: param } }));
-                    break;
+            case 'search':
+                // Trigger search
+                console.log('[VoiceCommand] Search:', param);
+                this.speak('Searching for ' + param);
+                window.dispatchEvent(new CustomEvent('webmcp-voice-search', { detail: { query: param } }));
+                break;
 
-                case 'scroll':
-                    const direction = param === 'up' ? -1 : 1;
-                    window.scrollBy(0, direction * 300);
-                    this.speak('Scrolling ' + param);
-                    break;
+            case 'scroll':
+                const direction = param === 'up' ? -1 : 1;
+                window.scrollBy(0, direction * 300);
+                this.speak('Scrolling ' + param);
+                break;
 
-                case 'read':
-                    this.readPageContent();
-                    break;
+            case 'read':
+                this.readPageContent();
+                break;
 
-                case 'fill-form':
-                    if (window.AEMFormAgent) {
-                        this.speak('Sure, let me help you with the form. Scanning for fields...');
-                        window.AEMFormAgent.discoverForm().then(() => {
-                            window.AEMFormAgent.analyzeFields().then(() => {
-                                window.AEMFormAgent.checkProgress();
-                            });
+            case 'fill-form':
+                if (window.AEMFormAgent) {
+                    this.speak('Sure, let me help you with the form. Scanning for fields...');
+                    window.AEMFormAgent.discoverForm().then(() => {
+                        window.AEMFormAgent.analyzeFields().then(() => {
+                            window.AEMFormAgent.checkProgress();
                         });
-                    } else {
-                        this.speak('Sorry, the form agent is not available.');
-                    }
-                    break;
+                    });
+                } else {
+                    this.speak('Sorry, the form agent is not available.');
+                }
+                break;
 
-                case 'audit':
-                    if (window.AEMAuditAgent) {
-                        this.speak('Running accessibility audit...');
-                        window.AEMAuditAgent.scanPage();
-                    } else {
-                        this.speak('Audit agent not available.');
-                    }
-                    break;
+            case 'audit':
+                if (window.AEMAuditAgent) {
+                    this.speak('Running accessibility audit...');
+                    window.AEMAuditAgent.scanPage();
+                } else {
+                    this.speak('Audit agent not available.');
+                }
+                break;
 
-                case 'ask':
-                    if (window.AEMContentAgent) {
-                        this.speak('Checking page content...');
-                        window.AEMContentAgent.ask(param);
-                    } else {
-                        this.speak('Content agent not available.');
-                    }
-                    break;
+            case 'ask':
+                if (window.AEMContentAgent) {
+                    this.speak('Checking page content...');
+                    window.AEMContentAgent.ask(param);
+                } else {
+                    this.speak('Content agent not available.');
+                }
+                break;
 
-                case 'stop':
-                    this.speechSynthesis.cancel();
-                    this.speak('Stopped');
-                    break;
+            case 'stop':
+                this.speechSynthesis.cancel();
+                this.speak('Stopped');
+                break;
 
-                case 'refresh':
-                    window.location.reload();
-                    break;
+            case 'refresh':
+                window.location.reload();
+                break;
             }
         }
 
@@ -307,45 +307,45 @@
         registerMCPTools() {
             const tools = [
                 {
-                    name: "startVoiceCommand",
-                    description: "Start listening for voice commands",
-                    inputSchema: { type: "object", properties: {} },
+                    name: 'startVoiceCommand',
+                    description: 'Start listening for voice commands',
+                    inputSchema: { type: 'object', properties: {} },
                     handler: () => this.handleStartVoice()
                 },
                 {
-                    name: "stopVoiceCommand",
-                    description: "Stop listening for voice commands",
-                    inputSchema: { type: "object", properties: {} },
+                    name: 'stopVoiceCommand',
+                    description: 'Stop listening for voice commands',
+                    inputSchema: { type: 'object', properties: {} },
                     handler: () => this.handleStopVoice()
                 },
                 {
-                    name: "processVoiceCommand",
-                    description: "Process a voice command text directly",
+                    name: 'processVoiceCommand',
+                    description: 'Process a voice command text directly',
                     inputSchema: {
-                        type: "object",
+                        type: 'object',
                         properties: {
-                            command: { type: "string", description: "Voice command to process" }
+                            command: { type: 'string', description: 'Voice command to process' }
                         },
-                        required: ["command"]
+                        required: ['command']
                     },
                     handler: (params) => this.handleProcessCommand(params)
                 },
                 {
-                    name: "speakText",
-                    description: "Speak text using text-to-speech",
+                    name: 'speakText',
+                    description: 'Speak text using text-to-speech',
                     inputSchema: {
-                        type: "object",
+                        type: 'object',
                         properties: {
-                            text: { type: "string", description: "Text to speak" }
+                            text: { type: 'string', description: 'Text to speak' }
                         },
-                        required: ["text"]
+                        required: ['text']
                     },
                     handler: (params) => this.handleSpeak(params)
                 },
                 {
-                    name: "getCommandHistory",
-                    description: "Get voice command history",
-                    inputSchema: { type: "object", properties: {} },
+                    name: 'getCommandHistory',
+                    description: 'Get voice command history',
+                    inputSchema: { type: 'object', properties: {} },
                     handler: () => this.handleGetHistory()
                 }
             ];
@@ -405,26 +405,26 @@
 
         handleStartVoice() {
             this.startListening();
-            return { content: [{ type: "text", text: JSON.stringify({ success: true, status: "listening" }) }] };
+            return { content: [{ type: 'text', text: JSON.stringify({ success: true, status: 'listening' }) }] };
         }
 
         handleStopVoice() {
             this.stopListening();
-            return { content: [{ type: "text", text: JSON.stringify({ success: true, status: "stopped" }) }] };
+            return { content: [{ type: 'text', text: JSON.stringify({ success: true, status: 'stopped' }) }] };
         }
 
         handleProcessCommand(params) {
             this.processCommand(params.command);
-            return { content: [{ type: "text", text: JSON.stringify({ success: true, command: params.command }) }] };
+            return { content: [{ type: 'text', text: JSON.stringify({ success: true, command: params.command }) }] };
         }
 
         handleSpeak(params) {
             this.speak(params.text);
-            return { content: [{ type: "text", text: JSON.stringify({ success: true, spoken: params.text }) }] };
+            return { content: [{ type: 'text', text: JSON.stringify({ success: true, spoken: params.text }) }] };
         }
 
         handleGetHistory() {
-            return { content: [{ type: "text", text: JSON.stringify({ success: true, history: this.commandHistory }) }] };
+            return { content: [{ type: 'text', text: JSON.stringify({ success: true, history: this.commandHistory }) }] };
         }
     }
 

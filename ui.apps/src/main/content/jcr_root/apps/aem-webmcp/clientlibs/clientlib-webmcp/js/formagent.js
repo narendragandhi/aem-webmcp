@@ -67,9 +67,9 @@
             if (window.AEMLLMAgent && window.AEMLLMAgent.session) {
                 try {
                     const schema = {
-                        type: "object",
+                        type: 'object',
                         properties: this.allFields.reduce((acc, f) => {
-                            acc[f.name] = { type: "string", description: `The value for field ${f.label || f.name}` };
+                            acc[f.name] = { type: 'string', description: `The value for field ${f.label || f.name}` };
                             return acc;
                         }, {})
                     };
@@ -78,7 +78,7 @@
                     if (intent) {
                         console.log('[FormAgent] LLM Intent parsed:', intent);
                         for (const [name, value] of Object.entries(intent)) {
-                            if (value && value !== "unknown") {
+                            if (value && value !== 'unknown') {
                                 await this.fillField(name, value);
                                 // Design: Small staggered delay between fields
                                 await new Promise(r => setTimeout(r, 200));
@@ -158,7 +158,7 @@
             const remaining = this.requiredFields.filter(f => !this.collectedData[f.name]);
             if (remaining.length === 0) {
                 console.log('[FormAgent] All fields collected. Ready to submit!');
-                window.AEMWebMCP.speakText({ text: "I've filled out the form for you. Would you like me to submit it?" });
+                window.AEMWebMCP.speakText({ text: 'I\'ve filled out the form for you. Would you like me to submit it?' });
             } else {
                 const next = remaining[0];
                 window.AEMWebMCP.speakText({ text: `Got it. Now, what is your ${next.name}?` });

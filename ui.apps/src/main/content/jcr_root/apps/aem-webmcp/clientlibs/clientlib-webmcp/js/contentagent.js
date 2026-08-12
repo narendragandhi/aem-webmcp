@@ -57,7 +57,7 @@
          */
         async ask(question) {
             if (!this.pageContent) await this.indexPage();
-            if (!this.pageContent) return "I need to index the page first. Please try again.";
+            if (!this.pageContent) return 'I need to index the page first. Please try again.';
             
             const keywords = question.toLowerCase().replace(/[?.,]/g, '').split(' ')
                 .filter(w => w.length > 3 && !['what', 'where', 'when', 'does', 'this', 'have'].includes(w));
@@ -94,7 +94,7 @@
                 window.AEMWebMCP.speakText({ text: answer });
                 return answer;
             } else {
-                const fallback = "I couldn't find that information on this page.";
+                const fallback = 'I couldn\'t find that information on this page.';
                 window.AEMWebMCP.speakText({ text: fallback });
                 return fallback;
             }

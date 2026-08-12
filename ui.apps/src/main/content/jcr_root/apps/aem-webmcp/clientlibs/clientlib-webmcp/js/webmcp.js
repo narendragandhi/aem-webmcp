@@ -429,8 +429,8 @@
             <div class="webmcp-stat"><span class="webmcp-stat-label">Total Components</span><span class="webmcp-stat-value">' + components.length + '</span></div>\
             <div class="webmcp-stat"><span class="webmcp-stat-label">Categories</span><span class="webmcp-stat-value">' + Object.keys(categories).length + '</span></div>\
             ' + Object.keys(categories).map(function (cat) {
-                return '<div class="webmcp-stat"><span class="webmcp-stat-label">' + cat + '</span><span class="webmcp-stat-value">' + categories[cat] + '</span></div>';
-            }).join('') + '\
+            return '<div class="webmcp-stat"><span class="webmcp-stat-label">' + cat + '</span><span class="webmcp-stat-value">' + categories[cat] + '</span></div>';
+        }).join('') + '\
         ';
 
         var compList = panel.querySelector('.webmcp-components');

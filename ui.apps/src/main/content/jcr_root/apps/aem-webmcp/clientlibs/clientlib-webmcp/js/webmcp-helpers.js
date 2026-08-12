@@ -105,66 +105,66 @@
         if (!el) return { success: false, error: 'Element not found' };
 
         switch (action) {
-            case 'click': case 'submit':
-                var clickable = el.querySelector('button, a, [role="button"]') || el;
-                clickable.click();
-                return { success: true, element: A.getSelector(clickable) };
+        case 'click': case 'submit':
+            var clickable = el.querySelector('button, a, [role="button"]') || el;
+            clickable.click();
+            return { success: true, element: A.getSelector(clickable) };
 
-            case 'expand': case 'collapse':
-                var expandable = el.querySelector('[aria-expanded], [data-toggle], .accordion__header, .cmp-accordion__header, [data-cmp-accordion-heading]');
-                if (expandable) {
-                    expandable.click();
-                    return { success: true, expanded: expandable.getAttribute('aria-expanded') === 'true' };
-                }
-                return { success: false, error: 'No expandable element found' };
+        case 'expand': case 'collapse':
+            var expandable = el.querySelector('[aria-expanded], [data-toggle], .accordion__header, .cmp-accordion__header, [data-cmp-accordion-heading]');
+            if (expandable) {
+                expandable.click();
+                return { success: true, expanded: expandable.getAttribute('aria-expanded') === 'true' };
+            }
+            return { success: false, error: 'No expandable element found' };
 
-            case 'select-tab':
-                var tabIndex = (options && options.index) || 0;
-                var tab = el.querySelectorAll('[role="tab"], .cmp-tabs__tab').item(tabIndex);
-                if (tab) { tab.click(); return { success: true, tabIndex: tabIndex }; }
-                return { success: false, error: 'Tab not found at index ' + tabIndex };
+        case 'select-tab':
+            var tabIndex = (options && options.index) || 0;
+            var tab = el.querySelectorAll('[role="tab"], .cmp-tabs__tab').item(tabIndex);
+            if (tab) { tab.click(); return { success: true, tabIndex: tabIndex }; }
+            return { success: false, error: 'Tab not found at index ' + tabIndex };
 
-            case 'next': case 'next-slide':
-                var nextBtn = el.querySelector('[data-cmp-valuename="next"], .carousel__control--next, .slick-next, [aria-label="next"]');
-                if (nextBtn) { nextBtn.click(); return { success: true }; }
-                return { success: false, error: 'Next button not found' };
+        case 'next': case 'next-slide':
+            var nextBtn = el.querySelector('[data-cmp-valuename="next"], .carousel__control--next, .slick-next, [aria-label="next"]');
+            if (nextBtn) { nextBtn.click(); return { success: true }; }
+            return { success: false, error: 'Next button not found' };
 
-            case 'prev': case 'previous':
-                var prevBtn = el.querySelector('[data-cmp-valuename="prev"], .carousel__control--prev, .slick-prev, [aria-label="previous"]');
-                if (prevBtn) { prevBtn.click(); return { success: true }; }
-                return { success: false, error: 'Previous button not found' };
+        case 'prev': case 'previous':
+            var prevBtn = el.querySelector('[data-cmp-valuename="prev"], .carousel__control--prev, .slick-prev, [aria-label="previous"]');
+            if (prevBtn) { prevBtn.click(); return { success: true }; }
+            return { success: false, error: 'Previous button not found' };
 
-            case 'go-to-slide':
-                var slideIndex = (options && options.index) || 0;
-                var slide = el.querySelectorAll('.carousel__item, .slick-slide').item(slideIndex);
-                if (slide) { slide.click(); return { success: true, slideIndex: slideIndex }; }
-                return { success: false, error: 'Slide not found at index ' + slideIndex };
+        case 'go-to-slide':
+            var slideIndex = (options && options.index) || 0;
+            var slide = el.querySelectorAll('.carousel__item, .slick-slide').item(slideIndex);
+            if (slide) { slide.click(); return { success: true, slideIndex: slideIndex }; }
+            return { success: false, error: 'Slide not found at index ' + slideIndex };
 
-            case 'select-option':
-                var optionValue = options && options.value;
-                var option = el.querySelector('option[value="' + optionValue + '"], input[value="' + optionValue + '"], radio[value="' + optionValue + '"]');
-                if (option) { option.click(); return { success: true, value: optionValue }; }
-                return { success: false, error: 'Option not found: ' + optionValue };
+        case 'select-option':
+            var optionValue = options && options.value;
+            var option = el.querySelector('option[value="' + optionValue + '"], input[value="' + optionValue + '"], radio[value="' + optionValue + '"]');
+            if (option) { option.click(); return { success: true, value: optionValue }; }
+            return { success: false, error: 'Option not found: ' + optionValue };
 
-            case 'download':
-                var downloadLink = el.querySelector('a[href*=".pdf"], a[download], [data-download-url]');
-                if (downloadLink) { downloadLink.click(); return { success: true }; }
-                return { success: false, error: 'Download link not found' };
+        case 'download':
+            var downloadLink = el.querySelector('a[href*=".pdf"], a[download], [data-download-url]');
+            if (downloadLink) { downloadLink.click(); return { success: true }; }
+            return { success: false, error: 'Download link not found' };
 
-            case 'navigate':
-                var navLink = el.querySelector('a');
-                if (navLink) { window.location.href = navLink.href; return { success: true, url: navLink.href }; }
-                return { success: false, error: 'Navigation link not found' };
+        case 'navigate':
+            var navLink = el.querySelector('a');
+            if (navLink) { window.location.href = navLink.href; return { success: true, url: navLink.href }; }
+            return { success: false, error: 'Navigation link not found' };
 
-            case 'scroll-into-view':
-                el.scrollIntoView({ behavior: 'smooth' });
-                return { success: true };
+        case 'scroll-into-view':
+            el.scrollIntoView({ behavior: 'smooth' });
+            return { success: true };
 
-            case 'focus':
-                el.focus();
-                return { success: true };
+        case 'focus':
+            el.focus();
+            return { success: true };
 
-            default: return { success: false, error: 'Unknown action: ' + action };
+        default: return { success: false, error: 'Unknown action: ' + action };
         }
     };
 
@@ -239,7 +239,11 @@
         var product = document.querySelector(selector);
         if (!product) return { success: false, error: 'Product not found' };
         var addButton = product.querySelector('button') || product.querySelector('[data-add-to-cart], .add-to-cart, [aria-label*="cart"], [title*="Cart"]');
-        if (addButton) { addButton.click(); return { success: true }; }
+        if (addButton) {
+            var amount = Math.max(1, Number(quantity) || 1);
+            for (var i = 0; i < amount; i++) addButton.click();
+            return { success: true, quantity: amount };
+        }
         return { success: false, error: 'Add to cart button not found' };
     };
 

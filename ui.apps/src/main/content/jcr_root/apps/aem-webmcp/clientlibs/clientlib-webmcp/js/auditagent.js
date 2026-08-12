@@ -79,7 +79,7 @@
                 const msg = `I found ${count} accessibility issues on this page. Check the console for details.`;
                 window.AEMWebMCP.speakText({ text: msg });
             } else {
-                 window.AEMWebMCP.speakText({ text: "This page looks good for basic accessibility!" });
+                window.AEMWebMCP.speakText({ text: 'This page looks good for basic accessibility!' });
             }
         }
     };

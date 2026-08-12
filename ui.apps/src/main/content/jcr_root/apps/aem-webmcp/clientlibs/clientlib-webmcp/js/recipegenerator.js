@@ -9,179 +9,179 @@
 
     const RECIPE_DATABASE = [
         {
-            name: "Garlic Butter Chicken",
-            ingredients: ["chicken", "garlic", "butter", "salt", "pepper", "rosemary"],
-            time: "25 min",
+            name: 'Garlic Butter Chicken',
+            ingredients: ['chicken', 'garlic', 'butter', 'salt', 'pepper', 'rosemary'],
+            time: '25 min',
             servings: 4,
-            difficulty: "Easy",
+            difficulty: 'Easy',
             vegetarian: false,
             quick: true,
             healthy: false,
             instructions: [
-                "Season chicken breasts with salt and pepper",
-                "Melt butter in a large skillet over medium-high heat",
-                "Add minced garlic and cook for 1 minute",
-                "Add chicken and cook 6-7 minutes per side",
-                "Add rosemary and baste with garlic butter",
-                "Rest for 5 minutes before serving"
+                'Season chicken breasts with salt and pepper',
+                'Melt butter in a large skillet over medium-high heat',
+                'Add minced garlic and cook for 1 minute',
+                'Add chicken and cook 6-7 minutes per side',
+                'Add rosemary and baste with garlic butter',
+                'Rest for 5 minutes before serving'
             ]
         },
         {
-            name: "Tomato Basil Pasta",
-            ingredients: ["pasta", "tomato", "basil", "garlic", "olive oil", "parmesan"],
-            time: "20 min",
+            name: 'Tomato Basil Pasta',
+            ingredients: ['pasta', 'tomato', 'basil', 'garlic', 'olive oil', 'parmesan'],
+            time: '20 min',
             servings: 4,
-            difficulty: "Easy",
+            difficulty: 'Easy',
             vegetarian: true,
             quick: true,
             healthy: true,
             instructions: [
-                "Cook pasta according to package directions",
-                "Sauté garlic in olive oil until fragrant",
-                "Add diced tomatoes and simmer for 10 minutes",
-                "Toss with cooked pasta",
-                "Garnish with fresh basil and parmesan"
+                'Cook pasta according to package directions',
+                'Sauté garlic in olive oil until fragrant',
+                'Add diced tomatoes and simmer for 10 minutes',
+                'Toss with cooked pasta',
+                'Garnish with fresh basil and parmesan'
             ]
         },
         {
-            name: "Vegetable Stir Fry",
-            ingredients: ["broccoli", "carrot", "bell pepper", "soy sauce", "garlic", "ginger"],
-            time: "15 min",
+            name: 'Vegetable Stir Fry',
+            ingredients: ['broccoli', 'carrot', 'bell pepper', 'soy sauce', 'garlic', 'ginger'],
+            time: '15 min',
             servings: 3,
-            difficulty: "Easy",
+            difficulty: 'Easy',
             vegetarian: true,
             quick: true,
             healthy: true,
             instructions: [
-                "Cut all vegetables into bite-sized pieces",
-                "Heat oil in a wok over high heat",
-                "Add garlic and ginger, stir for 30 seconds",
-                "Add vegetables in order of cooking time",
-                "Add soy sauce and toss to combine",
-                "Serve immediately over rice"
+                'Cut all vegetables into bite-sized pieces',
+                'Heat oil in a wok over high heat',
+                'Add garlic and ginger, stir for 30 seconds',
+                'Add vegetables in order of cooking time',
+                'Add soy sauce and toss to combine',
+                'Serve immediately over rice'
             ]
         },
         {
-            name: "Classic Beef Tacos",
-            ingredients: ["beef", "taco shells", "lettuce", "tomato", "cheese", "sour cream"],
-            time: "20 min",
+            name: 'Classic Beef Tacos',
+            ingredients: ['beef', 'taco shells', 'lettuce', 'tomato', 'cheese', 'sour cream'],
+            time: '20 min',
             servings: 4,
-            difficulty: "Easy",
+            difficulty: 'Easy',
             vegetarian: false,
             quick: true,
             healthy: false,
             instructions: [
-                "Brown ground beef in a skillet",
-                "Add taco seasoning and water, simmer 5 minutes",
-                "Warm taco shells according to package",
-                "Fill shells with beef",
-                "Top with lettuce, tomato, cheese, sour cream"
+                'Brown ground beef in a skillet',
+                'Add taco seasoning and water, simmer 5 minutes',
+                'Warm taco shells according to package',
+                'Fill shells with beef',
+                'Top with lettuce, tomato, cheese, sour cream'
             ]
         },
         {
-            name: "Mediterranean Salad",
-            ingredients: ["cucumber", "tomato", "feta", "olive oil", "lemon", "oregano"],
-            time: "10 min",
+            name: 'Mediterranean Salad',
+            ingredients: ['cucumber', 'tomato', 'feta', 'olive oil', 'lemon', 'oregano'],
+            time: '10 min',
             servings: 2,
-            difficulty: "Easy",
+            difficulty: 'Easy',
             vegetarian: true,
             quick: true,
             healthy: true,
             instructions: [
-                "Chop cucumber and tomato into cubes",
-                "Combine in a bowl with olives",
-                "Crumble feta cheese on top",
-                "Drizzle with olive oil and lemon juice",
-                "Season with oregano, salt and pepper"
+                'Chop cucumber and tomato into cubes',
+                'Combine in a bowl with olives',
+                'Crumble feta cheese on top',
+                'Drizzle with olive oil and lemon juice',
+                'Season with oregano, salt and pepper'
             ]
         },
         {
-            name: "Chicken Fried Rice",
-            ingredients: ["chicken", "rice", "egg", "soy sauce", "carrot", "peas"],
-            time: "25 min",
+            name: 'Chicken Fried Rice',
+            ingredients: ['chicken', 'rice', 'egg', 'soy sauce', 'carrot', 'peas'],
+            time: '25 min',
             servings: 4,
-            difficulty: "Medium",
+            difficulty: 'Medium',
             vegetarian: false,
             quick: false,
             healthy: false,
             instructions: [
-                "Cook rice and let cool (day-old rice works best)",
-                "Scramble eggs and set aside",
-                "Cook diced chicken until done",
-                "Add vegetables and stir fry 3 minutes",
-                "Add rice and soy sauce",
-                "Fold in eggs and serve hot"
+                'Cook rice and let cool (day-old rice works best)',
+                'Scramble eggs and set aside',
+                'Cook diced chicken until done',
+                'Add vegetables and stir fry 3 minutes',
+                'Add rice and soy sauce',
+                'Fold in eggs and serve hot'
             ]
         },
         {
-            name: "Mushroom Risotto",
-            ingredients: ["rice", "mushroom", "onion", "white wine", "parmesan", "butter"],
-            time: "40 min",
+            name: 'Mushroom Risotto',
+            ingredients: ['rice', 'mushroom', 'onion', 'white wine', 'parmesan', 'butter'],
+            time: '40 min',
             servings: 4,
-            difficulty: "Medium",
+            difficulty: 'Medium',
             vegetarian: true,
             quick: false,
             healthy: false,
             instructions: [
-                "Sauté onion and mushrooms in butter",
-                "Add rice and toast for 2 minutes",
-                "Add wine and let absorb",
-                "Add warm broth one ladle at a time",
-                "Stir continuously until rice is creamy",
-                "Finish with parmesan and butter"
+                'Sauté onion and mushrooms in butter',
+                'Add rice and toast for 2 minutes',
+                'Add wine and let absorb',
+                'Add warm broth one ladle at a time',
+                'Stir continuously until rice is creamy',
+                'Finish with parmesan and butter'
             ]
         },
         {
-            name: "Grilled Salmon",
-            ingredients: ["salmon", "lemon", "garlic", "dill", "olive oil", "asparagus"],
-            time: "20 min",
+            name: 'Grilled Salmon',
+            ingredients: ['salmon', 'lemon', 'garlic', 'dill', 'olive oil', 'asparagus'],
+            time: '20 min',
             servings: 2,
-            difficulty: "Medium",
+            difficulty: 'Medium',
             vegetarian: false,
             quick: true,
             healthy: true,
             instructions: [
-                "Marinate salmon with lemon, garlic, dill, olive oil",
-                "Preheat grill to medium-high",
-                "Grill salmon 4 minutes per side",
-                "Grill asparagus alongside",
-                "Serve with lemon wedges"
+                'Marinate salmon with lemon, garlic, dill, olive oil',
+                'Preheat grill to medium-high',
+                'Grill salmon 4 minutes per side',
+                'Grill asparagus alongside',
+                'Serve with lemon wedges'
             ]
         },
         {
-            name: "Banana Pancakes",
-            ingredients: ["banana", "egg", "flour", "milk", "sugar", "butter"],
-            time: "15 min",
+            name: 'Banana Pancakes',
+            ingredients: ['banana', 'egg', 'flour', 'milk', 'sugar', 'butter'],
+            time: '15 min',
             servings: 2,
-            difficulty: "Easy",
+            difficulty: 'Easy',
             vegetarian: true,
             quick: true,
             healthy: false,
             instructions: [
-                "Mash banana in a bowl",
-                "Mix in egg, flour, milk, sugar",
-                "Heat butter in a skillet",
-                "Pour batter to form pancakes",
-                "Flip when bubbles form",
-                "Serve with maple syrup"
+                'Mash banana in a bowl',
+                'Mix in egg, flour, milk, sugar',
+                'Heat butter in a skillet',
+                'Pour batter to form pancakes',
+                'Flip when bubbles form',
+                'Serve with maple syrup'
             ]
         },
         {
-            name: "Shrimp Scampi",
-            ingredients: ["shrimp", "pasta", "garlic", "white wine", "butter", "lemon"],
-            time: "20 min",
+            name: 'Shrimp Scampi',
+            ingredients: ['shrimp', 'pasta', 'garlic', 'white wine', 'butter', 'lemon'],
+            time: '20 min',
             servings: 4,
-            difficulty: "Easy",
+            difficulty: 'Easy',
             vegetarian: false,
             quick: true,
             healthy: false,
             instructions: [
-                "Cook pasta according to package",
-                "Sauté garlic in butter",
-                "Add shrimp and cook until pink",
-                "Add wine and lemon juice",
-                "Toss with pasta",
-                "Garnish with parsley"
+                'Cook pasta according to package',
+                'Sauté garlic in butter',
+                'Add shrimp and cook until pink',
+                'Add wine and lemon juice',
+                'Toss with pasta',
+                'Garnish with parsley'
             ]
         }
     ];
@@ -189,55 +189,55 @@
     // MCP-B Spec-Compliant Tool Definitions
     const MCP_TOOLS = {
         generateRecipes: {
-            name: "generateRecipes",
-            description: "Generate recipe suggestions based on available ingredients. Returns a list of matching recipes sorted by ingredient relevance.",
+            name: 'generateRecipes',
+            description: 'Generate recipe suggestions based on available ingredients. Returns a list of matching recipes sorted by ingredient relevance.',
             inputSchema: {
-                type: "object",
+                type: 'object',
                 properties: {
                     ingredients: {
-                        type: "array",
-                        items: { type: "string" },
-                        description: "List of ingredients available to cook with"
+                        type: 'array',
+                        items: { type: 'string' },
+                        description: 'List of ingredients available to cook with'
                     },
                     filters: {
-                        type: "object",
+                        type: 'object',
                         properties: {
-                            vegetarian: { type: "boolean", description: "Filter for vegetarian recipes" },
-                            quick: { type: "boolean", description: "Filter for quick recipes under 30 minutes" },
-                            healthy: { type: "boolean", description: "Filter for healthy recipes" }
+                            vegetarian: { type: 'boolean', description: 'Filter for vegetarian recipes' },
+                            quick: { type: 'boolean', description: 'Filter for quick recipes under 30 minutes' },
+                            healthy: { type: 'boolean', description: 'Filter for healthy recipes' }
                         },
-                        description: "Optional filters to apply"
+                        description: 'Optional filters to apply'
                     }
                 },
-                required: ["ingredients"]
+                required: ['ingredients']
             }
         },
         getRecipeDetails: {
-            name: "getRecipeDetails",
-            description: "Get detailed information about a specific recipe including full ingredients list and step-by-step instructions.",
+            name: 'getRecipeDetails',
+            description: 'Get detailed information about a specific recipe including full ingredients list and step-by-step instructions.',
             inputSchema: {
-                type: "object",
+                type: 'object',
                 properties: {
                     recipeName: {
-                        type: "string",
-                        description: "Name of the recipe to get details for"
+                        type: 'string',
+                        description: 'Name of the recipe to get details for'
                     }
                 },
-                required: ["recipeName"]
+                required: ['recipeName']
             }
         },
         searchRecipes: {
-            name: "searchRecipes",
-            description: "Search recipes by name or ingredient keyword.",
+            name: 'searchRecipes',
+            description: 'Search recipes by name or ingredient keyword.',
             inputSchema: {
-                type: "object",
+                type: 'object',
                 properties: {
                     query: {
-                        type: "string",
-                        description: "Search query - can match recipe name or ingredients"
+                        type: 'string',
+                        description: 'Search query - can match recipe name or ingredients'
                     }
                 },
-                required: ["query"]
+                required: ['query']
             }
         }
     };
@@ -271,20 +271,20 @@
         registerMCPTools() {
             const tools = [
                 {
-                    name: "generateRecipes",
-                    description: "Generate recipe suggestions based on available ingredients",
+                    name: 'generateRecipes',
+                    description: 'Generate recipe suggestions based on available ingredients',
                     inputSchema: MCP_TOOLS.generateRecipes.inputSchema,
                     handler: (params) => this.handleGenerateRecipes(params)
                 },
                 {
-                    name: "getRecipeDetails", 
-                    description: "Get detailed information about a specific recipe",
+                    name: 'getRecipeDetails',
+                    description: 'Get detailed information about a specific recipe',
                     inputSchema: MCP_TOOLS.getRecipeDetails.inputSchema,
                     handler: (params) => this.handleGetRecipeDetails(params)
                 },
                 {
-                    name: "searchRecipes",
-                    description: "Search recipes by name or ingredient",
+                    name: 'searchRecipes',
+                    description: 'Search recipes by name or ingredient',
                     inputSchema: MCP_TOOLS.searchRecipes.inputSchema,
                     handler: (params) => this.handleSearchRecipes(params)
                 }
@@ -383,7 +383,7 @@
 
             return {
                 content: [{
-                    type: "text",
+                    type: 'text',
                     text: JSON.stringify({
                         success: true,
                         count: recipes.length,
@@ -410,15 +410,15 @@
             if (!recipe) {
                 return {
                     content: [{
-                        type: "text",
-                        text: JSON.stringify({ success: false, error: "Recipe not found" }, null, 2)
+                        type: 'text',
+                        text: JSON.stringify({ success: false, error: 'Recipe not found' }, null, 2)
                     }]
                 };
             }
 
             return {
                 content: [{
-                    type: "text",
+                    type: 'text',
                     text: JSON.stringify({ success: true, recipe }, null, 2)
                 }]
             };
@@ -435,7 +435,7 @@
 
             return {
                 content: [{
-                    type: "text",
+                    type: 'text',
                     text: JSON.stringify({
                         success: true,
                         count: recipes.length,

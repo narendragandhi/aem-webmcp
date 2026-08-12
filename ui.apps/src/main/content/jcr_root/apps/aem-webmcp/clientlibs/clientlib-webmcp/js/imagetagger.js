@@ -25,43 +25,43 @@
     // MCP-B Spec-Compliant Tool Definitions
     const MCP_TOOLS = {
         tagImage: {
-            name: "tagImage",
-            description: "Analyze an image and return detected objects with confidence scores using MediaPipe",
+            name: 'tagImage',
+            description: 'Analyze an image and return detected objects with confidence scores using MediaPipe',
             inputSchema: {
-                type: "object",
+                type: 'object',
                 properties: {
                     imageData: {
-                        type: "string",
-                        description: "Base64 encoded image data or image URL to analyze"
+                        type: 'string',
+                        description: 'Base64 encoded image data or image URL to analyze'
                     },
                     maxResults: {
-                        type: "number",
-                        description: "Maximum number of tags to return (default: 10)"
+                        type: 'number',
+                        description: 'Maximum number of tags to return (default: 10)'
                     }
                 },
-                required: ["imageData"]
+                required: ['imageData']
             }
         },
         getImageTags: {
-            name: "getImageTags",
-            description: "Get the most recent image tagging results",
+            name: 'getImageTags',
+            description: 'Get the most recent image tagging results',
             inputSchema: {
-                type: "object",
+                type: 'object',
                 properties: {}
             }
         },
         searchByTag: {
-            name: "searchByTag",
-            description: "Search assets by tag in the tagging results",
+            name: 'searchByTag',
+            description: 'Search assets by tag in the tagging results',
             inputSchema: {
-                type: "object",
+                type: 'object',
                 properties: {
                     tag: {
-                        type: "string",
-                        description: "Tag to search for"
+                        type: 'string',
+                        description: 'Tag to search for'
                     }
                 },
-                required: ["tag"]
+                required: ['tag']
             }
         }
     };
@@ -117,7 +117,7 @@
             });
             
             ['dragleave', 'drop'].forEach(eventName => {
-                uploadArea.addEventListener(eventName => {
+                uploadArea.addEventListener(eventName, () => {
                     uploadArea.classList.remove('drag-over');
                 });
             });
@@ -224,7 +224,7 @@
             }
         }
 
-        fallbackClassify(img) {
+        fallbackClassify() {
             // Fallback classification when MediaPipe is not available
             // Returns mock results based on image dimensions and random seeds
             const numTags = Math.floor(Math.random() * 5) + 3;
@@ -297,20 +297,20 @@
         registerMCPTools() {
             const tools = [
                 {
-                    name: "tagImage",
-                    description: "Analyze an image and return detected objects",
+                    name: 'tagImage',
+                    description: 'Analyze an image and return detected objects',
                     inputSchema: MCP_TOOLS.tagImage.inputSchema,
                     handler: (params) => this.handleTagImage(params)
                 },
                 {
-                    name: "getImageTags",
-                    description: "Get last tagging results",
+                    name: 'getImageTags',
+                    description: 'Get last tagging results',
                     inputSchema: MCP_TOOLS.getImageTags.inputSchema,
                     handler: () => this.handleGetImageTags()
                 },
                 {
-                    name: "searchByTag",
-                    description: "Search by tag",
+                    name: 'searchByTag',
+                    description: 'Search by tag',
                     inputSchema: MCP_TOOLS.searchByTag.inputSchema,
                     handler: (params) => this.handleSearchByTag(params)
                 }
@@ -374,8 +374,8 @@
             if (!imageData) {
                 return {
                     content: [{
-                        type: "text",
-                        text: JSON.stringify({ success: false, error: "No image data provided" })
+                        type: 'text',
+                        text: JSON.stringify({ success: false, error: 'No image data provided' })
                     }]
                 };
             }
@@ -393,7 +393,7 @@
 
             return {
                 content: [{
-                    type: "text",
+                    type: 'text',
                     text: JSON.stringify({
                         success: true,
                         count: results.length,
@@ -410,15 +410,15 @@
             if (!this.lastResults) {
                 return {
                     content: [{
-                        type: "text",
-                        text: JSON.stringify({ success: false, error: "No image has been analyzed yet" })
+                        type: 'text',
+                        text: JSON.stringify({ success: false, error: 'No image has been analyzed yet' })
                     }]
                 };
             }
 
             return {
                 content: [{
-                    type: "text",
+                    type: 'text',
                     text: JSON.stringify({
                         success: true,
                         tags: this.lastResults
@@ -433,8 +433,8 @@
             if (!this.lastResults) {
                 return {
                     content: [{
-                        type: "text",
-                        text: JSON.stringify({ success: false, error: "No images analyzed" })
+                        type: 'text',
+                        text: JSON.stringify({ success: false, error: 'No images analyzed' })
                     }]
                 };
             }
@@ -445,7 +445,7 @@
 
             return {
                 content: [{
-                    type: "text",
+                    type: 'text',
                     text: JSON.stringify({
                         success: true,
                         found: matches.length > 0,

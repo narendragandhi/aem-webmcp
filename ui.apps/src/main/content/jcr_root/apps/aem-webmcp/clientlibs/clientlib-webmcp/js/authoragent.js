@@ -24,8 +24,8 @@
             // We could add a floating button or integrate with the debug panel
             if (window.AEMWebMCPAutomator) {
                 window.AEMWebMCPAutomator.registerTool({
-                    name: "optimizePage",
-                    description: "Scan the page for authoring optimizations (SEO, Alt text, hierarchy)",
+                    name: 'optimizePage',
+                    description: 'Scan the page for authoring optimizations (SEO, Alt text, hierarchy)',
                     parameters: {}
                 }, () => this.runOptimizationScan());
             }
@@ -37,7 +37,7 @@
         async runOptimizationScan() {
             if (!window.AEMWebMCP) return;
 
-            window.AEMWebMCP.speakText({ text: "Starting authoring optimization scan..." });
+            window.AEMWebMCP.speakText({ text: 'Starting authoring optimization scan...' });
             
             const results = [];
             
@@ -102,7 +102,7 @@
 
         displayResults(results) {
             if (results.length === 0) {
-                window.AEMWebMCP.speakText({ text: "Great job! I found no major optimization opportunities." });
+                window.AEMWebMCP.speakText({ text: 'Great job! I found no major optimization opportunities.' });
                 return;
             }
 
