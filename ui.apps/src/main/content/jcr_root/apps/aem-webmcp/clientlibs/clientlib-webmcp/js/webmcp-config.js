@@ -7,7 +7,6 @@
  * Version: 2.1.0
  */
 
-/* global window */
 (function (window) {
     'use strict';
 

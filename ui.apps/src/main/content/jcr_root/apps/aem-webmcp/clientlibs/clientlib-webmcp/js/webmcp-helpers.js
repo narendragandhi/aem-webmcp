@@ -8,7 +8,6 @@
  * Version: 2.1.0
  */
 
-/* global window, document, CSS */
 (function (document, window) {
     'use strict';
 

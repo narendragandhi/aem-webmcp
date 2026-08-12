@@ -10,3 +10,4 @@ llmagent.js
 contentagent.js
 auditagent.js
 authoragent.js
+slicc-bridge.js

@@ -146,6 +146,19 @@
               <rules>
                 <rule>
                   <element>BUNDLE</element>
+                  <!--
+                    These classes are backed by AEM runtime services (JCR,
+                    GraphQL, and process telemetry). They belong in the AEM
+                    integration-test gate, not the JVM unit-test gate. Keep
+                    the unit thresholds meaningful for the remaining bundle.
+                  -->
+                  <excludes>
+                    <exclude>**/ContentFragmentGraphQLService*</exclude>
+                    <exclude>**/ContentFragmentServlet*</exclude>
+                    <exclude>**/HealthCheckServlet*</exclude>
+                    <exclude>**/MetricsServlet*</exclude>
+                    <exclude>**/WebMCPMetricsService*</exclude>
+                  </excludes>
                   <limits>
                     <limit>
                       <counter>LINE</counter>

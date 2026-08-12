@@ -77,6 +77,7 @@ window.WEBMCP_CONSENT = true;
 - [API Reference](docs/API-REFERENCE.md)
 - [CMS WebMCP Landscape](docs/CMS-WEBCMCP-LANDSCAPE.md)
 - [Sample AI Agent](docs/sample-agent.js)
+- [SLICC Integration](docs/SLICC-INTEGRATION.md)
 - [Contributing](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)
 
