@@ -111,6 +111,9 @@ cd playwright-tests
 npm install
 npm test
 
+# Run the CI-sized parity gate against a running AEM instance
+npm run test:ci
+
 # Run specific test suites
 npm run test:core        # Core WebMCP tests
 npm run test:forms       # Form handling tests

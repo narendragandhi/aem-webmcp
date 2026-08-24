@@ -110,6 +110,31 @@ jobs:
           path: ui.apps/target/jsdoc
           retention-days: 7
 
+  playwright-contract:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: playwright-tests/package-lock.json
+
+      - name: Install Playwright dependencies
+        working-directory: playwright-tests
+        run: npm ci
+
+      # The repository CI runner has no AEM author/publish environment. This
+      # validates the runner, lockfile, and committed parity inventory; the
+      # browser gate runs with AEM via Docker Compose or deployment CI.
+      - name: Validate Playwright test inventory
+        working-directory: playwright-tests
+        run: npm run test:ci -- --list
+
   security:
     needs: build
     runs-on: ubuntu-latest

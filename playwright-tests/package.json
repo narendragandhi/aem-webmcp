@@ -4,7 +4,6 @@
   "description": "Comprehensive Playwright E2E tests for AEM WebMCP",
   "devDependencies": {
     "@playwright/test": "^1.49.0",
-    "@axe-core/playwright": "^4.8.0",
     "typescript": "^5.0.0"
   },
   "scripts": {
@@ -24,6 +23,8 @@
     "test:accessibility": "playwright test webmcp-accessibility",
     "test:performance": "playwright test webmcp-performance",
     "test:agents": "playwright test webmcp-agents",
+    "test:parity": "playwright test tests/cypress-parity.spec.ts",
+    "test:ci": "playwright test tests/cypress-parity.spec.ts --project=chromium",
     "report": "playwright show-report",
     "codegen": "playwright codegen",
     "install-browsers": "playwright install"

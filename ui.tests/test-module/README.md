@@ -1,4 +1,8 @@
-# Cypress Sample Test Module
+# Legacy Cypress Test Module
+
+This module is retained for transition fallback only. New browser coverage
+belongs in [`../../playwright-tests`](../../playwright-tests). The supported
+steady-state command is `npm run test:ci` from that directory.
 
 This module documents the recommended structure for a Cypress test module and adheres to the Cloud Manager UI test module conventions,
 ensuring that tests will be executed and reports generated are stored in the proper location.

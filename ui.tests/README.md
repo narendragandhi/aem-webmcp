@@ -1,5 +1,11 @@
-UI Testing module (Cypress) for your AEM application
+Legacy UI Testing module (Cypress) for your AEM application
 ===
+
+Playwright is now the supported browser-test runner. Use
+[`../playwright-tests`](../playwright-tests) and `npm run test:ci` for the
+steady-state smoke/parity gate. This Cloud Manager Cypress module is retained
+temporarily as a fallback while an AEM-backed CI run validates the replacement
+and visual baselines.
 
 Sample structure for [Cypress](https://www.cypress.io) UI test module which conforms to
 AEM Cloud Manager quality gate UI test conventions.
