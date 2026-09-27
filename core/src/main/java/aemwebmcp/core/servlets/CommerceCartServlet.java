@@ -8,6 +8,8 @@ import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.jcr.resource.api.JcrResourceConstants;
 import org.apache.sling.servlets.annotations.SlingServletResourceTypes;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import aemwebmcp.core.services.WebMCPSettings;
 import org.osgi.service.component.propertytypes.ServiceDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +43,17 @@ import java.util.regex.Pattern;
         methods = {HttpConstants.METHOD_GET, HttpConstants.METHOD_POST})
 @ServiceDescription("AEM WebMCP Commerce Cart Servlet")
 public class CommerceCartServlet extends SlingAllMethodsServlet {
+    @Reference
+    private WebMCPSettings settings = new WebMCPSettings();
+
+    private boolean available(SlingHttpServletResponse response) throws IOException {
+        response.setHeader("Cache-Control", "private, no-store");
+        if (!settings.isCommerceEnabled() || !settings.isCommerceMockData() || settings.isPersistToJCR()) {
+            sendError(response, 503, "Demo cart disabled. Configure a production commerce integration separately.");
+            return false;
+        }
+        return true;
+    }
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOG = LoggerFactory.getLogger(CommerceCartServlet.class);
@@ -74,7 +87,7 @@ public class CommerceCartServlet extends SlingAllMethodsServlet {
     protected void doPost(final SlingHttpServletRequest req,
                           final SlingHttpServletResponse resp) throws ServletException, IOException {
         
-        if (!checkRateLimit(req, resp)) {
+        if (!available(resp) || !checkRateLimit(req, resp)) {
             return;
         }
         
@@ -131,7 +144,7 @@ public class CommerceCartServlet extends SlingAllMethodsServlet {
     protected void doGet(final SlingHttpServletRequest req,
                          final SlingHttpServletResponse resp) throws ServletException, IOException {
         
-        if (!checkRateLimit(req, resp)) {
+        if (!available(resp) || !checkRateLimit(req, resp)) {
             return;
         }
         
@@ -147,6 +160,10 @@ public class CommerceCartServlet extends SlingAllMethodsServlet {
         }
 
         Cart cart = SESSION_CARTS.get(sessionId);
+        if (cart != null && cart.getLastAccessTime().isBefore(Instant.now().minus(settings.getCartTimeoutMinutes(), ChronoUnit.MINUTES))) {
+            SESSION_CARTS.remove(sessionId);
+            cart = null;
+        }
         if (cart != null) {
             cart.setLastAccessTime(Instant.now());
             resp.getWriter().write(cartToJson(cart, false, csrfToken));
@@ -239,7 +256,7 @@ public class CommerceCartServlet extends SlingAllMethodsServlet {
     }
 
     private void handleAddToCart(SlingHttpServletRequest req, Cart cart) {
-        if (cart.getItems().size() >= MAX_ITEMS_PER_CART) {
+        if (cart.getItems().size() >= settings.getMaxCartItems()) {
             throw new IllegalArgumentException("Cart is full");
         }
         

@@ -1,7 +1,7 @@
 /**
  * AEM WebMCP Auto-Enhancer — Core Module
  *
- * W3C WebMCP CG-DRAFT (21 July 2026) compliant.
+ * WebMCP adapter targeting the September 2026 draft; see docs/COMPATIBILITY.md.
  * Uses registerTool() / getTools() / ontoolchange only.
  * (provideContext removed from spec March 2026)
  *
@@ -15,11 +15,15 @@
     'use strict';
 
     var A = window.AEMWebMCPAutomator || {};
+    function pageSetting(name) {
+        var element = document.querySelector('meta[name="webmcp-' + name + '"]');
+        return element ? element.content : null;
+    }
 
     A.version = '2.1.0';
-    A.debug = window.WEBMCP_DEBUG || false;
-    A.enabled = window.WEBMCP_ENABLED !== false;
-    A.consentGiven = window.WEBMCP_CONSENT === true;
+    A.debug = window.WEBMCP_DEBUG || pageSetting('debug') === 'true';
+    A.enabled = window.WEBMCP_ENABLED !== false && pageSetting('enabled') !== 'false';
+    A.consentGiven = window.WEBMCP_CONSENT === true || pageSetting('consent-required') === 'false';
 
     /** Internal registry of currently registered tool names. */
     A._registeredTools = new Map();
@@ -50,31 +54,42 @@
 
     A.toInputSchema = function (parameters) {
         var properties = {};
+        var required = [];
         Object.entries(parameters || {}).forEach(function (entry) {
             var key = entry[0], def = entry[1];
-            properties[key] = { type: def.type || 'string', description: def.description || '' };
+            properties[key] = Object.assign({ type: 'string', description: '' }, def);
+            if (def.required === true) required.push(key);
+            if (typeof def.required === 'boolean') delete properties[key].required;
         });
-        return { type: 'object', properties: properties };
+        var schema = { type: 'object', properties: properties };
+        if (required.length) schema.required = required;
+        return schema;
     };
 
     A.toModelContextTool = function (id, action) {
-        var readOnly = A.READ_ONLY_TOOLS.indexOf(id) !== -1;
+        var readOnly = action.annotations && typeof action.annotations.readOnlyHint === 'boolean'
+            ? action.annotations.readOnlyHint : A.READ_ONLY_TOOLS.indexOf(id) !== -1;
         var untrusted = A.UNTRUSTED_TOOLS.indexOf(id) !== -1;
         return {
             name: id,
             title: action.name,
             description: action.description,
-            inputSchema: A.toInputSchema(action.parameters),
-            annotations: { readOnlyHint: readOnly, untrustedContentHint: untrusted },
-            execute: async function (input) {
+            inputSchema: action.inputSchema || A.toInputSchema(action.parameters),
+            annotations: Object.assign({ readOnlyHint: readOnly, untrustedContentHint: untrusted,
+                consequentialHint: id === 'submitForm' }, action.annotations),
+            execute: async function (input, options) {
+                options = options || {};
+                A.throwIfAborted(options.signal);
+                if (!A.enabled) throw new Error('WebMCP is disabled');
+                if (!input || typeof input !== 'object' || Array.isArray(input)) throw new TypeError('Tool input must be an object');
                 if (!readOnly) {
                     var allowed = await A.ensureAgentConsent();
                     if (!allowed) {
-                        return { content: [{ type: 'text', text: JSON.stringify({ success: false, error: 'User consent required' }) }] };
+                        return { success: false, error: 'User consent required. Use the page approval controls, then retry.' };
                     }
                 }
-                var result = await action.execute(input);
-                return { content: [{ type: 'text', text: JSON.stringify(result) }] };
+                A.throwIfAborted(options.signal);
+                return action.execute(input, options);
             }
         };
     };
@@ -91,21 +106,48 @@
     };
 
     A.ensureAgentConsent = async function () {
-        if (A.consentGiven || window.WEBMCP_AUTO_CONSENT === true || window.AEM_WEBMCP_CONSENT === true) {
+        if (A.canExposeAPI() || window.WEBMCP_CONSENT === true || window.AEM_WEBMCP_CONSENT === true ||
+                (window.AEMWebMCP && window.AEMWebMCP.consented)) {
             A.consentGiven = true;
             return true;
         }
-        var mc = A._getModelContext();
-        if (mc && typeof mc.requestUserInteraction === 'function') {
-            try {
-                var granted = await mc.requestUserInteraction();
-                A.consentGiven = granted !== false;
-                return A.consentGiven;
-            } catch (e) {
-                return false;
-            }
-        }
+        if (window.AEMWebMCP) window.AEMWebMCP._showConsentUI();
         return false;
+    };
+
+    A.throwIfAborted = function (signal) {
+        if (signal && signal.aborted) throw signal.reason || new DOMException('Operation canceled', 'AbortError');
+    };
+
+    // Application confirmation, not a WebMCP browser API. Never latches approval.
+    A.confirmAction = function (message, signal) {
+        A.throwIfAborted(signal);
+        return new Promise(function (resolve, reject) {
+            var previousFocus = document.activeElement;
+            var dialog = document.createElement('dialog');
+            dialog.setAttribute('aria-label', 'Confirm form submission');
+            var text = document.createElement('p');
+            text.textContent = message;
+            var cancel = document.createElement('button');
+            cancel.textContent = 'Cancel';
+            var confirm = document.createElement('button');
+            confirm.textContent = 'Submit request';
+            dialog.append(text, cancel, confirm);
+            document.body.appendChild(dialog);
+            function finish(approved, error) {
+                if (signal) signal.removeEventListener('abort', abort);
+                dialog.remove();
+                if (previousFocus && previousFocus.isConnected) previousFocus.focus();
+                if (error) reject(error); else resolve(approved);
+            }
+            function abort() { finish(false, signal.reason || new DOMException('Operation canceled', 'AbortError')); }
+            cancel.onclick = function () { finish(false); };
+            confirm.onclick = function () { finish(true); };
+            dialog.addEventListener('cancel', function (event) { event.preventDefault(); finish(false); });
+            if (signal) signal.addEventListener('abort', abort, { once: true });
+            dialog.showModal();
+            cancel.focus();
+        });
     };
 
     // ==================== TOOL REGISTRATION ====================
@@ -135,7 +177,7 @@
             try {
                 if (typeof mc.registerTool === 'function') {
                     var controller = new AbortController();
-                    mc.registerTool(tool, { signal: controller.signal })
+                    Promise.resolve(mc.registerTool(tool, { signal: controller.signal }))
                         .then(function () {
                             A._registeredTools.set(tool.name, { tool: tool, controller: controller });
                             A._health.registered++;
@@ -174,6 +216,8 @@
             name: definition.title || definition.name,
             description: definition.description,
             parameters: definition.parameters,
+            inputSchema: definition.inputSchema,
+            annotations: definition.annotations,
             execute: handler
         };
         var tool = A.toModelContextTool(definition.name, action);
@@ -187,12 +231,12 @@
         var mc = A._getModelContext();
         var unregister = function () {};
 
-        if (mc) {
+        if (mc && A.enabled) {
             try {
                 if (typeof mc.registerTool === 'function') {
                     var controller = new AbortController();
-                    mc.registerTool(tool, { signal: controller.signal }).then(function () {
-                        A._registeredTools.set(tool.name, { tool: tool, controller: controller });
+                    Promise.resolve(mc.registerTool(tool, { signal: controller.signal, exposedTo: definition.exposedTo || [] })).then(function () {
+                        if (!controller.signal.aborted) A._registeredTools.set(tool.name, { tool: tool, controller: controller });
                     }).catch(function (e) {
                         A.debug && console.warn('[WebMCP] Could not register tool:', definition.name, e);
                     });
@@ -272,8 +316,8 @@
             findComponent: { name: 'Find Component', description: 'Find a component by action type', parameters: { type: { type: 'string', description: 'Component action type (e.g., search, form, accordion)' }, index: { type: 'integer', description: 'Index if multiple components of same type' } }, execute: function (params) { return self.findComponent(params && params.type, (params && params.index) || 0); } },
             findComponentsByCategory: { name: 'Find Components By Category', description: 'Find all components in a category', parameters: { category: { type: 'string', description: 'Category (commerce, navigation, content, layout, form, media, experience)' } }, execute: function (params) { return self.getAllComponents(params && params.category); } },
             interactComponent: { name: 'Interact with Component', description: 'Perform an action on a component', parameters: { selector: { type: 'string', description: 'CSS selector of the component' }, action: { type: 'string', description: 'Action to perform (click, expand, collapse, select-tab, next, prev, etc.)' }, options: { type: 'object', description: 'Additional options (e.g., { index: 0 })' } }, execute: function (params) { return self.interactComponent(params && params.selector, params && params.action, params && params.options); } },
-            fillForm: { name: 'Fill Form Field', description: 'Fill a form field with a value', parameters: { selector: { type: 'string', description: 'CSS selector for input' }, value: { type: 'string', description: 'Value to fill' } }, execute: function (params) { return self.fillFormField(params && params.selector, params && params.value); } },
-            submitForm: { name: 'Submit Form', description: 'Submit a form', parameters: { selector: { type: 'string', description: 'CSS selector for form' } }, execute: function (params) { return self.submitForm(params && params.selector); } },
+            fillForm: { name: 'Fill Form Field', description: 'Fill a form field with a value', parameters: { selector: { type: 'string', required: true, description: 'CSS selector for input' }, value: { type: 'string', required: true, description: 'Value to fill' } }, execute: function (params, options) { return self.fillFormField(params && params.selector, params && params.value, options); } },
+            submitForm: { name: 'Submit Form', description: 'Validate a form and ask the user to confirm submission. Returns submitted, not delivery success.', parameters: { selector: { type: 'string', required: true, description: 'CSS selector for form' } }, execute: function (params, options) { return self.submitForm(params && params.selector, options); } },
             getFormFields: { name: 'Get Form Fields', description: 'Get all fields in a form', parameters: { selector: { type: 'string', description: 'CSS selector for form' } }, execute: function (params) { return self.getFormFields(params && params.selector); } },
             navigate: { name: 'Navigate', description: 'Navigate to a URL', parameters: { url: { type: 'string', description: 'Target URL' } }, execute: function (params) { window.location.href = params && params.url; return { success: true, url: params && params.url }; } },
             clickElement: { name: 'Click Element', description: 'Click an element by selector', parameters: { selector: { type: 'string', description: 'CSS selector' } }, execute: function (params) { return self.interactComponent(params && params.selector, 'click'); } },
@@ -303,8 +347,10 @@
             consented: !!window.AEM_WEBMCP_CONSENT,
 
             _checkConsent: function () {
-                if (this.consented || window.AEM_WEBMCP_CONSENT === true) {
+                if (!self.enabled) return false;
+                if (this.consented || self.canExposeAPI() || window.WEBMCP_CONSENT === true || window.AEM_WEBMCP_CONSENT === true) {
                     this.consented = true;
+                    self.consentGiven = true;
                     return true;
                 }
                 this._showConsentUI();
@@ -355,6 +401,7 @@
 
                 bar.querySelector('.btn-allow').onclick = function () {
                     window.AEMWebMCP.consented = true;
+                    self.consentGiven = true;
                     bar.classList.remove('visible');
                     setTimeout(function () { host.remove(); }, 500);
                 };
@@ -376,7 +423,13 @@
             if (!action) return;
             window.AEMWebMCP[id] = function () {
                 if (window.AEMWebMCP._checkConsent()) {
-                    return action.execute.apply(self, arguments);
+                    var input = arguments[0];
+                    if (!input || typeof input !== 'object') {
+                        input = {};
+                        var args = arguments;
+                        Object.keys(action.parameters || {}).forEach(function (key, index) { input[key] = args[index]; });
+                    }
+                    return action.execute(input);
                 }
                 return { success: false, error: 'User consent required' };
             };

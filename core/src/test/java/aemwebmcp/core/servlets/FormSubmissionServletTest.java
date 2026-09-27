@@ -19,6 +19,30 @@ import static org.mockito.Mockito.*;
 
 @MockitoSettings(strictness = Strictness.LENIENT)
 class FormSubmissionServletTest {
+    @Test
+    void limiterExpiresAndIsolatesClients() {
+        FormSubmissionServlet servlet = new FormSubmissionServlet();
+        for (int i = 0; i < 10; i++) assertTrue(servlet.allowRequest("client-a", 1000));
+        assertFalse(servlet.allowRequest("client-a", 60_999));
+        assertTrue(servlet.allowRequest("client-b", 60_999));
+        assertTrue(servlet.allowRequest("client-a", 61_000));
+    }
+
+    @Test
+    void limiterUpdatesAtomically() {
+        FormSubmissionServlet servlet = new FormSubmissionServlet();
+        long accepted = java.util.stream.IntStream.range(0, 100).parallel()
+            .filter(i -> servlet.allowRequest("same-client", 1000)).count();
+        assertEquals(10, accepted);
+    }
+
+    @Test
+    void invalidCsrfDoesNotConsumeSubmissionAllowance() throws Exception {
+        when(request.getParameter("csrfToken")).thenReturn("wrong");
+        for (int i = 0; i < 12; i++) fixture.doPost(request, response);
+        verify(response, never()).setStatus(429);
+        assertTrue(fixture.allowRequest("unknown", System.currentTimeMillis()));
+    }
 
     private FormSubmissionServlet fixture;
     private static final String CSRF_TOKEN = "valid-token";

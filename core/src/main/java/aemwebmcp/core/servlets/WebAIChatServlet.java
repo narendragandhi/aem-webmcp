@@ -6,6 +6,7 @@
 package aemwebmcp.core.servlets;
 
 import aemwebmcp.core.services.WebAIChatService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.HttpConstants;
@@ -18,6 +19,7 @@ import org.osgi.service.component.propertytypes.ServiceDescription;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * Servlet that provides server-side LLM processing fallback.
@@ -34,6 +36,7 @@ import java.io.IOException;
 public class WebAIChatServlet extends SlingAllMethodsServlet {
 
     private static final long serialVersionUID = 1L;
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @Reference
     private transient WebAIChatService chatService;
@@ -50,13 +53,13 @@ public class WebAIChatServlet extends SlingAllMethodsServlet {
 
         if (message == null || message.isEmpty()) {
             response.setStatus(SlingHttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write("{\"error\":\"Message is required\"}");
+            response.getWriter().write(MAPPER.writeValueAsString(Map.of("error", "Message is required")));
             return;
         }
 
         // Delegate to server-side AI service (e.g., Vertex AI / OpenAI / Gemini Pro)
         String aiResponse = chatService.chat(sessionId != null ? sessionId : "default", message);
         
-        response.getWriter().write("{\"response\":\"" + aiResponse.replace("\"", "\\\"") + "\"}");
+        response.getWriter().write(MAPPER.writeValueAsString(Map.of("response", aiResponse)));
     }
 }

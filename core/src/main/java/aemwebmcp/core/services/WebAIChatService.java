@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -127,7 +128,13 @@ public class WebAIChatService {
      * @return List of ChatMessages for this session. Returns empty list if no history exists.
      */
     public List<ChatMessage> getHistory(String sessionId) {
-        return sessions.getOrDefault(sessionId, new ArrayList<>());
+        List<ChatMessage> history = sessions.get(sessionId);
+        if (history == null) {
+            return new ArrayList<>();
+        }
+        synchronized (history) {
+            return new ArrayList<>(history);
+        }
     }
 
     /**
@@ -139,18 +146,19 @@ public class WebAIChatService {
      * @param content The message text.
      */
     public void addMessage(String sessionId, String role, String content) {
-        sessions.computeIfAbsent(sessionId, k -> new ArrayList<>());
-        List<ChatMessage> history = sessions.get(sessionId);
-        
-        history.add(new ChatMessage(role, content));
-        
-        if (history.size() > MAX_HISTORY) {
-            history.remove(0);
+        List<ChatMessage> history = sessions.computeIfAbsent(sessionId, k -> Collections.synchronizedList(new ArrayList<>()));
+        synchronized (history) {
+            history.add(new ChatMessage(role, content));
+            if (history.size() > MAX_HISTORY) {
+                history.remove(0);
+            }
         }
         
         if (sessions.size() > MAX_SESSIONS) {
             String oldestKey = sessions.keySet().iterator().next();
-            sessions.remove(oldestKey);
+            if (oldestKey != null) {
+                sessions.remove(oldestKey);
+            }
         }
         
         LOG.debug("Added message to session {}: {} - {}", sessionId, role, content.substring(0, Math.min(50, content.length())));
@@ -215,9 +223,14 @@ public class WebAIChatService {
      */
     public ChatMessage getLastMessage(String sessionId) {
         List<ChatMessage> history = sessions.get(sessionId);
-        if (history == null || history.isEmpty()) {
+        if (history == null) {
             return null;
         }
-        return history.get(history.size() - 1);
+        synchronized (history) {
+            if (history.isEmpty()) {
+                return null;
+            }
+            return history.get(history.size() - 1);
+        }
     }
 }

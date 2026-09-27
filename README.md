@@ -1,114 +1,68 @@
-# AEM WebMCP - AI Agent Ready
+# AEM WebMCP reference
 
-> WebMCP (Web Model Context Protocol) integration for AEM Core Components
+A community implementation and practical cookbook for browser agents working with Adobe Experience Manager.
 
-[![CI](https://github.com/narendragandhi/aem-webmcp/actions/workflows/ci.yml/badge.svg)](https://github.com/narendragandhi/aem-webmcp/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![AEM Version](https://img.shields.io/badge/AEM-6.5%2B+-yellow.svg)]()
-[![Core Components](https://img.shields.io/badge/Core%20Components-2.0%2B-green.svg)]()
+**Start with the [form journey](docs/FORM-JOURNEY.md).** It demonstrates native declarative discovery, an imperative business tool, visible confirmation, cancellation, revision checks, and a shared human/agent submission path.
 
-## Overview
+WebMCP remains experimental. This repository is a reference implementation with demo backends, not a production certification. See the [compatibility matrix](docs/COMPATIBILITY.md) for measured results and limitations.
 
-AEM WebMCP automatically enhances Adobe Experience Manager sites with WebMCP capabilities, enabling AI agents to interact with your site in a structured, reliable way - no custom component development required.
+## Try it without AEM
 
-## What is WebMCP?
+Requires Node.js 22 or newer. From the repository root:
 
-WebMCP (Web Model Context Protocol) is a browser API developed jointly by Microsoft and Google in the W3C Web Machine Learning Community Group. Websites register structured tools on `document.modelContext` (with `navigator.modelContext` fallback in current origin trials), which browser-hosted AI agents (Edge 147+, Chrome 149 origin trial) can discover and invoke. Instead of AI agents clicking around blindly, they can:
-
-- Understand site structure and components
-- Fill forms with proper field validation
-- Navigate precisely without guessing
-- Perform complex e-commerce actions
-
-## Features
-
-- **50+ AEM Core Components** automatically detected and enhanced
-- **Zero configuration** - auto-loads via clientlib
-- **Consent-based** API exposure for AI agents
-- **Debug panel** for development
-- **Accessibility tree** support
-- **AI Tools API** for discovering capabilities
-- **Screenshot support** for vision-enabled agents
-- **Production-ready** with OWASP security scanning
-
-## Demo
-
-![AEM WebMCP debug panel showing components detected on a live AEM page](./test-site/webmcp-test-results.png)
-
-> The WebMCP debug panel (bottom-right) shows all components detected and registered as AI-accessible tools in real time. Zero configuration required — the clientlib auto-loads and scans the page on every render.
-
-### Verify the agent contract yourself
-
-`test-site/mock-agent.js` is a spec-exact mock of `navigator.modelContext`
-(the API surface of Edge 147 / Chrome 149). Serve `test-site/`, inject the
-mock before page load (e.g. Playwright `addInitScript`), and the page
-registers 25 tools that the "agent" can discover and invoke — including the
-`requestUserInteraction()` consent flow for state-changing tools. See
-`docs/CODE-REVIEW-2026-07.md` for the recorded verification run.
-
----
-
-## Quick Start
-
-```bash
-# Build the project
-mvn clean install
-
-# Deploy to AEM Author
-mvn install -PautoInstallSinglePackage -Daem.host=localhost -Daem.port=4502
+```sh
+node test-site/server.mjs
 ```
 
-## Configuration
+Open <http://127.0.0.1:4178>. The manual form works without WebMCP. The local server returns a clearly labeled simulated receipt; it does not store messages or create tickets.
 
-```javascript
-// Enable debug
-window.WEBMCP_DEBUG = true;
+For native tools, use a compatible Chrome build with `chrome://flags/#enable-webmcp-testing` enabled. The playground displays the tools the browser actually reports. Click **Enable assistant access**, approve access, then use the browser tool inspector. A fresh confirmation is required before sending each request.
 
-// Show debug panel
-window.WEBMCP_SHOW_PANEL = true;
+## Learn and integrate
 
-// Enable AI agent API (requires consent)
-window.WEBMCP_CONSENT = true;
+| Resource | What you get |
+| --- | --- |
+| [Getting started](docs/GETTING-STARTED.md) | Build, clientlibs, AEM installation and smoke checks |
+| [Flagship form journey](docs/FORM-JOURNEY.md) | Complete runnable example, AEM integration boundaries and acceptance steps |
+| [API reference](docs/API-REFERENCE.md) | Native tools, public wrappers, cancellation, schemas and results |
+| [Compatibility](docs/COMPATIBILITY.md) | Draft versus shipped APIs, tested browser versions, native versus fallback evidence |
+| [AEM cookbook](docs/COOKBOOK.md) | Sites, Forms, Content Fragments, CIF, authoring and Edge Delivery integration patterns |
+| [Deployment](docs/DEPLOYMENT.md) | Author/publish separation, CSRF, Dispatcher, caching and frame policies |
+| [Mini Paint lessons](docs/MINI-PAINT-LESSONS.md) | Shared commands, human edits, undo and transport verification applied to AEM |
+| [Roadmap](docs/ROADMAP.md) | Remaining work with explicit completion criteria |
+| [SLICC bridge](docs/SLICC-INTEGRATION.md) | Optional application adapter; separate from native WebMCP |
+
+## Verify
+
+```sh
+npm ci --prefix ui.apps
+npm test --prefix ui.apps -- --runInBand
+npm run lint --prefix ui.apps
+mvn -B -pl core test
+
+npm ci --prefix playwright-tests
+npm exec --prefix playwright-tests -- playwright install chromium
+npm run test:reference --prefix playwright-tests
+
+# Installed Chrome; absence of the required native API is a failure.
+WEBMCP_BROWSER_CHANNEL=chrome npm run test:native --prefix playwright-tests
 ```
 
-## Documentation
+The reference suite serves the clientlib sources directly. No AEM, LLM key or mocked browser API is required. Native certification is separate from passing ordinary DOM tests. CI runs both reference and native Chrome checks, not just a test inventory.
 
-- [Getting Started](docs/GETTING-STARTED.md)
-- [API Reference](docs/API-REFERENCE.md)
-- [CMS WebMCP Landscape](docs/CMS-WEBCMCP-LANDSCAPE.md)
-- [Sample AI Agent](docs/sample-agent.js)
-- [SLICC Integration](docs/SLICC-INTEGRATION.md)
-- [Contributing](CONTRIBUTING.md)
-- [Changelog](CHANGELOG.md)
+## What is included?
 
-## Supported Components
+- An imperative adapter using `document.modelContext` with a legacy `navigator.modelContext` fallback.
+- Core Component discovery helpers and the existing 25 generic actions.
+- An opt-in JSON form example with native declarative annotations.
+- Per-execution cancellation and per-submission confirmation.
+- OSGi settings consumed by demo endpoints and rendered into page configuration.
+- Optional AI demos and a SLICC bridge, with separate deployment requirements.
 
-| Category | Components |
-|----------|------------|
-| Commerce | Search, Cart, Product, Featured Products |
-| Navigation | Navigation, Language Nav, Breadcrumb |
-| Content | Text, Title, Image, Teaser, Download, Embed |
-| Layout | Container, Accordion, Tabs, Carousel |
-| Forms | Form, Text, Button, Hidden, Options |
-| Media | PDF Viewer |
-| Experience | Experience Fragment |
+The cart and legacy form servlet are demos. Disabling their mock mode does not create a production backend. Content Fragment service limitations and unverified AEM deployment variants are tracked in the roadmap.
 
-## Requirements
+## Standards and community
 
-- AEM 6.5+ or AEM as a Cloud Service
-- AEM Core Components 2.0+
-- Maven 3.6+
+Start with the [WebMCP draft](https://webmachinelearning.github.io/webmcp/) and [Chrome documentation](https://developer.chrome.com/docs/ai/webmcp/). Native WebMCP runs in a page context; it is distinct from a remote MCP server and from JSON-LD metadata.
 
-## Community Project
-
-> **Disclaimer:** AEM WebMCP is a community project. It is not endorsed by, affiliated with, or maintained by Adobe. All comparisons and feature claims should be verified against current releases.
-
-## License
-
-Copyright 2024 Sonam Gandhi and contributors. Licensed under Apache License 2.0.
-
-## Resources
-
-- [WebMCP Documentation](https://developer.chrome.com/blog/webmcp-epp)
-- [AEM Core Components](https://github.com/adobe/aem-core-wcm-components)
-- [WebMCP W3C Spec](https://github.com/WICG/web-mcp)
+Community project; not maintained or endorsed by Adobe. Contributions should include a runnable example and independent outcome assertions. See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and the Apache-2.0 [license](LICENSE).

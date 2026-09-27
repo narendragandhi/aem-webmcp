@@ -100,8 +100,8 @@ public class HealthCheckServlet extends SlingSafeMethodsServlet {
     private boolean checkJCR() {
         try {
             if (repository != null) {
-                repository.loginAdministrative(null);
-                return true;
+                // Descriptor access does not create a privileged, unclosed session.
+                return repository.getDescriptor("jcr.repository.name") != null;
             }
         } catch (Exception e) {
             LOG.warn("JCR health check failed: {}", e.getMessage());

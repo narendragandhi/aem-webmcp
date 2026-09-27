@@ -131,7 +131,8 @@
             var entry = automator._registeredTools.get(name);
             if (entry && entry.tool && typeof entry.tool.execute === 'function') {
                 try {
-                    return await entry.tool.execute(input && typeof input === 'object' ? input : {});
+                    var result = await entry.tool.execute(input && typeof input === 'object' ? input : {});
+                    return result && Array.isArray(result.content) ? result : contentResult(result);
                 } catch (error) {
                     return errorResult(String(error && error.message ? error.message : error));
                 }

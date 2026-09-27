@@ -1,239 +1,59 @@
-# AEM WebMCP - Getting Started Guide
+# Getting started
 
-This guide will help you get up and running with AEM WebMCP quickly.
+Begin with the [standalone form journey](FORM-JOURNEY.md). It needs Node.js 22+, runs without AEM, and exposes browser capability diagnostics.
 
-## Prerequisites
+## Build and install on AEM
 
-- AEM 6.5+ or AEM as a Cloud Service
-- AEM Core Components 2.0+
-- Maven 3.6+
+Use the JDK and Maven versions in `pom.xml` and CI. The current project compiles against the AEM SDK and Core Components 2.28.0. Treat AEM 6.5 and Cloud Service compatibility as separate checks, not interchangeable version claims.
 
-## Quick Start
-
-### 1. Build and Deploy
-
-```bash
-# Clone and build
-git clone <repo-url>
+```sh
+git clone https://github.com/narendragandhi/aem-webmcp.git
 cd aem-webmcp
-mvn clean install -DskipTests
-
-# Deploy to AEM Author (localhost:4502)
-cd all
-mvn install -PautoInstallSinglePackage -Daem.host=localhost -Daem.port=4502
-
-# Or deploy to AEM Publish
-mvn install -PautoInstallSinglePackage -Daem.host=localhost -Daem.port=4503
+mvn -B clean install
+mvn -B -pl all -PautoInstallSinglePackage install -Daem.host=localhost -Daem.port=4502
 ```
 
-### 2. Configure Your Site
+Only run installation against your development instance. Visit `/content/aem-webmcp/us/en.html`. Live AEM validation is not implied by unit or standalone browser tests.
 
-Option A: Use the AEM WebMCP Page component:
-```
-sling:resourceSuperType = aem-webmcp/components/page
-```
+## Existing Sites pages
 
-Option B: Add clientlibs to existing page:
+Retain your project's Core Component page proxy and include the WebMCP clientlib:
+
 ```html
 <sly data-sly-use.clientlib="core/wcm/components/commons/v1/templates/clientlib.html">
-    <sly data-sly-call="${clientlib.js @ categories='aem-webmcp.base'}"/>
+    <sly data-sly-call="${clientlib.js @ categories='aemwebmcp.webmcp'}"/>
 </sly>
 ```
 
-### 3. Verify Installation
+The bundled base clientlib `aem-webmcp.base` already embeds it; do not load both.
 
-1. Visit any page on your AEM instance
-2. Open browser console
-3. Run: `AEMWebMCP.getPageInfo()`
-4. You should see page info returned
+For OSGi-backed frontend settings, also include the project's `aem-webmcp/components/page/webmcp-head` resource or render its three meta settings using `WebMCPStatusModel`. Include them before JavaScript runs. Changing server configuration requires cached pages to be refreshed; it is not a live browser revocation mechanism.
 
-Or enable debug panel:
-```javascript
-window.WEBMCP_SHOW_PANEL = true;
-```
+## Configuration and consent
 
-## Demo Page
+The PID `com.aem.webmcp.WebMCPConfiguration` is consumed by `WebMCPSettings`. Existing page metadata communicates enablement, debug and consent requirements. The same settings control demo endpoint enablement and supported limits.
 
-After installation, visit:
-- `/content/aem-webmcp/us/en.html`
+On non-AEM pages, set these flags **before** scripts load:
 
-This demo page showcases:
-- Search component
-- Contact form (text, email, options, button)
-- Accordion with FAQ
-- Tabs
-- Teasers
-- Download
-- Breadcrumb
-
-## Using with AI Agents
-
-### Browser Console
-
-```javascript
-// Initialize agent
-const agent = new AEMWebMCPAgent();
-
-// Discover components
-await agent.discover();
-
-// Run demo
-await agent.demoJourney();
-```
-
-### Programmatic Usage
-
-```javascript
-// Get all components
-const components = AEMWebMCP.getComponents();
-
-// Filter by category
-const forms = AEMWebMCP.getComponents('form');
-
-// Search
-AEMWebMCP.search('products');
-
-// Fill form
-AEMWebMCP.fillForm('input[name="email"]', 'user@example.com');
-AEMWebMCP.submitForm('form');
-
-// Interact
-AEMWebMCP.interact('.accordion', 'expand');
-AEMWebMCP.interact('.tabs', 'select-tab', { index: 1 });
-```
-
-## Configuration
-
-### Enable Debug Mode
-```javascript
-window.WEBMCP_DEBUG = true;
-```
-
-### Show Debug Panel
-```javascript
-window.WEBMCP_SHOW_PANEL = true;
-```
-
-### Disable WebMCP Completely
-```javascript
-window.WEBMCP_ENABLED = false;
-```
-
-### Consent-Based API Exposure
-By default, WebMCP exposes actions via `document.modelContext` (with `navigator.modelContext` fallback). To enable:
-```javascript
-// Opt-in to expose WebMCP actions to AI agents
-window.WEBMCP_CONSENT = true;
-
-// Or auto-consent (for development only)
-window.WEBMCP_AUTO_CONSENT = true;
-```
-
-### Disable for Specific Elements
 ```html
-<div data-webmcp-disabled="true">
-    <!-- This won't be enhanced -->
-</div>
+<script>
+  window.WEBMCP_DEBUG = true;
+  window.WEBMCP_SHOW_PANEL = true;
+</script>
 ```
 
-## Building
+Use `AEMWebMCP._showConsentUI()` to request application access. Approval enables native mutation calls and the public API consistently. It does not replace backend authorization or per-submission confirmation. `WEBMCP_AUTO_CONSENT` is for controlled development only.
 
-### Standard Build
-```bash
-mvn clean install
+`data-webmcp-disabled="true"` excludes a component subtree from enhancement and supported interaction helpers. It is not an ACL or a mechanism to hide data from other page scripts.
+
+## Verify
+
+```js
+const mc = document.modelContext || navigator.modelContext;
+const tools = mc ? await mc.getTools() : [];
+console.table(tools.map(({name, description}) => ({name, description})));
 ```
 
-### Production Build
-Skips tests and uses higher CVSS threshold:
-```bash
-mvn clean install -Pproduction
-```
+A successful call to `window.AEMWebMCP` alone proves only the application API. Follow [native verification](COMPATIBILITY.md) for the browser path.
 
-### Skip OWASP Check
-```bash
-mvn clean install -Dowasp.skip=true
-```
-
-### Set NVD API Key
-Get a free key from https://nvd.nist.gov/developers/request-an-api-key
-```bash
-export NVD_API_KEY=your-key-here
-mvn clean install
-```
-
-### Build Profiles
-
-| Profile | Purpose |
-|---------|---------|
-| default | Full build with tests |
-| production | Optimized for production (skip tests, CVSS 9+) |
-| autoInstallBundle | Deploy bundle only to AEM |
-| autoInstallPackage | Deploy content package to AEM |
-
-## Testing
-
-### Unit Tests
-```bash
-mvn test -pl core
-```
-
-### Integration Tests
-```bash
-mvn verify -Plocal -pl it.tests
-```
-
-### E2E Tests
-```bash
-cd ui.tests/test-module
-npm install
-npm test
-```
-
-## JSON-LD Structured Data
-
-The package automatically adds JSON-LD to your pages:
-- WebSite with search action
-- WebPage with breadcrumbs
-- AI Agent capabilities
-
-This improves SEO and enables AI agents to understand your site.
-
-## Supported Components
-
-| Category | Components |
-|----------|------------|
-| Commerce | Search, Cart, Product, Featured Products |
-| Navigation | Navigation, Language Nav, Breadcrumb |
-| Content | Text, Title, Image, Teaser, Download, Embed |
-| Layout | Container, Accordion, Tabs, Carousel |
-| Forms | Form, Text, Button, Hidden, Options |
-| Media | PDF Viewer |
-| Experience | Experience Fragment |
-
-## Troubleshooting
-
-### WebMCP not loading?
-- Check browser console for errors
-- Verify clientlibs are loaded: `document.querySelectorAll('[data-webmcp-action]').length`
-
-### Components not detected?
-- Ensure Core Components are on the page
-- Check element has `data-resource-type` or `data-cq-resource-path`
-
-### Debug panel not showing?
-- Set `window.WEBMCP_SHOW_PANEL = true` in console
-- Refresh the page
-
-## Next Steps
-
-1. Deploy to your AEM environment
-2. Test with the demo page
-3. Try the sample AI agent: `docs/sample-agent.js`
-4. Enable debug panel to see all components
-5. Check JSON-LD in page source
-
-## Resources
-
-- [WebMCP Documentation](https://developer.chrome.com/blog/webmcp-epp)
-- [AEM Core Components](https://github.com/adobe/aem-core-wcm-components)
-- [WebMCP W3C Spec](https://github.com/WICG/web-mcp)
+See [deployment](DEPLOYMENT.md) before publishing and the [cookbook](COOKBOOK.md) for integration choices.

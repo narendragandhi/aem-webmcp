@@ -6,6 +6,8 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.servlets.annotations.SlingServletResourceTypes;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import aemwebmcp.core.services.WebMCPSettings;
 import org.osgi.service.component.propertytypes.ServiceDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +31,8 @@ import java.util.regex.Pattern;
         methods = "GET")
 @ServiceDescription("AEM WebMCP Search Servlet")
 public class SearchServlet extends SlingSafeMethodsServlet {
+    @Reference
+    private WebMCPSettings settings = new WebMCPSettings();
 
     private static final long serialVersionUID = 1L;
 
@@ -66,6 +70,10 @@ public class SearchServlet extends SlingSafeMethodsServlet {
     protected void doGet(final SlingHttpServletRequest req,
                           final SlingHttpServletResponse resp) throws ServletException, IOException {
         
+        if (!settings.isSearchEnabled() || !settings.isSearchMockData()) {
+            sendError(resp, 503, "Search is disabled or no production search backend is configured");
+            return;
+        }
         if (!isWithinRateLimit(req)) {
             sendError(resp, 429, "Rate limit exceeded");
             return;
@@ -74,6 +82,10 @@ public class SearchServlet extends SlingSafeMethodsServlet {
         String query = req.getParameter("query");
         String fullText = req.getParameter("fullText");
         String searchTerm = (query != null ? query : (fullText != null ? fullText : "")).trim();
+        if (!searchTerm.isEmpty() && searchTerm.length() < settings.getMinQueryLength()) {
+            sendError(resp, 400, "Query is too short");
+            return;
+        }
         
         if (searchTerm.length() > MAX_QUERY_LENGTH) {
             sendError(resp, 400, "Query too long");
@@ -123,7 +135,7 @@ public class SearchServlet extends SlingSafeMethodsServlet {
         if (term.isEmpty()) return results;
         String lower = term.toLowerCase();
         for (Map<String, String> item : MOCK_CONTENT) {
-            if (results.size() >= MAX_RESULTS) break;
+            if (results.size() >= settings.getMaxResults()) break;
             if (item.get("title").toLowerCase().contains(lower) || 
                 item.get("description").toLowerCase().contains(lower)) {
                 results.add(new HashMap<>(item));

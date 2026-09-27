@@ -2,8 +2,12 @@
     WebMCP Metadata & Security
     Declares AI capabilities and security constraints
 */-->
-<meta name="webmcp-enabled" content="true">
-<meta name="webmcp-version" content="1.0">
+<sly data-sly-use.settings="aemwebmcp.core.models.webmcp.WebMCPStatusModel">
+    <meta name="webmcp-enabled" content="${settings.enabled ? 'true' : 'false'}">
+    <meta name="webmcp-debug" content="${settings.debug ? 'true' : 'false'}">
+    <meta name="webmcp-consent-required" content="${settings.consentRequired ? 'true' : 'false'}">
+</sly>
+<meta name="webmcp-version" content="2.1.0">
 
 <sly data-sly-use.webmcpJsonLd="aemwebmcp.core.models.webmcp.WebMCPJsonLdModel"
      data-sly-test="${webmcpJsonLd.hasWebMCPComponents}">

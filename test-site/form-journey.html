@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AEM WebMCP • Interactive AI Agent Showcase</title>
+  <link rel="stylesheet" href="/form-journey.css">
+  <script defer src="/clientlib/webmcp-config.js"></script>
+  <script defer src="/clientlib/webmcp-helpers.js"></script>
+  <script defer src="/clientlib/webmcp.js"></script>
+  <script defer src="/clientlib/form-journey.js"></script>
+  <script defer src="/form-playground.js"></script>
+</head>
+<body>
+  <header>
+    <a href="/form-journey.html">AEM / WebMCP</a>
+    <span>🤖 WebMCP Agent Enabled</span>
+  </header>
+  <main>
+    <section class="intro">
+      <p class="eyebrow">01 / Agentic AI Forms</p>
+      <h1>A request you can<br>see, review, and stop.</h1>
+      <p class="lead">One visible form. The same confirmation and submission path for people and browser agents.</p>
+      <p class="notice">Demo only: this server validates your request and returns a simulated receipt. It does not create a support ticket or store your message. Use fictional details.</p>
+    </section>
+    <div class="workspace">
+      <section class="card">
+        <h2>Ask for support</h2>
+        <form id="support" name="support request" action="/api/support" method="post"
+              toolname="prepare_support_request"
+              tooldescription="Prepare a support request in the visible form. The user reviews and submits it manually."
+              data-webmcp-json-form data-webmcp-tool="submit_support_request">
+          <label for="fullName">Full name</label>
+          <input id="fullName" name="fullName" required minlength="2" maxlength="100" autocomplete="name" toolparamdescription="Your full name">
+          <label for="email">Reply email</label>
+          <input id="email" name="email" type="email" required maxlength="254" autocomplete="email" toolparamdescription="Email for the response">
+          <label for="message">How can we help?</label>
+          <textarea id="message" name="message" required minlength="10" maxlength="5000" rows="5" toolparamdescription="Describe the support request"></textarea>
+          <div class="actions"><button type="submit">Review request</button><button type="button" data-cancel-request class="secondary">Cancel request</button><button type="reset" class="secondary">Clear</button></div>
+          <pre role="status" aria-live="polite">No request submitted.</pre>
+        </form>
+      </section>
+      <aside class="card">
+        <p class="eyebrow">Inspect the contract</p>
+        <h2>Browser tools</h2>
+        <p id="capability" role="status">Checking native API…</p>
+        <div class="actions"><button id="enable" class="secondary">Enable assistant access</button><button id="refresh" class="secondary">Refresh tools</button></div>
+        <pre id="tools">Loading…</pre>
+        <h3>Try a journey</h3>
+        <p>Ask your browser agent: “Prepare a support request for Alex Example, alex@example.com, about an inaccessible account. Let me review it before sending.”</p>
+        <p>The declarative tool prepares the form for manual submission. The imperative tool fills the same form and asks for confirmation. Cancellation before sending prevents the request.</p>
+        <a href="/docs/FORM-JOURNEY.md">AEM integration recipe ↗</a>
+      </aside>
+    </div>
+    <section class="notes"><h2>Build from here</h2><p><a href="/docs/COMPATIBILITY.md">Compatibility &amp; verification</a> · <a href="/docs/COOKBOOK.md">AEM cookbook</a> · <a href="/docs/ROADMAP.md">Roadmap</a></p></section>
+  </main>
+  <footer>Community reference project · Experimental WebMCP · No Adobe affiliation</footer>
+</body>
+</html>

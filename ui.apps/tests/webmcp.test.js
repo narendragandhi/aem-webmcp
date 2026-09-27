@@ -26,7 +26,6 @@ function loadWebMCP() {
         unregisterTool:       jest.fn(),
         addEventListener:     jest.fn(),
         removeEventListener:  jest.fn(),
-        requestUserInteraction: jest.fn().mockResolvedValue(true),
     };
 
     // Put mock on document.modelContext (spec-correct location)
@@ -173,10 +172,11 @@ describe('toModelContextTool', () => {
         expect(Automator.toModelContextTool('getPageInfo', fakeAction).annotations.untrustedContentHint).toBe(false);
     });
 
-    test('execute wraps result in MCP content format', async () => {
+    test('execute returns native structured results', async () => {
         const action = { ...fakeAction, execute: jest.fn().mockResolvedValue({ ok: true }) };
+        Automator.consentGiven = true;
         const result = await Automator.toModelContextTool('test', action).execute({});
-        expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify({ ok: true }) }] });
+        expect(result).toEqual({ ok: true });
     });
 
     test('execute skips consent for read-only tools', async () => {
@@ -184,7 +184,7 @@ describe('toModelContextTool', () => {
         Automator.consentGiven = false;
         window.WEBMCP_AUTO_CONSENT = false;
         const result = await Automator.toModelContextTool('getPageInfo', action).execute({});
-        expect(result.content[0].text).toBe('"data"');
+        expect(result).toBe('data');
     });
 });
 
@@ -395,6 +395,9 @@ describe('ensureAgentConsent', () => {
         Automator.consentGiven = false;
         window.WEBMCP_AUTO_CONSENT = false;
         window.AEM_WEBMCP_CONSENT = false;
+        window.WEBMCP_CONSENT = false;
+        window.AEMWebMCP.consented = false;
+        document.body.innerHTML = '';
     });
 
     test('returns true when WEBMCP_AUTO_CONSENT is true', async () => {
@@ -412,27 +415,21 @@ describe('ensureAgentConsent', () => {
         expect(await Automator.ensureAgentConsent()).toBe(true);
     });
 
-    test('calls requestUserInteraction when available', async () => {
-        mockMC.requestUserInteraction.mockResolvedValue(true);
+    test('shows application consent controls without inventing a browser API', async () => {
+        expect(await Automator.ensureAgentConsent()).toBe(false);
+        expect(document.getElementById('webmcp-consent-wrapper')).not.toBeNull();
+        expect(mockMC.requestUserInteraction).toBeUndefined();
+    });
+
+    test('page approval authorizes native calls', async () => {
+        await Automator.ensureAgentConsent();
+        document.getElementById('webmcp-consent-wrapper').shadowRoot.querySelector('.btn-allow').click();
         expect(await Automator.ensureAgentConsent()).toBe(true);
-        expect(mockMC.requestUserInteraction).toHaveBeenCalled();
-        expect(Automator.consentGiven).toBe(true);
     });
 
-    test('returns false when requestUserInteraction returns false', async () => {
-        mockMC.requestUserInteraction.mockResolvedValue(false);
-        expect(await Automator.ensureAgentConsent()).toBe(false);
-        expect(Automator.consentGiven).toBe(false);
-    });
-
-    test('returns false when requestUserInteraction throws', async () => {
-        mockMC.requestUserInteraction.mockRejectedValue(new Error('denied'));
-        expect(await Automator.ensureAgentConsent()).toBe(false);
-    });
-
-    test('returns false when no requestUserInteraction and no consent flags', async () => {
-        delete document.modelContext.requestUserInteraction;
-        delete navigator.modelContext.requestUserInteraction;
+    test('denial never authorizes native calls', async () => {
+        await Automator.ensureAgentConsent();
+        document.getElementById('webmcp-consent-wrapper').shadowRoot.querySelector('.btn-deny').click();
         expect(await Automator.ensureAgentConsent()).toBe(false);
     });
 });

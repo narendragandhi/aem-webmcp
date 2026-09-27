@@ -51,7 +51,7 @@
     A.extractFormFields = function (el) {
         var fields = [];
         el.querySelectorAll('input, select, textarea').forEach(function (input) {
-            if (input.name && input.type !== 'hidden') {
+            if (input.name && !input.matches('[type="hidden"],[type="password"],[type="file"]') && !A.isExcluded(input)) {
                 fields.push({ name: input.name, type: input.type || input.tagName.toLowerCase(), required: input.required });
             }
         });
@@ -74,6 +74,7 @@
         A.debug && console.log('[WebMCP] Found ' + allElements.length + ' elements with data-webmcp-action attribute');
 
         allElements.forEach(function (el) {
+            if (A.isExcluded(el)) return;
             if (category && el.dataset.webmcpCategory !== category) return;
             var data = {
                 action: el.dataset.webmcpAction,
@@ -170,29 +171,39 @@
 
     // ==================== FORM HELPERS ====================
 
-    A.fillFormField = function (selector, value) {
-        return new Promise(function (resolve) {
-            var input = document.querySelector(selector);
-            if (!input) {
-                resolve({ success: false, error: 'Input not found: ' + selector });
-                return;
-            }
-            input.classList.add('webmcp-ai-active');
-            input.value = value;
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-            input.dispatchEvent(new Event('change', { bubbles: true }));
-            setTimeout(function () {
-                input.classList.remove('webmcp-ai-active');
-                resolve({ success: true });
-            }, 400);
-        });
+    A.isExcluded = function (element) {
+        return !!element.closest('[data-webmcp-disabled="true"]');
     };
 
-    A.submitForm = function (selector) {
+    A.fillFormField = async function (selector, value, options) {
+        A.throwIfAborted(options && options.signal);
+        if (typeof selector !== 'string' || typeof value !== 'string') return { success: false, error: 'selector and value must be strings' };
+        var input = document.querySelector(selector);
+        if (!input || !input.matches('input,select,textarea') || A.isExcluded(input) || input.disabled || input.readOnly) {
+            return { success: false, error: 'Editable input not found: ' + selector };
+        }
+        if (input.matches('[type="password"],[type="hidden"],[type="file"]')) return { success: false, error: 'This field is not exposed to tools' };
+        if (input.matches('[type="checkbox"],[type="radio"]')) input.checked = value === 'true';
+        else input.value = value;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        return { success: true, valid: input.checkValidity() };
+    };
+
+    A.submitForm = async function (selector, options) {
+        var signal = options && options.signal;
+        A.throwIfAborted(signal);
         var form = document.querySelector(selector);
-        if (!form) return { success: false, error: 'Form not found' };
-        form.submit();
-        return { success: true };
+        if (!form || form.tagName !== 'FORM' || A.isExcluded(form)) return { success: false, error: 'Form not found' };
+        if (typeof form.webmcpSubmit === 'function') return form.webmcpSubmit(signal);
+        if (!form.reportValidity()) return { success: false, error: 'Form validation failed' };
+        if (!await A.confirmAction('Submit ' + (form.getAttribute('aria-label') || form.name || 'this form') + '? Review the visible fields before continuing.', signal)) {
+            return { success: false, error: 'Submission canceled' };
+        }
+        A.throwIfAborted(signal);
+        if (!form.isConnected || A.isExcluded(form) || !form.reportValidity()) return { success: false, error: 'Form changed before submission' };
+        form.requestSubmit();
+        return { status: 'submitted', message: 'Submission dispatched. Check the form response for delivery status.' };
     };
 
     A.getFormFields = function (selector) {
@@ -209,7 +220,7 @@
         if (searchInput) {
             searchInput.value = query;
             var form = searchInput.closest('form');
-            if (form) { form.submit(); return { success: true }; }
+            if (form && !A.isExcluded(form)) { form.requestSubmit(); return { status: 'submitted' }; }
         }
         window.location.href = '/search?q=' + encodeURIComponent(query);
         return { success: true };
@@ -389,6 +400,7 @@
     };
 
     A.enhanceComponent = function (el) {
+        if (A.isExcluded(el)) return false;
         var resourceType = el.dataset.resourceType || el.dataset.cqResourcePath || A.getResourceTypeFromClass(el);
         if (!resourceType) return false;
 
@@ -431,12 +443,14 @@
         Object.keys(patterns).forEach(function (pattern) {
             var action = patterns[pattern];
             document.querySelectorAll('.' + pattern + ':not([data-webmcp-action])').forEach(function (el) {
+                if (A.isExcluded(el)) return;
                 el.setAttribute('data-webmcp-action', action);
                 el.setAttribute('data-webmcp-category', action === 'shopping-cart' ? 'commerce' : (action === 'form' ? 'form' : pattern));
             });
         });
 
         document.querySelectorAll('form:not([data-webmcp-action])').forEach(function (el) {
+            if (A.isExcluded(el)) return;
             el.setAttribute('data-webmcp-action', 'form');
             el.setAttribute('data-webmcp-category', 'form');
         });

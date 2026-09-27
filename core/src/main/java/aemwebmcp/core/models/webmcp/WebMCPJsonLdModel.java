@@ -28,6 +28,9 @@ public class WebMCPJsonLdModel {
     @Self
     private SlingHttpServletRequest request;
 
+    /** The raw JSON-LD data string. */
+    private String jsonLdData;
+
     /** The generated JSON-LD script tag. */
     private String jsonLdScript;
     
@@ -114,8 +117,8 @@ public class WebMCPJsonLdModel {
                 graph.put("@context", "https://schema.org");
                 graph.put("@graph", schemas);
                 
-                jsonLdScript = "<script type=\"application/ld+json\">" + 
-                    MAPPER.writeValueAsString(graph) + "</script>";
+                jsonLdData = MAPPER.writeValueAsString(graph);
+                jsonLdScript = "<script type=\"application/ld+json\">" + jsonLdData + "</script>";
                 
                 hasWebMCPComponents = true;
             }
@@ -159,7 +162,7 @@ public class WebMCPJsonLdModel {
                 return url.substring(0, idx);
             }
         }
-        return "https://localhost:4502";
+        return "http://localhost:4502";
     }
     
     /**
@@ -188,6 +191,12 @@ public class WebMCPJsonLdModel {
             items.add(item);
         }
     }
+
+    /**
+     * Gets the raw JSON-LD data string.
+     * @return JSON-LD string.
+     */
+    public String getJsonLdData() { return jsonLdData; }
 
     /**
      * Gets the generated JSON-LD script.

@@ -7,6 +7,8 @@ import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.servlets.annotations.SlingServletResourceTypes;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import aemwebmcp.core.services.WebMCPSettings;
 import org.osgi.service.component.propertytypes.ServiceDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,12 +41,28 @@ public class FormSubmissionServlet extends SlingAllMethodsServlet {
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
     private static final Pattern SAFE_INPUT_PATTERN = Pattern.compile("^[a-zA-Z0-9\\s\\-\\.\\,\\!\\?\\'\\\"]*$");
-    private static final Map<String, Long> RATE_LIMIT_MAP = new ConcurrentHashMap<>();
+    @Reference
+    private WebMCPSettings settings = new WebMCPSettings();
+    // Per-instance demo limiter. Production limits belong at a trusted shared edge.
+    private final Map<String, long[]> rateLimits = new HashMap<>();
+    synchronized boolean allowRequest(String client, long now) {
+        rateLimits.entrySet().removeIf(entry -> now - entry.getValue()[0] >= 60_000L);
+        if (!rateLimits.containsKey(client) && rateLimits.size() >= 10_000) return false;
+        long[] window = rateLimits.computeIfAbsent(client, key -> new long[] { now, 0 });
+        if (window[1] >= settings.getFormRateLimit()) return false;
+        window[1]++;
+        return true;
+    }
 
     @Override
     protected void doPost(final SlingHttpServletRequest req,
                            final SlingHttpServletResponse resp) throws ServletException, IOException {
         
+        if (!settings.isFormEnabled()) {
+            sendError(resp, 503, "Form submission is disabled");
+            return;
+        }
+        resp.setHeader("Cache-Control", "no-store");
         if (!validateRequest(req, resp)) {
             return;
         }
@@ -72,8 +90,9 @@ public class FormSubmissionServlet extends SlingAllMethodsServlet {
                 String submissionId = UUID.randomUUID().toString();
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", true);
+                response.put("demo", true);
                 response.put("submissionId", submissionId);
-                response.put("message", "Form submitted successfully!");
+                response.put("message", "Demo validation completed. No message was stored or delivered.");
                 resp.getWriter().write(mapper.writeValueAsString(response));
             } catch (Exception e) {
                 sendError(resp, SlingHttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to process submission");
@@ -82,34 +101,40 @@ public class FormSubmissionServlet extends SlingAllMethodsServlet {
     }
 
     private boolean validateRequest(SlingHttpServletRequest req, SlingHttpServletResponse resp) throws IOException {
-        String clientIp = req.getRemoteAddr();
-        if (clientIp == null) clientIp = "unknown";
-        long count = RATE_LIMIT_MAP.getOrDefault(clientIp, 0L);
-        if (count >= RATE_LIMIT_REQUESTS) {
-            sendError(resp, 429, "Rate limit exceeded. Please try again later.");
-            return false;
-        }
-        RATE_LIMIT_MAP.put(clientIp, count + 1);
-
-        if (req.getContentLengthLong() > MAX_REQUEST_SIZE) {
+        if (req.getContentLengthLong() > settings.getMaxRequestSize()) {
             sendError(resp, 413, "Request too large");
             return false;
         }
 
         String csrfToken = req.getParameter("csrfToken");
         String sessionToken = (String) req.getSession().getAttribute("csrfToken");
-        if (csrfToken == null || !csrfToken.equals(sessionToken)) {
+        if (settings.isCsrfEnabled() && (csrfToken == null || !csrfToken.equals(sessionToken))) {
             sendError(resp, 403, "Invalid request");
             return false;
         }
 
+        String clientIp = req.getRemoteAddr();
+        if (!allowRequest(clientIp == null ? "unknown" : clientIp, System.currentTimeMillis())) {
+            resp.setHeader("Retry-After", "60");
+            sendError(resp, 429, "Rate limit exceeded. Please try again later.");
+            return false;
+        }
+        for (String[] values : req.getParameterMap().values()) {
+            if (values == null) continue;
+            for (String value : values) {
+                if (value != null && value.length() > settings.getMaxFieldLength()) {
+                    sendError(resp, 400, "Field exceeds maximum length");
+                    return false;
+                }
+            }
+        }
         return true;
     }
 
     private Map<String, String> extractFormData(SlingHttpServletRequest req) {
         Map<String, String> data = new HashMap<>();
         req.getParameterMap().forEach((k, v) -> {
-            if (v != null && v.length > 0 && v[0].length() <= MAX_FIELD_LENGTH) {
+            if (v != null && v.length > 0 && v[0] != null) {
                 data.put(k, v[0]);
             }
         });

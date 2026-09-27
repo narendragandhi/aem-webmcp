@@ -2,6 +2,7 @@
 webmcp-config.js
 webmcp-helpers.js
 webmcp.js
+form-journey.js
 recipegenerator.js
 imagetagger.js
 voicecommand.js

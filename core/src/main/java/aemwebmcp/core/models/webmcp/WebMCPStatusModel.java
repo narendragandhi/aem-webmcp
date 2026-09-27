@@ -9,6 +9,9 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.injectorspecific.Self;
+import org.apache.sling.models.annotations.injectorspecific.OSGiService;
+import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
+import aemwebmcp.core.services.WebMCPSettings;
 import org.apache.sling.models.annotations.injectorspecific.RequestAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +42,8 @@ import java.util.stream.Collectors;
  */
 @Model(adaptables = SlingHttpServletRequest.class)
 public class WebMCPStatusModel {
+    @OSGiService(injectionStrategy = InjectionStrategy.OPTIONAL)
+    private WebMCPSettings settings;
 
     private static final Logger LOG = LoggerFactory.getLogger(WebMCPStatusModel.class);
     
@@ -124,8 +129,10 @@ public class WebMCPStatusModel {
      * @return always returns true as WebMCP is enabled by default
      */
     public boolean isEnabled() {
-        return true;
+        return settings == null || settings.isEnabled();
     }
+    public boolean isDebug() { return settings != null && settings.isDebug(); }
+    public boolean isConsentRequired() { return settings == null || settings.isConsentRequired(); }
     
     /**
      * Inner class representing information about a single WebMCP-compatible component.

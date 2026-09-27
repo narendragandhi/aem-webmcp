@@ -1,1 +1,2 @@
 css/ai-aesthetic.css
+css/status.css

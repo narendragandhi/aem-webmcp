@@ -60,11 +60,13 @@ public class ContentFragmentServlet extends SlingSafeMethodsServlet {
 
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
+        resp.setHeader("Cache-Control", "private, no-cache, no-store, must-revalidate");
 
-        // CORS headers for cross-origin AI agent access
-        resp.setHeader("Access-Control-Allow-Origin", "*");
-        resp.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-        resp.setHeader("Access-Control-Allow-Headers", "Content-Type");
+        String origin = req.getHeader("Origin");
+        if (origin != null && !origin.isEmpty()) {
+            resp.setHeader("Access-Control-Allow-Origin", origin);
+            resp.setHeader("Vary", "Origin");
+        }
 
         try {
             String path = req.getParameter("path");
@@ -76,6 +78,15 @@ public class ContentFragmentServlet extends SlingSafeMethodsServlet {
             Map<String, Object> response = new HashMap<>();
 
             if (path != null && !path.isEmpty()) {
+                // Path traversal and resource existence check
+                if (!path.startsWith("/content/dam/") || path.contains("..") || req.getResourceResolver().getResource(path) == null) {
+                    response.put("success", false);
+                    response.put("error", "Invalid or inaccessible path");
+                    resp.setStatus(SlingHttpServletResponse.SC_FORBIDDEN);
+                    resp.getWriter().write(MAPPER.writeValueAsString(response));
+                    return;
+                }
+
                 // Fetch single Content Fragment
                 WebMCPMetricsService.TraceContext trace = metricsService.startSpan("content_fragment_fetch");
                 metricsService.setSpanAttribute("cf.path", path);
@@ -88,7 +99,7 @@ public class ContentFragmentServlet extends SlingSafeMethodsServlet {
                         data = contentFragmentService.fetchContentFragment(path);
                     }
 
-                    if (data.isEmpty()) {
+                    if (data == null || data.isEmpty()) {
                         response.put("success", false);
                         response.put("error", "Content Fragment not found");
                         resp.setStatus(SlingHttpServletResponse.SC_NOT_FOUND);
