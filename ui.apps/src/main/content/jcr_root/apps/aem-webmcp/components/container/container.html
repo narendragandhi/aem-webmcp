@@ -1,0 +1,10 @@
+<sly data-sly-use.container="com.adobe.cq.wcm.core.components.models.Container">
+    <div id="${container.id}" class="${container.gridClassNames} ${container.appliedCssClasses}"
+         data-cmp-data-layer="${container.data.json}">
+        <sly data-sly-list.child="${resource.listChildren}">
+            <div class="${container.columnClassNames[child.name]}">
+                <sly data-sly-resource="${child @ decoration=true}"/>
+            </div>
+        </sly>
+    </div>
+</sly>
