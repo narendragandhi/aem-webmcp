@@ -1,13 +1,14 @@
-<!--/*
-    AEM WebMCP - Form Container
-    Custom implementation to ensure rendering even without Core Components dependencies
-*/-->
+<!-- Render authored form children directly through Sling so their Core Component
+     resource super types provide the field markup. ContainerExporter exposes
+     exportedItems, not the `items` collection used by the former template. -->
 <form data-sly-use.container="com.adobe.cq.wcm.core.components.models.form.Container"
       method="${container.method}"
       action="${container.action}"
+      enctype="${container.enctype}"
       id="${container.id}"
       name="${container.name}"
       class="cmp-form ${container.id}">
-    <div data-sly-repeat="${container.items}" 
-         data-sly-resource="${item.path @ resourceType=item.resourceType}"></div>
+    <sly data-sly-list.child="${resource.listChildren}">
+        <sly data-sly-resource="${child}"/>
+    </sly>
 </form>
