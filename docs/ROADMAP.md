@@ -10,11 +10,11 @@ Shared consent, positional-call compatibility, native results, cancellation prop
 | --- | --- |
 | Live AEM form journey | Real submit action through author/publish + Dispatcher, with receipts and authorization failures |
 | Health check migration | Tagged platform health check and safe retirement of the custom selector |
-| CSRF consolidation | Platform-compatible replacement of legacy session-token coupling, including anonymous behavior |
+| Live CSRF verification | Granite integration replaces the legacy form token; verify authenticated rejection and anonymous behavior through Dispatcher |
 | All-tool validation | Maintained schema validator across native/bridge/debug with nested, required, bounds and unknown-argument checks |
 | Generic tool availability | Page-relevant tools with dynamic lifecycle and duplicate-instance tests |
 | AI component cancellation | Signals reach every voice/model/network operation |
-| Content Fragments | Named model/persisted-query fixture replacing inferred-model queries and redundant cache |
+| Content Fragments | Fixed persisted-query adapter replaces inferred queries/cache; deploy a real model/query/content fixture and verify through Dispatcher |
 | Commerce | Real backend, trusted prices, identity, idempotency and ownership |
 | AEM compatibility | Separate Cloud SDK, 6.5 service-pack, Core Component and Java verification |
 | Hosted-agent acceptance | Recorded client/version and complete human-agent journey |

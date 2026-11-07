@@ -100,11 +100,7 @@ public class WebAIChatService {
         // 1. Record user message
         addMessage(sessionId, "user", message);
 
-        // 2. Build context for the LLM
-        String context = buildContext(sessionId);
-
-        // 3. Call LLM (In a real production environment, this would call Vertex AI or Gemini API)
-        // For this reference implementation, we return a smart stub that simulates an agent response
+        // This endpoint deliberately simulates a response; no model receives history.
         String response = simulateAIResponse(message);
 
         // 4. Record assistant response
@@ -145,7 +141,7 @@ public class WebAIChatService {
      * @param role The role of the message sender.
      * @param content The message text.
      */
-    public void addMessage(String sessionId, String role, String content) {
+    public synchronized void addMessage(String sessionId, String role, String content) {
         List<ChatMessage> history = sessions.computeIfAbsent(sessionId, k -> Collections.synchronizedList(new ArrayList<>()));
         synchronized (history) {
             history.add(new ChatMessage(role, content));
@@ -155,22 +151,22 @@ public class WebAIChatService {
         }
         
         if (sessions.size() > MAX_SESSIONS) {
-            String oldestKey = sessions.keySet().iterator().next();
-            if (oldestKey != null) {
-                sessions.remove(oldestKey);
+            String evictedKey = sessions.keySet().iterator().next();
+            if (evictedKey != null) {
+                sessions.remove(evictedKey);
             }
         }
         
-        LOG.debug("Added message to session {}: {} - {}", sessionId, role, content.substring(0, Math.min(50, content.length())));
+        LOG.debug("Chat history updated");
     }
 
     /**
      * Clears all message history for a given session.
      * @param sessionId The session to clear.
      */
-    public void clearHistory(String sessionId) {
+    public synchronized void clearHistory(String sessionId) {
         sessions.remove(sessionId);
-        LOG.info("Cleared chat history for session: {}", sessionId);
+        LOG.debug("Chat history cleared");
     }
 
     /**

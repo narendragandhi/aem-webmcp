@@ -84,7 +84,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: ui.apps/package-lock.json
 
@@ -96,12 +96,15 @@ jobs:
       - name: Run ESLint
         run: |
           cd ui.apps
-          npm run lint || true
+          npm run lint
+
+      - name: Run JavaScript contracts
+        run: npm test --prefix ui.apps -- --runInBand
 
       - name: Run JSDoc
         run: |
           cd ui.apps
-          npm run docs || true
+          npm run docs
 
       - name: Upload JSDoc
         uses: actions/upload-artifact@v4
@@ -112,6 +115,10 @@ jobs:
 
   playwright-contract:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, chrome]
 
     steps:
       - name: Checkout code
@@ -128,12 +135,29 @@ jobs:
         working-directory: playwright-tests
         run: npm ci
 
-      # The repository CI runner has no AEM author/publish environment. This
-      # validates the runner, lockfile, and committed parity inventory; the
-      # browser gate runs with AEM via Docker Compose or deployment CI.
-      - name: Validate Playwright test inventory
+      - name: Install browser
         working-directory: playwright-tests
-        run: npm run test:ci -- --list
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Run reference journey
+        if: matrix.browser == 'chromium'
+        run: npm run test:reference --prefix playwright-tests
+
+      - name: Run native Chrome gate
+        if: matrix.browser == 'chrome'
+        env:
+          WEBMCP_BROWSER_CHANNEL: chrome
+        run: npm run test:native --prefix playwright-tests
+
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-evidence-${{ matrix.browser }}
+          path: |
+            playwright-tests/playwright-report/
+            playwright-tests/test-results/
+          retention-days: 14
 
   security:
     needs: build
@@ -202,7 +226,7 @@ jobs:
           name: aem-webmcp
 
   release:
-    needs: [build, test, lint, security]
+    needs: [build, test, lint, security, playwright-contract]
     # action-gh-release needs a tag; branch pushes fail with
     # "Missing tag_name parameter"
     if: startsWith(github.ref, 'refs/tags/v') && github.event_name == 'push'

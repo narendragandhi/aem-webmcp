@@ -1,179 +1,66 @@
-# AEM WebMCP - Hackathon Pitch Deck
+# AEM as an Agent-Accessible Application
 
----
+A 40-minute technical session for senior AEM developers and architects.
+Community reference implementation; experimental WebMCP; no Adobe endorsement.
 
-## Slide 1: Title
+## 1. The architectural question (3 minutes)
 
-# AEM WebMCP
-## AI Agent Integration for Adobe Experience Manager
+How can people and agents operate the same AEM experience without losing validation, authorization, or visible state?
 
-**The missing link between AI agents and enterprise CMS**
+Show one visible form and its business tool contract. The contribution is a reusable integration pattern, not a new model or autonomous production backend.
 
----
+## 2. Where WebMCP fits (4 minutes)
 
-## Slide 2: The Problem
+| Surface | Responsibility |
+| --- | --- |
+| Browser WebMCP | Discover and execute page-owned tools in the current document/frame context |
+| Remote MCP | Connect agent runtimes to server-side capabilities |
+| AEM application/API | Enforce identity, permissions, validation, persistence and receipts |
+| JSON-LD | Describe content; it does not register executable browser tools |
 
-### Current State:
-- AI agents navigate websites like humans - clicking, scrolling, guessing
-- Screen scraping is fragile and breaks easily
-- Forms, carts, searches are black boxes to AI
-- No structured way for AI to "see" your site
+WebMCP is a Community Group draft, not a W3C Standard. Chrome offers an origin trial and a testing flag. Date every browser compatibility claim.
 
-### Quote:
-> "AI agents spend 80% of time just figuring out how to interact with websites."
+Sources: [WebMCP draft](https://webmachinelearning.github.io/webmcp/), [Chrome documentation](https://developer.chrome.com/docs/ai/webmcp/).
 
----
+## 3. Reuse the AEM application (5 minutes)
 
-## Slide 3: The Solution
+Extend existing Core Component proxies and existing submit actions. Bind tools to application operations rather than creating a parallel mutation path. Use model-specific persisted queries for Content Fragment delivery and existing commerce commands for carts.
 
-### AEM WebMCP = WebMCP for Adobe Experience Manager
+The standalone form is executable. Adaptive Forms, CIF, authoring and Edge Delivery remain integration recipes until their fixtures and deployment checks pass.
 
-AEM WebMCP automatically detects and exposes AEM components to AI agents:
+## 4. Tool contracts and shared state (6 minutes)
 
-- ✅ **Forms** - AI can fill any form field
-- ✅ **Search** - AI can search your content
-- ✅ **Commerce** - AI can add to cart, checkout
-- ✅ **Navigation** - AI can click menus, breadcrumbs
-- ✅ **Layout** - AI can expand accordions, switch tabs
+Show `prepare_support_request`, `inspect_submit_support_request`, and `submit_support_request`.
 
----
+- Explicit input constraints and bounded outputs.
+- An optional expected revision rejects proposals made against older human input.
+- Fresh confirmation displays the proposed values.
+- The values and action are checked again immediately before sending.
+- Cancellation before sending prevents the request; cancellation after sending cannot guarantee rollback.
 
-## Slide 4: How It Works
+Explain why registration teardown and execution cancellation have different lifecycles. Annotations describe intent; they are not server authorization.
 
-```
-┌─────────────┐      ┌──────────────────┐      ┌─────────────┐
-│  AI Agent   │─────▶│  Your AEM Site  │◀─────│  AEM Core  │
-│             │      │  + WebMCP JS     │      │ Components │
-└─────────────┘      └──────────────────┘      └─────────────┘
-                            │
-                            ▼
-                    ┌──────────────────┐
-                    │ JSON-LD Metadata │
-                    │ data attributes  │
-                    │ /bin/form, /cart │
-                    └──────────────────┘
-```
+## 5. Live demonstration (10 minutes)
 
-1. Page loads with WebMCP JS
-2. Automatically detects all Core Components
-3. Adds structured metadata (JSON-LD + data attributes)
-4. AI agent discovers and interacts via API
+Follow [DEMO-SCRIPT.md](DEMO-SCRIPT.md). Show native discovery, a human edit, stale proposal rejection, cancellation with zero requests, and a confirmed simulated receipt. Use fictional data.
 
----
+If native support is absent, explicitly switch to the human/reference demonstration. Do not call a JavaScript registry a native browser result.
 
-## Slide 5: Demo Highlights
+## 6. AEM trust boundaries (7 minutes)
 
-### What I Just Showed:
-- ⭐ Form submission in 3 lines of code
-- ⭐ Product added to cart autonomously  
-- ⭐ Search returning structured results
-- ⭐ 70+ components auto-detected
+- HTTP session and authenticated identity scope chat history; caller-supplied IDs cannot select another conversation.
+- Granite CSRF and Sling Referrer filters remain responsible for request protection.
+- Dispatcher allows only the required method/path and does not cache CSRF tokens or personalized results.
+- Browser consent is not an ACL. Prompt injection remains a concern even for structured tools.
+- Persisted queries select published fields; disabling mocks never silently returns fabricated content.
+- Production writes require real persistence, ownership, idempotency and verifiable outcomes.
 
-### The "Wow" Moment:
-> "I just told an AI to 'submit a contact form' - and it did. 6 fields. Perfectly."
+The server chat endpoint is explicitly simulated. It does not call an LLM.
 
----
+## 7. Evidence and open work (5 minutes)
 
-## Slide 6: Enterprise-Ready
+Show [COMPATIBILITY.md](COMPATIBILITY.md) and the reports from the exact rehearsed browser build. CI executes JavaScript contracts, reference browser journeys and a required native Chrome gate. A local pass does not imply a remote CI run has completed.
 
-| Feature | Status |
-|---------|--------|
-| CSRF Protection | ✅ |
-| Rate Limiting | ✅ |
-| Input Validation | ✅ |
-| PII-Safe Logging | ✅ |
-| OSGi Configuration | ✅ |
-| JCR Persistence | ✅ |
-| Unit Tests | ✅ |
+Live AEM/Dispatcher, hosted-agent behavior and AEM 6.5/Cloud deployment variants require separate evidence. A demo receipt is not message delivery. No measured ROI, component coverage count or performance gain is claimed.
 
-**This isn't a proof-of-concept. It's production code.**
-
----
-
-## Slide 7: Market Opportunity
-
-### The AI Agent Boom
-- Every company is adopting AI agents
-- Voice commerce = $40B by 2027
-- "Agentic commerce" emerging
-
-### The Gap
-- No enterprise CMS has WebMCP integration
-- AEM powers 80% of Fortune 500
-- First mover advantage
-
----
-
-## Slide 8: Business Value
-
-### For Adobe/AEM Customers:
-- **Voice Commerce** - "Order me more ink"
-- **Customer Service** - AI handles form submissions
-- **Accessibility** - AI navigates for screen readers
-- **SEO** - JSON-LD improves search
-
-### ROI:
-- Reduce form abandonment by 20%
-- Enable 24/7 AI customer service
-- Future-proof for agentic web
-
----
-
-## Slide 9: Technical Highlights
-
-- **Zero config** - Auto-loads with Core Components
-- **70+ components** - Search, Cart, Forms, Navigation, Layout
-- **Open Source** - Apache 2.0 licensed
-- **AEM 6.5+ & Cloud** - Works everywhere
-- **Security hardened** - Enterprise standards
-
----
-
-## Slide 10: The Ask
-
-### Building the future of AI-agent CMS interaction
-
-**Repo:** github.com/narendragandhi/aem-webmcp
-**License:** Apache 2.0
-
-### What's needed:
-1. ⭐ Stars on GitHub
-2. 🧪 Beta testers
-3. 🤝 Partners for CIF integration
-4. 📢 Spread the word
-
----
-
-## Slide 11: Closing
-
-> "The agentic web is coming. AEM WebMCP helps AEM sites get ready."
-
-**Thank you!**
-
----
-
-## Quick Facts
-
-| | |
-|---|---|
-| **Project** | AEM WebMCP |
-| **Tech Stack** | AEM, Java, JavaScript |
-| **Components** | 70+ supported |
-| **License** | Apache 2.0 |
-| **Status** | Production-ready |
-
----
-
-## Judge Q&A Prep
-
-### Q: Why not just use the AEM Forms API?
-A: WebMCP is generic - works with ANY component, not just forms. It's about component discovery, not just submission.
-
-### Q: How is this different from Adobe Experience Cloud AI?
-A: They're complementary. Adobe's AI focuses on analytics/marketing; this project focuses on inbound AI agents interacting with the site.
-
-### Q: What's the competitive advantage?
-A: Early implementation for AEM + WebMCP. The integration pattern (auto-detection of Core Components) is the main differentiator.
-
-### Q: Is WebMCP stable?
-A: Chrome flag only now, but this is exactly why building early matters — early adoption is a competitive advantage.
+Close with the concrete design lesson: give agents the same application operations, state checks and outcome evidence that people need.

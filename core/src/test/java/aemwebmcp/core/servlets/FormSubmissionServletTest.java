@@ -36,14 +36,6 @@ class FormSubmissionServletTest {
         assertEquals(10, accepted);
     }
 
-    @Test
-    void invalidCsrfDoesNotConsumeSubmissionAllowance() throws Exception {
-        when(request.getParameter("csrfToken")).thenReturn("wrong");
-        for (int i = 0; i < 12; i++) fixture.doPost(request, response);
-        verify(response, never()).setStatus(429);
-        assertTrue(fixture.allowRequest("unknown", System.currentTimeMillis()));
-    }
-
     private FormSubmissionServlet fixture;
     private static final String CSRF_TOKEN = "valid-token";
 
@@ -108,14 +100,14 @@ class FormSubmissionServletTest {
     }
 
     @Test
-    void testCsrfFailure() throws Exception {
-        when(request.getParameter("csrfToken")).thenReturn("wrong-token");
-        when(request.getContentLengthLong()).thenReturn(100L);
-
+    void platformProtectedRequestDoesNotRequireLegacySessionToken() throws Exception {
+        when(request.getParameterMap()).thenReturn(Map.of(
+            "fullName", new String[]{"Alex Example"}, "email", new String[]{"alex@example.com"},
+            "message", new String[]{"Please restore my account access"}));
         fixture.doPost(request, response);
-
-        verify(response).setStatus(403);
-        assertTrue(responseWriter.toString().contains("Invalid request"));
+        assertTrue(responseWriter.toString().contains("\"demo\":true"));
+        verify(request, never()).getSession();
+        verify(request, never()).getParameter("csrfToken");
     }
 
     @Test

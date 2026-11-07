@@ -62,11 +62,7 @@ public class ContentFragmentServlet extends SlingSafeMethodsServlet {
         resp.setCharacterEncoding("UTF-8");
         resp.setHeader("Cache-Control", "private, no-cache, no-store, must-revalidate");
 
-        String origin = req.getHeader("Origin");
-        if (origin != null && !origin.isEmpty()) {
-            resp.setHeader("Access-Control-Allow-Origin", origin);
-            resp.setHeader("Vary", "Origin");
-        }
+        // Cross-origin access is governed by AEM's configured CORS policy.
 
         try {
             String path = req.getParameter("path");
@@ -144,6 +140,10 @@ public class ContentFragmentServlet extends SlingSafeMethodsServlet {
 
             resp.getWriter().write(MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(response));
 
+        } catch (IllegalStateException e) {
+            resp.setStatus(SlingHttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            resp.getWriter().write(MAPPER.writeValueAsString(Map.of(
+                    "success", false, "error", "Content Fragment delivery unavailable; verify persisted-query configuration")));
         } catch (Exception e) {
             LOG.error("Error processing Content Fragment request", e);
             Map<String, Object> error = new HashMap<>();

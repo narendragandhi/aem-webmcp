@@ -21,7 +21,7 @@ Use [FORM-JOURNEY.md](FORM-JOURNEY.md). Human and agent entry points reach one s
 
 Create a real model, content fixture and named persisted query. Bind a read-only tool to that fixed query with validated variables. Do not infer a model name from an asset path or expose arbitrary author queries on publish.
 
-Adobe documents [persisted queries](https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/headless/graphql-api/persisted-queries) for cacheable delivery. The older `ContentFragmentGraphQLService` is experimental: its persisted-query switch is unused and it maintains a separate cache. It is not the recommended integration path.
+Adobe documents [persisted queries](https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/headless/graphql-api/persisted-queries) for cacheable delivery. The optional `ContentFragmentGraphQLService` now requires a fixed public persisted-query URL and response alias; it has no private cache or model inference. See [deployment](DEPLOYMENT.md) for the contract. Direct application calls to AEM persisted queries are preferred when an adapter is unnecessary. A live model/query fixture still requires deployment verification.
 
 ## Authoring
 

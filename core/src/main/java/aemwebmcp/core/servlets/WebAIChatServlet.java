@@ -20,10 +20,10 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.Map;
+import java.util.List;
 
 /**
- * Servlet that provides server-side LLM processing fallback.
- * Used when local browser-native window.ai is not available.
+ * Session-isolated demonstration endpoint. Responses are simulated, not LLM output.
  */
 @Component(service = { Servlet.class })
 @SlingServletResourceTypes(
@@ -32,7 +32,7 @@ import java.util.Map;
     selectors = "webai-chat",
     extensions = "json"
 )
-@ServiceDescription("WebMCP AI Chat Proxy Servlet")
+@ServiceDescription("WebMCP Demo Chat Servlet")
 public class WebAIChatServlet extends SlingAllMethodsServlet {
 
     private static final long serialVersionUID = 1L;
@@ -47,19 +47,22 @@ public class WebAIChatServlet extends SlingAllMethodsServlet {
         
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
+        response.setHeader("Cache-Control", "no-store");
 
         String message = request.getParameter("message");
-        String sessionId = request.getParameter("sessionId");
-
-        if (message == null || message.isEmpty()) {
+        if (message == null || message.isBlank() || message.length() > 5000) {
             response.setStatus(SlingHttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write(MAPPER.writeValueAsString(Map.of("error", "Message is required")));
+            response.getWriter().write(MAPPER.writeValueAsString(Map.of("error", "Message must contain 1 to 5000 characters")));
             return;
         }
 
-        // Delegate to server-side AI service (e.g., Vertex AI / OpenAI / Gemini Pro)
-        String aiResponse = chatService.chat(sessionId != null ? sessionId : "default", message);
+        // Never select history using caller input. Include the authenticated identity
+        // so login/logout in the same HTTP session cannot reuse another user's history.
+        String userId = request.getResourceResolver().getUserID();
+        String sessionId = MAPPER.writeValueAsString(List.of(
+                request.getSession().getId(), userId == null ? "anonymous" : userId));
+        String aiResponse = chatService.chat(sessionId, message);
         
-        response.getWriter().write(MAPPER.writeValueAsString(Map.of("response", aiResponse)));
+        response.getWriter().write(MAPPER.writeValueAsString(Map.of("response", aiResponse, "demo", true)));
     }
 }

@@ -41,9 +41,9 @@ Cancellation after a request is sent cannot guarantee server rollback. Verify de
 
 Retain installed Core/Adaptive Forms components and their configured submit actions. Add native annotations through a narrowly scoped proxy/template extension or approved enhancement.
 
-The optional `form-journey.js` attaches only to `form[data-webmcp-json-form]` with a unique `data-webmcp-tool`. Use it only with an existing same-origin endpoint accepting these JSON fields and returning JSON with `success: true`. Include a status element inside the form. For authenticated AEM requests, `data-webmcp-csrf="granite"` fetches a token and sends `CSRF-Token`.
+The optional `form-journey.js` attaches only to `form[data-webmcp-json-form]` with a unique `data-webmcp-tool`. Use it only with an existing same-origin endpoint accepting these fields and returning JSON with `success: true`. JSON is the default; `data-webmcp-encoding="form"` selects URL-encoded AEM parameters. Include a status element inside the form. For authenticated AEM requests, `data-webmcp-csrf="granite"` fetches a token and sends `CSRF-Token`.
 
-The legacy `FormSubmissionServlet` expects form parameters and a custom session token. It is not the JSON adapter's production backend. Its response identifies demo validation.
+The demo `FormSubmissionServlet` expects form parameters and relies on Granite CSRF/Sling Referrer filters, without a custom session token. The adapter can send that parameter contract, but the response still identifies demo validation, not delivery. See [deployment](DEPLOYMENT.md) for authenticated versus anonymous behavior.
 
 Call `form.webmcpDestroy()` before removing a form in an SPA/editor. `foundation-contentloaded` initializes new opt-in forms.
 

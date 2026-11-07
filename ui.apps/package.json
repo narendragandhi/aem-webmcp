@@ -3,8 +3,8 @@
   "version": "2.1.0",
   "description": "AEM WebMCP Auto-Enhancer",
   "scripts": {
-    "jsdoc": "jsdoc src/main/content/jcr_root/apps/aem-webmcp/clientlibs/clientlib-webmcp/js/webmcp.js src/main/content/jcr_root/apps/aem-webmcp/clientlibs/clientlib-webai/js/webai.js src/main/content/jcr_root/apps/aem-webmcp/clientlibs/clientlib-base/js/webmcp.js -d target/jsdoc",
-    "docs": "jsdoc src/main/content/jcr_root/apps/aem-webmcp/clientlibs/clientlib-webmcp/js/webmcp.js src/main/content/jcr_root/apps/aem-webmcp/clientlibs/clientlib-webai/js/webai.js src/main/content/jcr_root/apps/aem-webmcp/clientlibs/clientlib-base/js/webmcp.js -d target/jsdoc",
+    "jsdoc": "jsdoc src/main/content/jcr_root/apps/aem-webmcp/clientlibs/clientlib-webmcp/js/webmcp.js src/main/content/jcr_root/apps/aem-webmcp/clientlibs/clientlib-webai/js/webai.js -d target/jsdoc",
+    "docs": "jsdoc src/main/content/jcr_root/apps/aem-webmcp/clientlibs/clientlib-webmcp/js/webmcp.js src/main/content/jcr_root/apps/aem-webmcp/clientlibs/clientlib-webai/js/webai.js -d target/jsdoc",
     "lint": "eslint src/main/content/jcr_root/apps/aem-webmcp/clientlibs/**/*.js",
     "test": "jest",
     "test:coverage": "jest --coverage"

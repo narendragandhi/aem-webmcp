@@ -3,6 +3,71 @@ import { test, expect } from '@playwright/test';
 const input = { fullName: 'Alex Example', email: 'alex@example.com', message: 'Please help restore my account access.' };
 test.beforeEach(async ({ page }) => { await page.goto('/'); });
 
+test('AEM transport sends form parameters and a Granite header after confirmation', async ({ page }) => {
+  await page.locator('form').evaluate(form => {
+    form.setAttribute('data-webmcp-encoding', 'form');
+    form.setAttribute('data-webmcp-csrf', 'granite');
+  });
+  await page.route('**/libs/granite/csrf/token.json', route => route.fulfill({ json: { token: 'test-token' } }));
+  // Transport contract fixture only: this does not emulate Granite's validation filter.
+  await page.route('**/api/support', route => route.fulfill({ json: { success: true, demo: true } }));
+  await page.getByLabel('Full name', { exact: true }).fill(input.fullName);
+  await page.getByLabel('Reply email').fill(input.email);
+  await page.getByLabel('How can we help?').fill(input.message);
+  await page.getByRole('button', { name: 'Review request' }).click();
+  const sent = page.waitForRequest('**/api/support');
+  await page.getByRole('button', { name: 'Submit request', exact: true }).click();
+  const request = await sent;
+  expect(request.headers()['csrf-token']).toBe('test-token');
+  expect(request.headers()['content-type']).toContain('application/x-www-form-urlencoded');
+  expect(Object.fromEntries(new URLSearchParams(request.postData()!))).toEqual(input);
+});
+
+test('changes during token retrieval invalidate confirmation and send no form request', async ({ page }) => {
+  let submissions = 0;
+  page.on('request', request => { if (request.url().endsWith('/api/support')) submissions++; });
+  await page.locator('form').evaluate(form => form.setAttribute('data-webmcp-csrf', 'granite'));
+  await page.route('**/libs/granite/csrf/token.json', async route => {
+    await page.locator('#message').evaluate(field => { (field as HTMLTextAreaElement).value = 'A newer human message'; });
+    await route.fulfill({ json: { token: 'test-token' } });
+  });
+  await page.getByLabel('Full name', { exact: true }).fill(input.fullName);
+  await page.getByLabel('Reply email').fill(input.email);
+  await page.getByLabel('How can we help?').fill(input.message);
+  await page.getByRole('button', { name: 'Review request' }).click();
+  await page.getByRole('button', { name: 'Submit request', exact: true }).click();
+  await expect(page.locator('form [role="status"]')).toContainText('The form changed');
+  expect(submissions).toBe(0);
+});
+
+test('native stale proposal preserves the human edit without submitting', async ({ page, browser }) => {
+  const available = await page.evaluate(() => {
+    const mc = (document as any).modelContext || (navigator as any).modelContext;
+    return typeof mc?.getTools === 'function' && typeof mc?.executeTool === 'function';
+  });
+  test.skip(!available, 'Native invocation unavailable; required native gate checks support separately.');
+  const legacy = Number(browser.version().split('.')[0]) < 155;
+  await page.getByRole('button', { name: 'Enable assistant access' }).click();
+  await page.getByRole('button', { name: 'Allow Access' }).click();
+  const revision = await page.evaluate(async legacy => {
+    const mc = (document as any).modelContext || (navigator as any).modelContext;
+    const tool = (await mc.getTools()).find((t: any) => t.name === 'inspect_submit_support_request');
+    const result = await mc.executeTool(tool, legacy ? '{}' : {});
+    return (typeof result === 'string' ? JSON.parse(result) : result).revision;
+  }, legacy);
+  await page.getByLabel('How can we help?').fill('Preserve this human edit.');
+  const result = await page.evaluate(async ({ input, revision, legacy }) => {
+    const mc = (document as any).modelContext || (navigator as any).modelContext;
+    const tool = (await mc.getTools()).find((t: any) => t.name === 'submit_support_request');
+    const args = { ...input, expectedRevision: revision };
+    const result = await mc.executeTool(tool, legacy ? JSON.stringify(args) : args);
+    return typeof result === 'string' ? JSON.parse(result) : result;
+  }, { input, revision, legacy });
+  expect(result.error).toBe('STALE_REVISION');
+  await expect(page.getByLabel('How can we help?')).toHaveValue('Preserve this human edit.');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+
 test('human journey validates, confirms and displays the backend receipt', async ({ page }) => {
   await page.getByRole('button', { name: 'Review request' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);

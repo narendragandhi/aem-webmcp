@@ -1,6 +1,7 @@
 /**
- * Opt-in JSON form adapter. Both humans and tools use the same submission path.
- * Requires a same-origin endpoint accepting JSON and returning { success: true, ... }.
+ * Opt-in form adapter. Both humans and tools use the same submission path.
+ * Requires a same-origin endpoint returning { success: true, ... }.
+ * data-webmcp-encoding="form" selects URL-encoded AEM parameters; JSON is the default.
  * This does not replace Core Forms / Adaptive Forms submit actions.
  */
 (function (window, document) {
@@ -46,7 +47,10 @@
                         snapshot !== JSON.stringify(Object.fromEntries(new FormData(form)))) {
                     return show({ success: false, error: 'The form changed. Review it and submit again.' });
                 }
-                var headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+                var encoding = form.dataset.webmcpEncoding || 'json';
+                if (encoding !== 'json' && encoding !== 'form') throw new Error('Unsupported form encoding');
+                var body = encoding === 'form' ? new URLSearchParams(payload).toString() : snapshot;
+                var headers = { 'Content-Type': encoding === 'form' ? 'application/x-www-form-urlencoded;charset=UTF-8' : 'application/json', 'Accept': 'application/json' };
                 // Opt in on authenticated AEM deployments. Granite validates this header.
                 if (form.dataset.webmcpCsrf === 'granite') {
                     var tokenResponse = await fetch('/libs/granite/csrf/token.json', { credentials: 'same-origin', signal: signal });
@@ -55,9 +59,16 @@
                     if (!token.token) throw new Error('AEM CSRF token missing');
                     headers['CSRF-Token'] = token.token;
                 }
+                A.throwIfAborted(signal);
+                // Token retrieval is asynchronous; recheck the state after it too.
+                if (!A.enabled || !form.isConnected || A.isExcluded(form) || !form.reportValidity() ||
+                        endpoint.href !== new URL(form.action, window.location.href).href ||
+                        snapshot !== JSON.stringify(Object.fromEntries(new FormData(form)))) {
+                    return show({ success: false, error: 'The form changed. Review it and submit again.' });
+                }
                 var response = await fetch(endpoint.href, {
                     method: 'POST', credentials: 'same-origin', headers: headers,
-                    body: snapshot, signal: signal
+                    body: body, signal: signal
                 });
                 var result = await response.json();
                 if (!response.ok || result.success !== true) throw new Error(result.error || 'Submission was not accepted');

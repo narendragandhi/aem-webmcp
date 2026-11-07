@@ -11,3 +11,6 @@ $include "./default_filters.any"
 
 # Allow manifest.webmanifest files located in the content
 /0102 { /type "allow" /extension "webmanifest" /path "/content/*/manifest" }
+
+# Granite CSRF tokens for authenticated form requests; never cache this endpoint.
+/0120 { /type "allow" /method "GET" /url "/libs/granite/csrf/token.json" }

@@ -5,3 +5,5 @@
 #
 
 $include "./default_rules.any"
+
+/0120 { /glob "/libs/granite/csrf/token.json" /type "deny" }

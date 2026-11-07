@@ -154,8 +154,8 @@ public @interface WebMCPConfiguration {
      * @return true if CSRF protection is active.
      */
     @AttributeDefinition(
-        name = "CSRF Protection Enabled",
-        description = "Enable CSRF token validation for forms",
+        name = "Legacy CSRF Flag (deprecated)",
+        description = "Ignored by the form servlet. Granite CSRF and Sling Referrer filters enforce platform protection; this flag cannot disable them.",
         defaultValue = "true"
     )
     boolean form_csrfEnabled() default true;

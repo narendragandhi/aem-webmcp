@@ -1,166 +1,66 @@
-# AEM WebMCP Demo Script
+# Conference demonstration: shared human/agent state
 
-## Demo Overview
-**Duration:** 3-5 minutes
-**Goal:** Show AI agent autonomously interacting with an AEM site using WebMCP
+Use fictional data. The standalone backend returns a simulated receipt and stores no ticket.
 
----
+## Preflight
 
-## Scene 1: Introduction (30 seconds)
+Run `node test-site/server.mjs`, then open http://127.0.0.1:4178 in a compatible Chrome with WebMCP testing enabled. Run the required native suite before rehearsal:
 
-> "Imagine telling an AI agent: 'Find our contact form and submit an inquiry.' Instead of clicking around blindly, it sees ALL your components and interacts precisely."
-
-**[SHOW: Browser with demo page loaded]**
-
----
-
-## Scene 2: Component Discovery (45 seconds)
-
-**Action:** Open browser console, run:
-
-```javascript
-// In console - show all components discovered
-const components = AEMWebMCP.getComponents();
-console.table(components.map(c => ({
-  category: c.category,
-  action: c.action,
-  interactions: c.interactions?.join(', ')
-})));
+```sh
+WEBMCP_BROWSER_CHANNEL=chrome npm run test:native --prefix playwright-tests
 ```
 
-**Say:** "The JavaScript automatically detects AEM Core Components. Every button, form, cart - it's all discoverable."
+Record the browser version and retain the capability attachment. Click **Enable assistant access**, then **Allow Access**. The browser tools panel must show native discovery. This inspector walkthrough demonstrates API behavior; only a separate recorded agent journey demonstrates model planning.
 
-**[SHOW: Console table with component list]**
+## Discover and inspect
 
----
+In DevTools, define helpers once. Choose the argument contract before calling; never retry a mutation just because parsing failed.
 
-## Scene 3: Search Functionality (30 seconds)
-
-**Action:** Show search works
-
-```javascript
-// Search for products
-const results = await AEMWebMCP.search('widget');
-console.log(`Found ${results.total} results:`, results.results);
+```js
+var mc = document.modelContext || navigator.modelContext;
+var tools = await mc.getTools();
+console.table(tools.map(t => ({ name: t.name, origin: t.origin })));
+// Set true only for the rehearsed Chrome build below 155.
+var legacyArguments = false;
+var invoke = async (name, args = {}) => {
+  var tool = (await mc.getTools()).find(t => t.name === name);
+  if (!tool) throw new Error('Native tool missing: ' + name);
+  var value = await mc.executeTool(tool, legacyArguments ? JSON.stringify(args) : args);
+  return typeof value === 'string' ? JSON.parse(value) : value;
+};
+var before = await invoke('inspect_submit_support_request');
 ```
 
-**Say:** "AI agents can search your site intelligently - not just Google search, but YOUR site's content."
+## Demonstrate a stale proposal
 
----
+Manually edit the message field, then execute:
 
-## Scene 4: Form Filling (60 seconds) ⭐ MAIN EVENT
-
-**Action:** Fill and submit contact form
-
-```javascript
-// 1. Find the form
-const form = AEMWebMCP.findComponent('form')[0];
-console.log('Found form:', form);
-
-// 2. Fill fields
-AEMWebMCP.fillForm('input[name="fullName"]', 'John Smith');
-AEMWebMCP.fillForm('input[name="email"]', 'john@example.com');
-AEMWebMCP.fillForm('textarea[name="message"]', 'Hi, interested in a demo!');
-AEMWebMCP.fillForm('select[name="department"]', 'sales');
-
-// 3. Submit
-const result = await AEMWebMCP.submitForm('form');
-console.log('Submission result:', result);
+```js
+var proposal = {
+  fullName: 'Alex Example', email: 'alex@example.com',
+  message: 'Please help restore my account access.',
+  expectedRevision: before.revision
+};
+await invoke('submit_support_request', proposal);
 ```
 
-**Say:** "Watch this - I'm telling the AI: 'Submit a contact form for a demo.' It finds the form, fills every field correctly, and submits. That's 6 interactions - handled precisely."
+Expect `STALE_REVISION`. Show that the human's text is unchanged and no POST occurred. Explain that callers must supply the revision to get this optimistic-concurrency check.
 
-**[SHOW: Form gets filled in real-time, submit, show success response]**
+## Cancel, then confirm
 
----
+Read a fresh revision and start the invocation without awaiting in the console:
 
-## Scene 5: E-commerce Demo (45 seconds)
-
-**Action:** Add product to cart
-
-```javascript
-// Find product and add to cart
-await AEMWebMCP.addToCart({
-  productId: 'premium-widget',
-  productName: 'Premium Widget',
-  price: 49.99,
-  quantity: 2
-});
-
-// View cart
-const cart = await AEMWebMCP.getCart();
-console.log('Cart:', cart);
+```js
+proposal.expectedRevision = (await invoke('inspect_submit_support_request')).revision;
+var pending = invoke('submit_support_request', proposal);
 ```
 
-**Say:** "E-commerce works the same way. 'Add 2 premium widgets to cart.' Done. AI agents can now handle shopping - opening huge possibilities for voice commerce."
+Click **Cancel** in the confirmation dialog. Inspect `await pending` and the Network panel: no `/api/support` request should have been sent.
 
----
+Read another fresh revision, invoke again, inspect the exact values, and click **Submit request**. Show both the visible receipt and the returned `demo: true` result. Explain that real AEM delivery needs the existing submit action/backend and its receipt.
 
-## Scene 6: Behind the Scenes (30 seconds)
+## Failure and fallback
 
-**Action:** Show WebMCP attributes
+The reference tests cover backend errors and cancellation. Keep their reports available rather than improvising destructive failures on stage. If the browser lacks native WebMCP, demonstrate the human form and label it as the reference fallback.
 
-```javascript
-// Show what's added to DOM
-document.querySelector('[data-webmcp-category]')
-```
-
-**Say:** "These data attributes are added to every component. That's the WebMCP API - structured, typed, discoverable. No screen scraping, no guessing."
-
-**[SHOW: HTML with data-webmcp-* attributes]**
-
----
-
-## Scene 7: Enterprise Features (30 seconds)
-
-**Say:** "But it's not just cool - it's production-ready:"
-
-- CSRF protection ✓
-- Rate limiting ✓  
-- Input validation ✓
-- PII-safe logging ✓
-- JCR persistence option ✓
-- OSGi configurable ✓
-
----
-
-## Closing (15 seconds)
-
-> "AEM WebMCP - the first enterprise integration for AI agents with Adobe Experience Manager. Build once, AI-ready forever."
-
-**[SHOW: GitHub/Repo URL]**
-
----
-
-## Backup / Q&A Scenarios
-
-### "How is this different from chatbots?"
-> "Traditional chatbots can't 'see' your site. This gives AI agents X-ray vision into your actual components."
-
-### "Does it slow down the site?"
-> "It's a lightweight clientlib - <10KB. Loads in parallel, no blocking."
-
-### "Is it secure?"
-> "Enterprise-grade: CSRF, rate limiting, input sanitization. Security is a priority."
-
-### "What AEM versions?"
-> "AEM as a Cloud Service and 6.5+. Core Components 2.0+."
-
----
-
-## Technical Setup for Demo
-
-```bash
-# Deploy to AEM
-cd aem-webmcp/all
-mvn install -PautoInstallSinglePackage \
-  -Daem.host=localhost -Daem.port=4502
-
-# Demo URLs
-http://localhost:4502/content/aem-webmcp/us/en.html          # Home
-http://localhost:4502/content/aem-webmcp/us/en/contact.html # Forms
-http://localhost:4502/content/aem-webmcp/us/en/shop.html   # Commerce
-
-# Enable debug to show panel
-window.WEBMCP_SHOW_PANEL = true;
-```
+For a hosted-agent demonstration, record the client/model/browser versions and independently check the same outcomes. A successful DevTools invocation is not hosted-agent acceptance.

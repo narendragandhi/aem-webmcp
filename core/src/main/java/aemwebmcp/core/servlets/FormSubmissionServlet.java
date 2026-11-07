@@ -106,12 +106,9 @@ public class FormSubmissionServlet extends SlingAllMethodsServlet {
             return false;
         }
 
-        String csrfToken = req.getParameter("csrfToken");
-        String sessionToken = (String) req.getSession().getAttribute("csrfToken");
-        if (settings.isCsrfEnabled() && (csrfToken == null || !csrfToken.equals(sessionToken))) {
-            sendError(resp, 403, "Invalid request");
-            return false;
-        }
+        // Granite's CSRF filter validates authenticated requests before dispatch.
+        // Use CSRF-Token / :cq_csrf_token, never a second HttpSession token.
+        // Anonymous requests follow the platform's CSRF and Referrer Filter policy.
 
         String clientIp = req.getRemoteAddr();
         if (!allowRequest(clientIp == null ? "unknown" : clientIp, System.currentTimeMillis())) {

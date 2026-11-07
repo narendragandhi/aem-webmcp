@@ -7,51 +7,32 @@ package aemwebmcp.core.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 /**
- * Service for fetching Content Fragment data via AEM GraphQL API.
- *
- * <p>This service enables WebMCP to expose Content Fragment field values
- * to AI agents, allowing them to understand and interact with structured
- * content on the page.
- *
- * <p>Features:
- * <ul>
- *   <li>GraphQL persisted query support</li>
- *   <li>Content Fragment model discovery</li>
- *   <li>Field extraction with type mapping</li>
- *   <li>Caching for performance</li>
- *   <li>Fallback to mock data for development</li>
- * </ul>
- *
- * @since 1.1.0
- * @author AEM WebMCP Team
+ * Demo fixtures and an opt-in adapter to one public, model-specific persisted query.
+ * The configured query must return data.fragment.item with _path and selected fields.
+ * No caller-supplied query, credentials, inferred model, or private response cache.
  */
 @Component(service = ContentFragmentGraphQLService.class, immediate = true)
 @Designate(ocd = ContentFragmentGraphQLService.Config.class)
 public class ContentFragmentGraphQLService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ContentFragmentGraphQLService.class);
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @ObjectClassDefinition(
@@ -61,10 +42,15 @@ public class ContentFragmentGraphQLService {
     public @interface Config {
         @AttributeDefinition(
             name = "GraphQL Endpoint",
-            description = "AEM GraphQL endpoint path",
+            description = "Deprecated: ignored. Configure Public persisted query URL instead.",
             defaultValue = "/content/graphql/global/endpoint.json"
         )
+        @Deprecated
         String graphql_endpoint() default "/content/graphql/global/endpoint.json";
+
+        @AttributeDefinition(name = "Public persisted query URL",
+            description = "Absolute HTTPS /graphql/execute.json/config/query URL. Public content only; HTTP localhost is allowed for development. Query variable: path. Response alias: fragment.")
+        String persisted_query_url() default "";
 
         @AttributeDefinition(
             name = "Use Persisted Queries",
@@ -82,222 +68,88 @@ public class ContentFragmentGraphQLService {
 
         @AttributeDefinition(
             name = "Cache TTL (seconds)",
-            description = "Cache time-to-live for Content Fragment data",
+            description = "Deprecated: ignored. Cache persisted queries at Dispatcher/CDN.",
             defaultValue = "300"
         )
         int cache_ttlSeconds() default 300;
 
         @AttributeDefinition(
             name = "Max Depth",
-            description = "Maximum depth for nested Content Fragment references",
+            description = "Deprecated: depth is defined by the persisted query.",
             defaultValue = "3"
         )
         int max_depth() default 3;
     }
 
-    @Reference
-    private WebMCPMetricsService metricsService;
-
-    private String graphqlEndpoint;
-    private boolean usePersistedQueries;
-    private boolean useMockData;
-    private int cacheTtlSeconds;
-    private int maxDepth;
-
-    // Cache for Content Fragment data
-    private final Map<String, CacheEntry> cache = new ConcurrentHashMap<>();
+    private boolean useMockData = true;
+    private boolean usePersistedQueries = true;
+    private String persistedQueryUrl = "";
 
     @Activate
     protected void activate(Config config) {
-        this.graphqlEndpoint = config.graphql_endpoint();
-        this.usePersistedQueries = config.use_persistedQueries();
-        this.useMockData = config.use_mockData();
-        this.cacheTtlSeconds = config.cache_ttlSeconds();
-        this.maxDepth = config.max_depth();
-
-        LOG.info("ContentFragmentGraphQLService activated - endpoint: {}, mock: {}", graphqlEndpoint, useMockData);
+        useMockData = config.use_mockData();
+        usePersistedQueries = config.use_persistedQueries();
+        persistedQueryUrl = config.persisted_query_url();
     }
 
-    /**
-     * Fetch Content Fragment data by path.
-     *
-     * @param fragmentPath JCR path to the Content Fragment
-     * @return Map containing the Content Fragment fields and values
-     */
     public Map<String, Object> fetchContentFragment(String fragmentPath) {
-        if (fragmentPath == null || fragmentPath.isEmpty()) {
-            return Collections.emptyMap();
+        if (fragmentPath == null || !fragmentPath.startsWith("/content/dam/") ||
+                fragmentPath.contains("..") || fragmentPath.length() > 2048) {
+            throw new IllegalArgumentException("A bounded Content Fragment path is required");
         }
-
-        // Check cache
-        CacheEntry cached = cache.get(fragmentPath);
-        if (cached != null && !cached.isExpired()) {
-            LOG.debug("Cache hit for Content Fragment: {}", fragmentPath);
-            return cached.getData();
-        }
-
-        WebMCPMetricsService.Timer timer = metricsService.startTimer("content_fragment_fetch");
-        try {
-            Map<String, Object> data;
-            if (useMockData) {
-                data = getMockContentFragment(fragmentPath);
-            } else {
-                data = fetchFromGraphQL(fragmentPath);
-            }
-
-            // Cache the result
-            cache.put(fragmentPath, new CacheEntry(data, cacheTtlSeconds));
-            metricsService.recordContentFragmentFetch(fragmentPath, true);
+        if (useMockData) {
+            Map<String, Object> data = getMockContentFragment(fragmentPath);
+            data.put("demo", true);
             return data;
-
-        } catch (Exception e) {
-            LOG.error("Failed to fetch Content Fragment: {}", fragmentPath, e);
-            metricsService.recordContentFragmentFetch(fragmentPath, false);
-            return Collections.emptyMap();
-        } finally {
-            timer.stop();
         }
-    }
-
-    /**
-     * Fetch Content Fragment data using GraphQL.
-     *
-     * @param fragmentPath JCR path to the Content Fragment
-     * @return Map containing the Content Fragment fields
-     */
-    private Map<String, Object> fetchFromGraphQL(String fragmentPath) throws IOException {
-        // Build GraphQL query
-        String query = buildContentFragmentQuery(fragmentPath);
-
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            HttpPost request = new HttpPost(graphqlEndpoint);
-            request.setHeader("Content-Type", "application/json");
-
-            ObjectNode requestBody = MAPPER.createObjectNode();
-            requestBody.put("query", query);
-            request.setEntity(new StringEntity(MAPPER.writeValueAsString(requestBody)));
-
-            try (CloseableHttpResponse response = httpClient.execute(request)) {
-                String responseBody = EntityUtils.toString(response.getEntity());
-                JsonNode jsonResponse = MAPPER.readTree(responseBody);
-
-                if (jsonResponse.has("errors")) {
-                    LOG.error("GraphQL errors: {}", jsonResponse.get("errors"));
-                    return Collections.emptyMap();
-                }
-
-                return parseGraphQLResponse(jsonResponse, fragmentPath);
+        URI endpoint = persistedQueryEndpoint();
+        String variables = URLEncoder.encode(";path=" + fragmentPath, StandardCharsets.UTF_8)
+                .replace("+", "%20");
+        HttpGet request = new HttpGet(endpoint.toASCIIString() + variables);
+        request.setHeader("Accept", "application/json");
+        request.setConfig(RequestConfig.custom().setConnectTimeout(5000)
+                .setSocketTimeout(5000).setConnectionRequestTimeout(5000).build());
+        // No shared credentials or redirects: this adapter serves public published data.
+        try (CloseableHttpClient client = HttpClients.custom().disableRedirectHandling().build();
+             CloseableHttpResponse response = client.execute(request)) {
+            if (response.getStatusLine().getStatusCode() != 200 || response.getEntity() == null) {
+                throw new IOException("Persisted query request failed");
             }
-        }
-    }
-
-    /**
-     * Build a GraphQL query for a Content Fragment.
-     *
-     * @param fragmentPath JCR path to the Content Fragment
-     * @return GraphQL query string
-     */
-    private String buildContentFragmentQuery(String fragmentPath) {
-        // Extract the model name from the path
-        // E.g., /content/dam/my-project/content-fragments/article -> articleByPath
-        String modelName = extractModelName(fragmentPath);
-
-        return String.format("""
-            {
-              %sByPath(_path: "%s") {
-                item {
-                  _path
-                  _metadata {
-                    stringMetadata {
-                      name
-                      value
-                    }
-                  }
-                  ... on %sModel {
-                    _variations
-                  }
-                }
-              }
+            byte[] body = response.getEntity().getContent().readNBytes(1_048_577);
+            if (body.length > 1_048_576) throw new IOException("Persisted query response too large");
+            JsonNode json = MAPPER.readTree(body);
+            if (json == null || json.has("errors")) throw new IOException("Persisted query returned errors");
+            JsonNode item = json.at("/data/fragment/item");
+            if (item.isMissingNode()) throw new IOException("Expected the fragment query alias");
+            if (item.isNull()) return Collections.emptyMap();
+            if (!item.isObject() || !fragmentPath.equals(item.path("_path").asText())) {
+                throw new IOException("Persisted query returned an unexpected fragment");
             }
-            """, modelName, fragmentPath, capitalizeFirst(modelName));
-    }
-
-    /**
-     * Parse GraphQL response into a map.
-     *
-     * @param response GraphQL JSON response
-     * @param fragmentPath Original fragment path
-     * @return Parsed Content Fragment data
-     */
-    private Map<String, Object> parseGraphQLResponse(JsonNode response, String fragmentPath) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("_path", fragmentPath);
-
-        JsonNode data = response.get("data");
-        if (data == null) {
+            Map<String, Object> result = MAPPER.convertValue(item,
+                    new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
+            result.put("demo", false);
             return result;
+        } catch (IOException e) {
+            // Do not turn transport/schema failures into fake content or a false success.
+            throw new IllegalStateException("Content Fragment delivery unavailable", e);
         }
-
-        // Find the first non-null field in data (the actual CF data)
-        Iterator<Map.Entry<String, JsonNode>> fields = data.fields();
-        while (fields.hasNext()) {
-            Map.Entry<String, JsonNode> field = fields.next();
-            JsonNode itemWrapper = field.getValue();
-            if (itemWrapper != null && itemWrapper.has("item")) {
-                JsonNode item = itemWrapper.get("item");
-                result.putAll(jsonNodeToMap(item));
-                break;
-            }
-        }
-
-        return result;
     }
 
-    /**
-     * Convert a JsonNode to a Map recursively.
-     */
-    private Map<String, Object> jsonNodeToMap(JsonNode node) {
-        Map<String, Object> map = new HashMap<>();
-        if (node == null || node.isNull()) {
-            return map;
+    private URI persistedQueryEndpoint() {
+        if (!usePersistedQueries || persistedQueryUrl == null || persistedQueryUrl.isBlank()) {
+            throw new IllegalStateException("Configure a public persisted query before disabling mock data");
         }
-
-        Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
-        while (fields.hasNext()) {
-            Map.Entry<String, JsonNode> entry = fields.next();
-            String key = entry.getKey();
-            JsonNode value = entry.getValue();
-
-            if (value.isArray()) {
-                List<Object> list = new ArrayList<>();
-                for (JsonNode element : value) {
-                    if (element.isObject()) {
-                        list.add(jsonNodeToMap(element));
-                    } else {
-                        list.add(getJsonValue(element));
-                    }
-                }
-                map.put(key, list);
-            } else if (value.isObject()) {
-                map.put(key, jsonNodeToMap(value));
-            } else {
-                map.put(key, getJsonValue(value));
-            }
+        URI uri;
+        try { uri = URI.create(persistedQueryUrl); }
+        catch (IllegalArgumentException e) { throw new IllegalStateException("Invalid persisted query configuration", e); }
+        boolean localHttp = "http".equals(uri.getScheme()) &&
+                ("localhost".equals(uri.getHost()) || "127.0.0.1".equals(uri.getHost()));
+        if (!("https".equals(uri.getScheme()) || localHttp) || uri.getHost() == null ||
+                uri.getUserInfo() != null || uri.getQuery() != null || uri.getFragment() != null ||
+                !uri.getRawPath().matches("/graphql/execute\\.json/[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+")) {
+            throw new IllegalStateException("Expected a public persisted query URL without credentials or variables");
         }
-        return map;
-    }
-
-    /**
-     * Get primitive value from JsonNode.
-     */
-    private Object getJsonValue(JsonNode node) {
-        if (node.isTextual()) return node.asText();
-        if (node.isInt()) return node.asInt();
-        if (node.isLong()) return node.asLong();
-        if (node.isDouble()) return node.asDouble();
-        if (node.isBoolean()) return node.asBoolean();
-        if (node.isNull()) return null;
-        return node.asText();
+        return uri;
     }
 
     /**
@@ -393,7 +245,7 @@ public class ContentFragmentGraphQLService {
 
         // Add common metadata
         data.put("_metadata", Map.of(
-            "model", extractModelName(fragmentPath),
+            "model", "demo",
             "variation", "master",
             "locale", "en"
         ));
@@ -410,45 +262,8 @@ public class ContentFragmentGraphQLService {
      * @return List of Content Fragment data maps
      */
     public List<Map<String, Object>> fetchContentFragmentsByModel(String modelName, int limit, int offset) {
-        WebMCPMetricsService.Timer timer = metricsService.startTimer("graphql_query");
-        try {
-            if (useMockData) {
-                return getMockContentFragmentList(modelName, limit);
-            }
-
-            String query = buildListQuery(modelName, limit, offset);
-            // Execute query and parse results
-            // For brevity, returning mock data pattern
-            return getMockContentFragmentList(modelName, limit);
-
-        } finally {
-            timer.stop();
-        }
-    }
-
-    /**
-     * Build a list query for Content Fragments.
-     */
-    private String buildListQuery(String modelName, int limit, int offset) {
-        return String.format("""
-            {
-              %sList(
-                _locale: "en"
-                limit: %d
-                offset: %d
-              ) {
-                items {
-                  _path
-                  _metadata {
-                    stringMetadata {
-                      name
-                      value
-                    }
-                  }
-                }
-              }
-            }
-            """, modelName, limit, offset);
+        if (!useMockData) throw new IllegalStateException("Model listing requires a separate persisted-query integration");
+        return getMockContentFragmentList(modelName, Math.max(0, Math.min(limit, 100)));
     }
 
     /**
@@ -461,6 +276,7 @@ public class ContentFragmentGraphQLService {
             item.put("_path", String.format("/content/dam/sample/%s/item-%d", modelName, i + 1));
             item.put("title", String.format("Sample %s #%d", capitalizeFirst(modelName), i + 1));
             item.put("index", i);
+            item.put("demo", true);
             results.add(item);
         }
         return results;
@@ -481,6 +297,7 @@ public class ContentFragmentGraphQLService {
 
         Map<String, Object> aiFormatted = new HashMap<>();
         aiFormatted.put("source", "aem-content-fragment");
+        aiFormatted.put("demo", raw.get("demo"));
         aiFormatted.put("path", fragmentPath);
 
         // Flatten complex structures for easier AI consumption
@@ -552,61 +369,16 @@ public class ContentFragmentGraphQLService {
         return summary.toString();
     }
 
-    /**
-     * Clear the Content Fragment cache.
-     */
-    public void clearCache() {
-        cache.clear();
-        LOG.info("Content Fragment cache cleared");
-    }
+    /** @deprecated No application cache remains; use Dispatcher/CDN invalidation. */
+    @Deprecated
+    public void clearCache() { }
 
-    /**
-     * Clear cache for a specific path.
-     *
-     * @param path Path to clear from cache
-     */
-    public void clearCache(String path) {
-        cache.remove(path);
-        LOG.debug("Cache cleared for: {}", path);
-    }
-
-    // ==================== HELPER METHODS ====================
-
-    private String extractModelName(String path) {
-        // Extract model name from path patterns
-        // /content/dam/project/content-fragments/article/my-article -> article
-        String[] parts = path.split("/");
-        for (int i = parts.length - 2; i >= 0; i--) {
-            String part = parts[i];
-            if (!part.isEmpty() && !part.equals("content-fragments") && !part.equals("dam")) {
-                return part.toLowerCase().replaceAll("-", "");
-            }
-        }
-        return "contentfragment";
-    }
+    /** @deprecated No application cache remains; use Dispatcher/CDN invalidation. */
+    @Deprecated
+    public void clearCache(String path) { }
 
     private String capitalizeFirst(String str) {
         if (str == null || str.isEmpty()) return str;
         return str.substring(0, 1).toUpperCase() + str.substring(1);
-    }
-
-    // ==================== CACHE ENTRY ====================
-
-    private static class CacheEntry {
-        private final Map<String, Object> data;
-        private final long expiryTime;
-
-        CacheEntry(Map<String, Object> data, int ttlSeconds) {
-            this.data = data;
-            this.expiryTime = System.currentTimeMillis() + (ttlSeconds * 1000L);
-        }
-
-        boolean isExpired() {
-            return System.currentTimeMillis() > expiryTime;
-        }
-
-        Map<String, Object> getData() {
-            return data;
-        }
     }
 }

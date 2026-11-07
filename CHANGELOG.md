@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Bind demo chat history to the HTTP session and authenticated user instead of caller-supplied IDs; bound incoming messages, remove message/session logging, and label simulated responses.
+- Execute JavaScript, browser reference and native Chrome checks in CI; enforce lint/JSDoc failures and require browser jobs before release.
+- Replace inferred Content Fragment queries and the private cache with an explicitly configured public persisted query. Real-mode listing fails closed; demo results are labeled. Remove reflected CORS headers in favor of platform policy.
+- Support URL-encoded AEM form requests and Granite CSRF headers, with a second state check after asynchronous token retrieval. Remove the form servlet's separate session-token scheme in favor of Granite and Sling filters.
+- Replace outdated conference claims and demo instructions with the shared-state journey and dated verification evidence.
+
+### Migration
+- Content Fragment non-mock mode requires `persisted.query.url`, the `path` variable and `fragment` response alias. Old `graphql.endpoint`, `cache.ttlSeconds` and `max.depth` settings are ignored. The exported services package is version 1.1; cache-clear methods remain deprecated no-ops.
+- The legacy `form.csrfEnabled` setting no longer controls request protection. Preserve Granite CSRF and Sling Referrer filters and verify authenticated/anonymous behavior through Dispatcher. See [deployment](docs/DEPLOYMENT.md).
+- Chat callers can no longer select a conversation through `sessionId`. Cookie session plus authenticated identity define the demo history; it remains process-local and bounded, not a durable conversation store.
+
 ## [2.1.0] - 2026-07-27
 
 ### Changed
