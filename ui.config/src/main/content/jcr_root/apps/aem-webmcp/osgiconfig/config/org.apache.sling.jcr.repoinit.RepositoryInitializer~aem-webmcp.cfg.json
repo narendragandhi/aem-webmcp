@@ -4,6 +4,7 @@
         "create path (nt:unstructured) /content/dam/aem-webmcp/jcr:content",
         "set properties on /content/dam/aem-webmcp/jcr:content\n  set cq:conf{String} to /conf/aem-webmcp\n  set jcr:title{String} to \"AEM WebMCP\"\nend",
         "create path (sling:Folder) /var/aem-webmcp",
+        "create path /content/aem-webmcp(cq:Page)",
         "create service user webmcp-service with path system/aem-webmcp",
         "set ACL for webmcp-service\n  allow jcr:all on /var/aem-webmcp\n  allow jcr:read on /content/aem-webmcp\nend"
     ]
